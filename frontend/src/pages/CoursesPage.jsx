@@ -21,7 +21,7 @@ import {
 const COURSE_THEME_STORAGE_PREFIX = "akadion:course-theme"
 const ADMIN_COURSES_PER_PAGE = 6
 
-function getCourseThemeStorageKey(user, courseId) {
+export function getCourseThemeStorageKey(user, courseId) {
   return `${COURSE_THEME_STORAGE_PREFIX}:${getThemeUserKey(user)}:${courseId}`
 }
 
@@ -48,14 +48,14 @@ function ProfessorHeroStats({ totalCourses, activeCourses }) {
       {stats.map(({ label, value, icon: Icon }) => (
         <div
           key={label}
-          className="flex items-center gap-3 rounded-[1.35rem] border border-[#cfe0f5]/90 bg-linear-to-r from-[#dce9fb] via-[#edf4ff] to-[#d3e4fb] px-4 py-3 text-[#3d5b85] shadow-[inset_0_1px_0_rgba(255,255,255,0.58)]"
+          className="flex items-center gap-3 rounded-[1.35rem] border border-white/28 bg-white/20 px-4 py-3 text-white backdrop-blur-md shadow-xs"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/70 text-[#5f7fa8]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/25 text-white">
             <Icon className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-2xl font-semibold leading-none">{value}</p>
-            <p className="mt-1 text-sm font-medium text-[#56749c]">{label}</p>
+            <p className="text-2xl font-bold leading-none text-white">{value}</p>
+            <p className="mt-1 text-xs font-medium text-white/84">{label}</p>
           </div>
         </div>
       ))}
@@ -63,11 +63,11 @@ function ProfessorHeroStats({ totalCourses, activeCourses }) {
   )
 }
 
-function getProfessorName(course) {
+export function getProfessorName(course) {
   return [course.profesorPrenume, course.profesorNume].filter(Boolean).join(" ") || course.profesorMail || "Profesor nealocat"
 }
 
-function normalizeEnrolledCourse(course) {
+export function normalizeEnrolledCourse(course) {
   return {
     ...course,
     inscris: true,
@@ -76,7 +76,7 @@ function normalizeEnrolledCourse(course) {
   }
 }
 
-function normalizeAvailableCourse(course) {
+export function normalizeAvailableCourse(course) {
   return {
     ...course,
     inscris: false,
@@ -86,7 +86,7 @@ function normalizeAvailableCourse(course) {
   }
 }
 
-function getCourseProgress(course) {
+export function getCourseProgress(course) {
   const totalWeeks = course.nrSaptamaniCurente ?? course.nrSaptamani ?? 0
   const percent = Math.max(0, Math.min(100, Math.round(course.procentajProgres ?? 0)))
   const completedWeeks = course.nrSaptamaniFinalizate ?? Math.round((percent / 100) * totalWeeks)
@@ -94,7 +94,7 @@ function getCourseProgress(course) {
   return { completedWeeks, percent, totalWeeks }
 }
 
-function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEnroll, actionDisabled }) {
+export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEnroll, actionDisabled }) {
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const selectedTheme = getCourseTheme(selectedThemeKey)
   const accent = selectedTheme.accent
@@ -106,12 +106,18 @@ function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEnroll, a
   return (
     <Card className={`relative overflow-visible rounded-[1.8rem] border-[#e4d8cd] bg-white/96 shadow-[0_18px_52px_rgba(32,46,84,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_rgba(32,46,84,0.12)] ${themePickerOpen ? "z-20" : "z-0"}`}>
       <div className={`relative h-44 overflow-hidden rounded-t-[1.8rem] bg-linear-to-br ${accent}`}>
-        <div className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/24 px-3 py-1 text-sm font-semibold text-white backdrop-blur-sm">
+        <div className={`absolute left-4 top-4 inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold shadow-xs border ${selectedTheme.badge || "bg-white/80 text-slate-800 border-white/60"}`}>
           {isStudentMode ? (course.inscris ? "Înscris" : "Disponibil") : course.activ ? "Activ" : "Inactiv"}
         </div>
       </div>
       <CardContent className="space-y-3 px-5 py-5">
-        <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b]">{course.denumire}</h3>
+        {(isProfessorMode || isAdminMode) ? (
+          <Link to={`/courses/${course.id}`} className="block">
+            <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b] underline-offset-4 hover:underline">{course.denumire}</h3>
+          </Link>
+        ) : (
+          <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b]">{course.denumire}</h3>
+        )}
         {(isStudentMode || isAdminMode) ? <p className="text-sm font-semibold text-[#5d7094]">{course.profesorDisplayName || getProfessorName(course)}</p> : null}
         {course.descriere ? <p className="line-clamp-2 text-sm leading-6 text-slate-600">{course.descriere}</p> : null}
         {isStudentMode && course.inscris ? (
@@ -134,7 +140,7 @@ function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEnroll, a
         </div>
         {isProfessorMode ? (
           <Button asChild variant="outline" className="mt-2 rounded-2xl border-[#d9ccbe] bg-white text-[#3f698a]">
-            <Link to={`/courses/${course.id}`}>Administreaza cursul</Link>
+            <Link to={`/courses/${course.id}`}>Administrează cursul</Link>
           </Button>
         ) : null}
         {isAdminMode ? (
@@ -198,7 +204,7 @@ function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEnroll, a
   )
 }
 
-function EmptyCoursesState({ message }) {
+export function EmptyCoursesState({ message }) {
   return (
     <Card className="w-full max-w-2xl rounded-[2rem] border-[#e4d8cd] bg-white/96 shadow-[0_24px_70px_rgba(32,46,84,0.08)]">
       <CardContent className="px-6 py-10 text-center text-slate-600 sm:px-10">
@@ -208,7 +214,7 @@ function EmptyCoursesState({ message }) {
   )
 }
 
-function AdminCourseList({ courses, currentPage, totalPages, onPageChange }) {
+export function AdminCourseList({ courses, currentPage, totalPages, onPageChange }) {
   return (
     <div className="space-y-3">
       {courses.map((course) => {
@@ -409,32 +415,30 @@ export default function CoursesPage() {
     }
   }, [adminCurrentPage, adminTotalPages])
 
+  const heroClassName = isAdmin
+    ? "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+    : "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+
   return (
     <AppShell
       title={isProfessor ? `${getUserGreetingName(user)} 📖` : "Cursuri Akadion"}
       description={isProfessor ? undefined : isAdmin ? "Toate cursurile create de profesori în platformă." : "Cursurile tale active și cursurile disponibile pentru înscriere."}
       eyebrow="Cursuri"
-      heroClassName="relative overflow-hidden border-0 bg-linear-to-r from-[#5a7f9f] via-[#456f91] to-[#315c7d] shadow-[0_24px_60px_rgba(53,86,117,0.22)] before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/12 before:content-[''] after:absolute after:-bottom-16 after:left-[-4rem] after:h-60 after:w-60 after:rounded-full after:bg-white/8 after:content-['']"
-      heroEyebrowClassName="text-white/78"
+      heroClassName={heroClassName}
+      heroEyebrowClassName="text-white/72"
       heroTitleClassName="text-white"
-      heroDescriptionClassName="text-white/80"
+      heroDescriptionClassName="text-white/84"
       heroContent={canListCourses ? <ProfessorHeroStats totalCourses={isStudent ? studentTotalCourses : courses.length} activeCourses={isStudent ? studentCourses.length : activeCourses} /> : null}
-      actions={canListCourses ? (
-        <Button type="button" variant="outline" onClick={loadCourses} disabled={coursesLoading || Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-          <RefreshCcw className="h-4 w-4" />
-          Reîncarcă
-        </Button>
-      ) : null}
     >
       {canListCourses ? (
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold tracking-tight text-[#24385b]">{isProfessor ? "Cursurile mele" : isAdmin ? "Toate cursurile" : "Catalog cursuri"}</h2>
             {isProfessor ? (
-              <Button asChild className="rounded-2xl bg-[#3f698a] text-white shadow-[0_10px_24px_rgba(63,105,138,0.24)] hover:bg-[#355b79]">
-                <Link to="/courses/new">
-                  <Plus className="h-4 w-4" />
-                  Curs nou
+              <Button asChild variant="outline" className="rounded-2xl border border-[#d9ccbe] bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:bg-[#f7efe6] hover:text-slate-900 hover:border-[#bcae9e]">
+                <Link to="/courses/new" className="inline-flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-slate-900" />
+                  <span>Curs nou</span>
                 </Link>
               </Button>
             ) : null}

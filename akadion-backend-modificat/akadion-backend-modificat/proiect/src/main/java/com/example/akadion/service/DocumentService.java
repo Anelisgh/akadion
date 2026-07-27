@@ -172,12 +172,14 @@ public class DocumentService {
     }
 
     private DocumentResponseDto toResponseDto(Document document) {
-        String urlDescarcare = minioStorageService.getPresignedUrl(document.getPathMinio());
+        String urlVizualizare = minioStorageService.getPresignedPreviewUrl(document.getPathMinio());
+        String urlDescarcare = minioStorageService.getPresignedDownloadUrl(document.getPathMinio());
         return new DocumentResponseDto(
                 document.getId(),
                 document.getTitlu(),
                 document.getStatusIndex().name(),
                 document.getActiv(),
+                urlVizualizare,
                 urlDescarcare
         );
     }

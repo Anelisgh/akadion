@@ -210,11 +210,13 @@ public class StudentCursService {
 
         return documentRepository.findBySaptamanaIdAndActivTrue(saptamanaId).stream()
                 .map(doc -> {
-                    String url = minioStorageService.getPresignedUrl(doc.getPathMinio());
+                    String urlVizualizare = minioStorageService.getPresignedPreviewUrl(doc.getPathMinio());
+                    String urlDescarcare = minioStorageService.getPresignedDownloadUrl(doc.getPathMinio());
                     return new DocumentStudentResponseDto(
                             doc.getId(),
                             doc.getTitlu(),
-                            url
+                            urlVizualizare,
+                            urlDescarcare
                     );
                 })
                 .toList();

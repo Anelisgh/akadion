@@ -17,11 +17,30 @@ public class MinioConfig {
     @Value("${minio.secret-key}") 
     private String secretKey;
 
+    @Value("${minio.bucket}")
+    private String bucket;
+
+    @Value("${minio.auto-create-bucket:false}")
+    private boolean autoCreateBucket;
+
     @Bean
     public MinioClient minioClient() {
-        return MinioClient.builder()
+        MinioClient client = MinioClient.builder()
             .endpoint(url)
             .credentials(accessKey, secretKey)
             .build();
+            
+        if (autoCreateBucket) {
+            try {
+                boolean exists = client.bucketExists(io.minio.BucketExistsArgs.builder().bucket(bucket).build());
+                if (!exists) {
+                    client.makeBucket(io.minio.MakeBucketArgs.builder().bucket(bucket).build());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Nu s-a putut crea bucket-ul in MinIO: " + e.getMessage(), e);
+            }
+        }
+        
+        return client;
     }
 }

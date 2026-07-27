@@ -1,31 +1,15 @@
-import { AlertCircle, BookOpenText, ChevronDown, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
-import { useState } from "react"
+import { AlertCircle, BookOpenText, ChevronDown, ChevronLeft, ChevronRight, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { Link, NavLink } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { startLogout } from "@/auth/logout"
 import { useAuth } from "@/auth/useAuth"
-import { getRoleLabel, getUserDisplayName, isAdminUser } from "@/lib/user"
+import { getRoleLabel, getUserDisplayName, isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
+import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
+import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { cn } from "@/lib/utils"
 import completeProfileLogo from "../../folder_inspiratie2/logo_bufnita.jpeg"
-
-function ShellNavLink({ to, children, end, icon: Icon, onClick }) {
-  return (
-    <NavLink
-      to={to}
-      end={end}
-      onClick={onClick}
-      className={({ isActive }) =>
-        `inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${
-          isActive ? "bg-[#24385b] text-white shadow-sm" : "text-slate-600 hover:bg-[#f4eadf] hover:text-[#24385b]"
-        }`
-      }
-    >
-      <Icon className="h-4 w-4" />
-      {children}
-    </NavLink>
-  )
-}
 
 function getInitials(displayName) {
   return displayName
@@ -35,6 +19,155 @@ function getInitials(displayName) {
     .map((part) => part[0])
     .join("")
     .toUpperCase() || "A"
+}
+
+function CourseTabsNav({ user, onNavClick }) {
+  const [courses, setCourses] = useState([])
+  const [courseThemes, setCourseThemes] = useState({})
+  const scrollRef = useRef(null)
+  const isProf = isProfessorUser(user)
+  const isAdmin = isAdminUser(user)
+  const isStudent = isStudentUser(user)
+
+  useEffect(() => {
+    let mounted = true
+    async function fetchUserCourses() {
+      if (isAdmin) return
+      try {
+        const data = isProf ? await listProfessorCourses() : await listStudentCourses()
+        if (mounted && Array.isArray(data)) {
+          setCourses(data)
+          const themes = {}
+          data.forEach((c) => {
+            try {
+              const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${c.id}`)
+              if (COURSE_THEME_KEYS.has(key)) {
+                themes[c.id] = key
+              }
+            } catch { }
+          })
+          setCourseThemes(themes)
+        }
+      } catch { }
+    }
+    fetchUserCourses()
+    return () => { mounted = false }
+  }, [user, isProf, isAdmin, isStudent])
+
+  function scroll(offset) {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: offset, behavior: "smooth" })
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1 min-w-0 max-w-full lg:max-w-xl xl:max-w-2xl">
+      {/* Scroll Left */}
+      {courses.length > 2 && (
+        <button
+          type="button"
+          onClick={() => scroll(-200)}
+          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#e7d9c8] bg-white text-slate-600 hover:bg-[#f4eadf] lg:flex"
+          title="Derulează la stânga"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+      )}
+
+      {/* Tabs Container */}
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-0.5 scroll-smooth"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {/* Dashboard Link */}
+        <NavLink
+          to="/"
+          end
+          onClick={onNavClick}
+          className={({ isActive }) =>
+            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+              isActive
+                ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+            }`
+          }
+        >
+          <Home className="h-4 w-4" />
+          <span>Acasă</span>
+        </NavLink>
+
+        {/* Admin Links */}
+        {isAdmin && (
+          <>
+            <NavLink
+              to="/admin/users"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                }`
+              }
+            >
+              <Users className="h-4 w-4" />
+              <span>Utilizatori</span>
+            </NavLink>
+            <NavLink
+              to="/courses"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                }`
+              }
+            >
+              <BookOpenText className="h-4 w-4" />
+              <span>Cursuri</span>
+            </NavLink>
+          </>
+        )}
+
+        {/* Course Tabs with Soft Pastel Theme Background */}
+        {courses.map((course) => {
+          const themeKey = courseThemes[course.id]
+          const theme = getCourseTheme(themeKey)
+
+          return (
+            <NavLink
+              key={course.id}
+              to={`/courses/${course.id}`}
+              state={{ course }}
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${isActive
+                  ? `${theme.tabActive || "bg-[#24385b] text-white"} scale-[1.02]`
+                  : `${theme.tabInactive || "bg-white text-slate-700"} hover:scale-[1.01]`
+                }`
+              }
+            >
+              <span className="truncate max-w-[130px] sm:max-w-[170px]">{course.denumire}</span>
+            </NavLink>
+          )
+        })}
+      </div>
+
+      {/* Scroll Right */}
+      {courses.length > 2 && (
+        <button
+          type="button"
+          onClick={() => scroll(200)}
+          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#e7d9c8] bg-white text-slate-600 hover:bg-[#f4eadf] lg:flex"
+          title="Derulează la dreapta"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  )
 }
 
 export default function AppShell({ title, description, eyebrow = "Akadion", actions, children, heroClassName, heroEyebrowClassName, heroTitleClassName, heroDescriptionClassName, heroContent, heroVisual, heroVisualClassName }) {
@@ -57,38 +190,25 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
     }
   }
 
-  const navItems = isAdminUser(user)
-    ? [
-        { to: "/", label: "Dashboard", icon: Home, end: true },
-        { to: "/courses", label: "Cursuri", icon: BookOpenText },
-        { to: "/admin/users", label: "Utilizatori", icon: Users },
-      ]
-    : [
-        { to: "/", label: "Dashboard", icon: Home, end: true },
-        { to: "/courses", label: "Cursuri", icon: BookOpenText },
-      ]
-
   return (
     <main className="app-shell min-h-screen text-slate-900">
       <header className="sticky top-0 z-30 border-b border-[#e7d9c8]/80 bg-[#fbf7f1]/92 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link to={homePath} className="flex items-center gap-3">
+          <Link to={homePath} className="flex items-center gap-3 shrink-0">
             <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white p-1 shadow-sm ring-1 ring-[#e7d9c8]">
               <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
             </span>
-            <span>
+            <span className="hidden sm:block">
               <span className="block text-base font-semibold tracking-tight text-[#24385b]">Akadion</span>
               <span className="block text-xs font-medium text-slate-500">{roleLabel}</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-[1.4rem] border border-[#e7d9c8] bg-white/70 p-1 lg:flex">
-            {navItems.map(({ to, label, icon, end }) => (
-              <ShellNavLink key={to} to={to} end={end} icon={icon}>{label}</ShellNavLink>
-            ))}
+          <nav className="hidden lg:flex min-w-0 flex-1 justify-center px-4">
+            <CourseTabsNav user={user} />
           </nav>
 
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -136,11 +256,9 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
 
         {mobileOpen ? (
           <div className="border-t border-[#e7d9c8] bg-[#fbf7f1] px-4 py-3 lg:hidden">
-            <nav className="mx-auto flex max-w-7xl flex-col gap-2">
-              {navItems.map(({ to, label, icon, end }) => (
-                <ShellNavLink key={to} to={to} end={end} icon={icon} onClick={() => setMobileOpen(false)}>{label}</ShellNavLink>
-              ))}
-            </nav>
+            <div className="mx-auto max-w-7xl space-y-3">
+              <CourseTabsNav user={user} onNavClick={() => setMobileOpen(false)} />
+            </div>
             <div className="mx-auto mt-3 max-w-7xl rounded-2xl border border-[#e7d9c8] bg-white px-3 py-3">
               <div className="mb-3 flex min-w-0 items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#24385b] text-sm font-semibold text-white">

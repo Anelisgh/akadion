@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CheckCircle2, KeyRound, Mail, ShieldCheck, UserRound } from "lucide-react"
+import { Building2, CheckCircle2, KeyRound, Mail, ShieldCheck, UserRound } from "lucide-react"
 import AppShell from "@/components/AppShell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -8,14 +8,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/auth/useAuth"
 import { getRoleLabel, getUserDisplayName, isAdminUser, requestMyPasswordReset, updateMyEmail, updateMyProfile } from "@/lib/user"
+import { cn } from "@/lib/utils"
 
-function ProfileField({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-[#e4d8cd] bg-[#fffdfa] px-4 py-3">
-      <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">{label}</p>
-      <p className="mt-1 text-base font-semibold text-slate-900">{value || "-"}</p>
-    </div>
-  )
+function getInitials(displayName) {
+  return displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "A"
 }
 
 function getErrorMessage(error, fallback) {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
         facultate: profileForm.facultate.trim(),
       })
       setUser(updatedUser)
-      setNotice("Datele personale au fost actualizate.")
+      setNotice("Datele personale au fost actualizate cu succes.")
     } catch (submitError) {
       setProfileErrors(getFieldErrors(submitError))
       setError(getErrorMessage(submitError, "Nu am putut actualiza datele personale."))
@@ -90,7 +92,7 @@ export default function ProfilePage() {
       } else {
         await refreshAuth()
       }
-      setNotice("Adresa a fost schimbată, te rugăm să verifici Inbox-ul noului email pentru confirmare.")
+      setNotice("Adresa a fost schimbată. Te rugăm să verifici Inbox-ul noului email pentru confirmare.")
     } catch (submitError) {
       setEmailErrors(getFieldErrors(submitError))
       setError(getErrorMessage(submitError, "Nu am putut schimba adresa de email."))
@@ -115,22 +117,29 @@ export default function ProfilePage() {
   }
 
   const emailChanged = email.trim() !== (user?.mail ?? "")
+  const displayName = getUserDisplayName(user)
+  const roleLabel = getRoleLabel(user?.rol)
+  const initials = getInitials(displayName)
+
+  const heroClassName = isAdmin
+    ? "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+    : "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
 
   return (
     <AppShell
       title="Profilul meu"
-      description="Aici îți poți vedea și actualiza datele personale și informațiile contului."
+      description="Gestionează-ți informațiile personale și setările de securitate ale contului."
       eyebrow="Cont"
-      heroClassName="relative overflow-hidden border-0 bg-linear-to-r from-[#edc9f1] via-[#e2b6eb] to-[#f0bfdc] shadow-[0_24px_60px_rgba(160,95,173,0.2)] before:absolute before:-top-12 before:right-[-3rem] before:h-52 before:w-52 before:rounded-full before:bg-white/24 before:content-[''] after:absolute after:-bottom-16 after:left-[-4rem] after:h-56 after:w-56 after:rounded-full after:bg-white/14 after:content-['']"
-      heroEyebrowClassName="text-[#9154a0]"
-      heroTitleClassName="text-[#643770]"
-      heroDescriptionClassName="text-[#824f90]"
+      heroClassName={heroClassName}
+      heroEyebrowClassName="text-white/72"
+      heroTitleClassName="text-white font-bold"
+      heroDescriptionClassName="text-white/84"
     >
-      <div className="space-y-4">
+      <div className="mx-auto max-w-6xl space-y-6">
         {notice ? (
           <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
             <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-              <AlertTitle>Actualizare reușită</AlertTitle>
+            <AlertTitle>Succes</AlertTitle>
             <AlertDescription className="text-emerald-800">{notice}</AlertDescription>
           </Alert>
         ) : null}
@@ -142,118 +151,157 @@ export default function ProfilePage() {
           </Alert>
         ) : null}
 
-        <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch">
-          <Card className={isAdmin
-            ? "relative h-full overflow-hidden rounded-[1.75rem] border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] before:absolute before:-top-10 before:right-[-2.5rem] before:h-44 before:w-44 before:rounded-full before:bg-white/10 before:content-[''] after:absolute after:-bottom-16 after:left-[-3rem] after:h-52 after:w-52 after:rounded-full after:bg-white/8 after:content-['']"
-            : "h-full rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]"}
-          >
-            <CardHeader className="items-center px-6 pt-8 text-center">
-              <div className={isAdmin
-                ? "relative flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-white/12 text-white backdrop-blur-sm"
-                : "flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-[#f5eee5] text-[#4A5681]"}
-              >
-                <UserRound className="h-10 w-10" />
+        <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Compact Identity Card */}
+          <Card className="overflow-hidden rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+            <div className="border-b border-[#e4d8cd] bg-[#fcf8f3] px-5 py-5 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#24385b] text-xl font-bold text-white shadow-xs">
+                {initials}
               </div>
-              <CardTitle className={isAdmin ? "relative text-2xl text-white" : "text-2xl text-slate-900"}>{getUserDisplayName(user)}</CardTitle>
-              <CardDescription className={isAdmin ? "relative text-white/72" : undefined}>{getRoleLabel(user?.rol)}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 px-6 pb-6">
-              <div className={isAdmin
-                ? "relative flex items-center gap-3 rounded-2xl bg-white/12 px-4 py-3 text-sm text-white/88 backdrop-blur-sm"
-                : "flex items-center gap-3 rounded-2xl bg-[#f7efe6] px-4 py-3 text-sm text-slate-700"}
-              >
-                <Mail className={isAdmin ? "h-4 w-4 text-white/80" : "h-4 w-4 text-[#4A5681]"} />
-                <span className="truncate">{user?.mail || "-"}</span>
+              <h2 className="mt-3 truncate text-lg font-bold text-slate-900">{displayName}</h2>
+              <span className="mt-1.5 inline-flex items-center rounded-full bg-[#24385b]/10 px-3 py-0.5 text-xs font-bold tracking-wide uppercase text-[#24385b]">
+                {roleLabel}
+              </span>
+            </div>
+            <CardContent className="space-y-3 p-4">
+              <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">📧</span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Email</p>
+                  <p className="truncate text-sm font-semibold text-slate-800">{user?.mail || "-"}</p>
+                </div>
               </div>
-              <div className={isAdmin
-                ? "relative flex items-center gap-3 rounded-2xl bg-white/12 px-4 py-3 text-sm text-white/88 backdrop-blur-sm"
-                : "flex items-center gap-3 rounded-2xl bg-[#eef1fb] px-4 py-3 text-sm text-slate-700"}
-              >
-                <ShieldCheck className={isAdmin ? "h-4 w-4 text-white/80" : "h-4 w-4 text-[#4A5681]"} />
-                <span>Stare cont: {user?.stareCont || "-"}</span>
-              </div>
+              {user?.facultate ? (
+                <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">🎓</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Facultate</p>
+                    <p className="truncate text-sm font-semibold text-slate-800">{user.facultate}</p>
+                  </div>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
-          <Card className="h-full rounded-[1.75rem] border-[#e4d8cd] bg-[#fcf8f3] shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-            <CardHeader className="px-6 pt-6">
-              <CardTitle className="text-xl text-slate-900">Date personale</CardTitle>
-              <CardDescription>Modifică numele, prenumele și facultatea asociate contului tău.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5 px-6 pb-6">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ProfileField label="Rol" value={getRoleLabel(user?.rol)} />
-                <ProfileField label="Stare" value={user?.stareCont} />
-              </div>
+          {/* Form & Security Cards */}
+          <div className="space-y-6">
+            {/* Date Personale */}
+            <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+              <CardHeader className="px-6 pb-2 pt-6">
+                <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900">
+                  <UserRound className="h-5 w-5 text-[#24385b]" />
+                  Informații personale
+                </CardTitle>
+                <CardDescription>Actualizează-ți numele, prenumele și facultatea.</CardDescription>
+              </CardHeader>
+              <CardContent className="px-6 pb-6 pt-3">
+                <form className="space-y-4" onSubmit={handleProfileSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-nume" className="text-xs font-bold uppercase tracking-wider text-slate-600">Nume</Label>
+                      <Input
+                        id="profile-nume"
+                        value={profileForm.nume}
+                        onChange={(event) => updateProfileField("nume", event.target.value)}
+                        className="h-12 rounded-2xl border-[#e4d8cd] bg-[#fcf8f3] px-4 text-base focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      />
+                      {profileErrors.nume ? <p className="text-sm text-rose-600">{profileErrors.nume}</p> : null}
+                    </div>
 
-              <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleProfileSubmit}>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-nume">Nume</Label>
-                  <Input id="profile-nume" value={profileForm.nume} onChange={(event) => updateProfileField("nume", event.target.value)} />
-                  {profileErrors.nume ? <p className="text-sm text-rose-600">{profileErrors.nume}</p> : null}
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-prenume" className="text-xs font-bold uppercase tracking-wider text-slate-600">Prenume</Label>
+                      <Input
+                        id="profile-prenume"
+                        value={profileForm.prenume}
+                        onChange={(event) => updateProfileField("prenume", event.target.value)}
+                        className="h-12 rounded-2xl border-[#e4d8cd] bg-[#fcf8f3] px-4 text-base focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      />
+                      {profileErrors.prenume ? <p className="text-sm text-rose-600">{profileErrors.prenume}</p> : null}
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="profile-prenume">Prenume</Label>
-                  <Input id="profile-prenume" value={profileForm.prenume} onChange={(event) => updateProfileField("prenume", event.target.value)} />
-                  {profileErrors.prenume ? <p className="text-sm text-rose-600">{profileErrors.prenume}</p> : null}
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-facultate" className="text-xs font-bold uppercase tracking-wider text-slate-600">Facultate</Label>
+                    <Input
+                      id="profile-facultate"
+                      value={profileForm.facultate}
+                      onChange={(event) => updateProfileField("facultate", event.target.value)}
+                      className="h-12 rounded-2xl border-[#e4d8cd] bg-[#fcf8f3] px-4 text-base focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                    />
+                    {profileErrors.facultate ? <p className="text-sm text-rose-600">{profileErrors.facultate}</p> : null}
+                  </div>
 
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="profile-facultate">Facultate</Label>
-                  <Input id="profile-facultate" value={profileForm.facultate} onChange={(event) => updateProfileField("facultate", event.target.value)} />
-                  {profileErrors.facultate ? <p className="text-sm text-rose-600">{profileErrors.facultate}</p> : null}
-                </div>
+                  <div className="pt-2">
+                    <Button type="submit" disabled={savingProfile} className="rounded-2xl bg-[#24385b] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1a2b47]">
+                      {savingProfile ? "Se salvează..." : "Salvează modificările"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
 
-                <div className="sm:col-span-2">
-                  <Button type="submit" disabled={savingProfile} className="rounded-2xl bg-[#4A5681] px-5 text-white hover:bg-[#3f4a72]">
-                    {savingProfile ? "Se salvează..." : "Salvează datele"}
+            {/* Securitate & Cont */}
+            <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+              <CardHeader className="px-6 pb-2 pt-6">
+                <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900">
+                  <ShieldCheck className="h-5 w-5 text-[#24385b]" />
+                  Securitate cont
+                </CardTitle>
+                <CardDescription>Modifică adresa de email sau cere resetarea parolei.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 px-6 pb-6 pt-3">
+                {/* Schimbare Email */}
+                <form className="space-y-3" onSubmit={handleEmailSubmit}>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-email" className="text-xs font-bold uppercase tracking-wider text-slate-600">Adresă email</Label>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <Input
+                        id="profile-email"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className="h-12 rounded-2xl border-[#e4d8cd] bg-[#fcf8f3] px-4 text-base focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      />
+                      <Button
+                        type="submit"
+                        variant={emailChanged ? "default" : "outline"}
+                        disabled={savingEmail || !emailChanged}
+                        className={cn(
+                          "h-12 shrink-0 rounded-2xl px-6 font-semibold",
+                          emailChanged
+                            ? "bg-[#24385b] text-white hover:bg-[#1a2b47]"
+                            : "border-[#d9ccbe] bg-white text-slate-400"
+                        )}
+                      >
+                        {savingEmail ? "Se actualizează..." : "Schimbă emailul"}
+                      </Button>
+                    </div>
+                    {emailErrors.email ? <p className="text-sm text-rose-600">{emailErrors.email}</p> : null}
+                  </div>
+                </form>
+
+                <hr className="border-[#e4d8cd]/60" />
+
+                {/* Resetare Parolă */}
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-900">Resetare parolă</h4>
+                    <p className="text-sm text-slate-500">Trimite un link securizat pe email pentru schimbarea parolei.</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePasswordReset}
+                    disabled={sendingPasswordReset}
+                    className="shrink-0 rounded-2xl border-[#d9ccbe] bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-[#f7efe6]"
+                  >
+                    <KeyRound className="mr-2 h-4 w-4 text-[#24385b]" />
+                    {sendingPasswordReset ? "Se trimite..." : "Schimbă parola"}
                   </Button>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-          <Card className="flex h-full flex-col rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-            <CardHeader className="px-6 pt-6">
-              <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
-                <Mail className="h-5 w-5 text-[#4A5681]" />
-                Email
-              </CardTitle>
-              <CardDescription>Schimbarea emailului va cere confirmare pe noua adresă.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-1 px-6 pb-6">
-              <form className="flex flex-1 flex-col justify-end space-y-4" onSubmit={handleEmailSubmit}>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-email">Adresa email</Label>
-                  <Input id="profile-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-                  {emailErrors.email ? <p className="text-sm text-rose-600">{emailErrors.email}</p> : null}
-                </div>
-                <Button
-                  type="submit"
-                  variant={emailChanged ? "default" : "outline"}
-                  disabled={savingEmail || !emailChanged}
-                  className={emailChanged ? "rounded-2xl bg-[#4A5681] px-5 text-white hover:bg-[#3f4a72]" : "rounded-2xl border-[#d9ccbe] bg-white"}
-                >
-                  {savingEmail ? "Se actualizează..." : "Schimbă emailul"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card className="flex h-full flex-col rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-            <CardHeader className="px-6 pt-6">
-              <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
-                <KeyRound className="h-5 w-5 text-[#4A5681]" />
-                Parola
-              </CardTitle>
-              <CardDescription>Primeste un link securizat pentru schimbarea parolei prin Keycloak.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-1 items-end px-6 pb-6">
-              <Button type="button" onClick={handlePasswordReset} disabled={sendingPasswordReset} className="rounded-2xl bg-[#4A5681] px-5 text-white hover:bg-[#3f4a72]">
-                {sendingPasswordReset ? "Se trimite..." : "Schimbă parola"}
-              </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </AppShell>

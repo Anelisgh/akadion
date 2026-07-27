@@ -5,12 +5,14 @@ import {
   CheckCircle2,
   FileText,
   Loader2,
+  Pencil,
   Plus,
   RefreshCcw,
   Save,
   Trash2,
   Upload,
   Users,
+  X,
 } from "lucide-react"
 import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
@@ -52,7 +54,9 @@ import {
   uploadWeekDocument,
   withdrawStudentCourse,
 } from "@/lib/professorCourses"
+import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
+import { cn } from "@/lib/utils"
 
 function formatDisplayDate(value) {
   if (!value) {
@@ -88,6 +92,21 @@ function getInitials(value, fallback = "P") {
 
 function getStudentName(student) {
   return [student?.prenume, student?.nume].filter(Boolean).join(" ") || student?.mail || "Student"
+}
+
+function extractFilename(url) {
+  if (!url) return ""
+  try {
+    const urlObj = new URL(url)
+    const pathParts = urlObj.pathname.split('/')
+    let lastPart = pathParts[pathParts.length - 1] || ""
+    if (lastPart.length > 37 && lastPart[8] === '-' && lastPart[13] === '-') {
+      return decodeURIComponent(lastPart.substring(37))
+    }
+    return decodeURIComponent(lastPart)
+  } catch {
+    return ""
+  }
 }
 
 function getDocumentStatusClasses(document) {
@@ -148,16 +167,17 @@ function StatusBadge({ children, className }) {
   )
 }
 
-function DetailTab({ active, children, onClick }) {
+function DetailTab({ active, theme, children, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border px-5 py-2.5 text-sm font-semibold transition ${
+      className={cn(
+        "rounded-2xl border px-5 py-2.5 text-sm font-semibold transition",
         active
-          ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
-          : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
-      }`}
+          ? cn("text-white shadow-sm border-transparent", theme?.btnPrimaryBg || "bg-[#24385b]")
+          : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-slate-900"
+      )}
     >
       {children}
     </button>
@@ -193,6 +213,7 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState("saptamani")
   const [courseEditorOpen, setCourseEditorOpen] = useState(false)
   const [newWeekOpen, setNewWeekOpen] = useState(false)
+  const [editingDocumentIds, setEditingDocumentIds] = useState({})
   const uploadFileInputRefs = useRef({})
   const documentFileInputRefs = useRef({})
 
@@ -628,6 +649,25 @@ export default function CourseDetailPage() {
     }))
   }
 
+  const [selectedThemeKey, setSelectedThemeKey] = useState(() => {
+    try {
+      const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${courseId}`)
+      if (COURSE_THEME_KEYS.has(key)) return key
+    } catch {}
+    return "akadion"
+  })
+
+  useEffect(() => {
+    try {
+      const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${courseId}`)
+      setSelectedThemeKey(COURSE_THEME_KEYS.has(key) ? key : "akadion")
+    } catch {
+      setSelectedThemeKey("akadion")
+    }
+  }, [user, courseId])
+
+  const theme = getCourseTheme(selectedThemeKey)
+
   const lastWeekNumber = weeks.reduce((highest, week) => Math.max(highest, week.nrSaptamana ?? 0), 0)
   const tabs = ["saptamani"]
   if (canViewStudents) {
@@ -645,50 +685,45 @@ export default function CourseDetailPage() {
       title={course?.denumire || "Detalii curs"}
       description={course ? course.descriere || `Începe la ${formatDisplayDate(course.dataInceput)}.` : "Se încarcă datele cursului."}
       eyebrow={isAdmin ? "Admin" : isStudent ? "Student" : "Profesor"}
-      heroClassName="relative overflow-hidden border-0 bg-linear-to-r from-[#4e6f91] via-[#476f85] to-[#7d705f] shadow-[0_24px_60px_rgba(53,86,117,0.22)] before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/12 before:content-[''] after:absolute after:-bottom-16 after:left-[-4rem] after:h-60 after:w-60 after:rounded-full after:bg-white/8 after:content-['']"
-      heroEyebrowClassName="text-white/78"
-      heroTitleClassName="text-white"
-      heroDescriptionClassName="text-white/80"
+      heroClassName={cn(
+        "relative overflow-hidden border",
+        theme.heroBg,
+        theme.heroBorder
+      )}
+      heroEyebrowClassName={cn("font-bold tracking-[0.22em]", theme.heroStatLabel)}
+      heroTitleClassName="text-slate-900 font-bold tracking-tight"
+      heroDescriptionClassName="text-slate-600"
       heroContent={course ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
-            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Status</p>
-            <p className="mt-1 text-lg font-semibold">{course.activ ? "Activ" : "Inactiv"}</p>
-          </div>
-          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
-            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Perioada</p>
-            <p className="mt-1 text-sm font-semibold">{formatDisplayDate(course.dataInceput)} - {formatDisplayDate(course.dataSfarsit)}</p>
-          </div>
-          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
-            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Săptămâni</p>
-            <p className="mt-1 text-lg font-semibold">{weeks.length}</p>
-          </div>
-          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
-            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Profesor</p>
-            <p className="mt-1 text-sm font-semibold">{getProfessorName(course)}</p>
+        <div className="mt-1">
+          {/* Accent bar */}
+          <div
+            className="mb-5 h-1 w-12 rounded-full opacity-80"
+            style={{ backgroundColor: theme.heroAccent }}
+          />
+          {/* Stat chips */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            {[
+              { label: "Status", value: course.activ ? "Activ" : "Inactiv", icon: course.activ ? "●" : "○" },
+              { label: "Perioadă", value: `${formatDisplayDate(course.dataInceput)} — ${formatDisplayDate(course.dataSfarsit)}`, small: true },
+              { label: "Săptămâni", value: weeks.length },
+              { label: "Profesor", value: getProfessorName(course), small: true },
+            ].map(({ label, value, small, icon }) => (
+              <div key={label} className={cn("rounded-2xl px-4 py-3", theme.heroStatBg)}>
+                <p className={cn("text-[10px] font-bold tracking-[0.18em] uppercase", theme.heroStatLabel)}>{label}</p>
+                <p className={cn("mt-1.5 font-semibold leading-tight", theme.heroStatText, small ? "text-sm" : "text-base")}>
+                  {icon ? <span className="mr-1.5 text-xs opacity-70">{icon}</span> : null}{value}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}
-      actions={(
-        <>
-          <Button asChild variant="outline" className="rounded-2xl border-white/30 bg-white/90 text-[#24385b] hover:bg-white">
-            <Link to="/courses">
-              <ArrowLeft className="h-4 w-4" />
-              Înapoi
-            </Link>
-          </Button>
-          <Button type="button" variant="outline" onClick={loadCourseWorkflow} disabled={pageLoading || Boolean(activeAction)} className="rounded-2xl border-white/30 bg-white/90 text-[#24385b] hover:bg-white">
-            <RefreshCcw className="h-4 w-4" />
-            Reîncarcă
-          </Button>
-          {isStudent && course?.inscris ? (
-            <Button type="button" variant="outline" onClick={handleWithdrawCourse} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-white/90 text-rose-700 hover:bg-white">
-              <Trash2 className="h-4 w-4" />
-              Retragere
-            </Button>
-          ) : null}
-        </>
-      )}
+      actions={isStudent && course?.inscris ? (
+        <Button type="button" variant="outline" onClick={handleWithdrawCourse} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-white text-rose-700 hover:bg-rose-50 shadow-xs">
+          <Trash2 className="h-4 w-4" />
+          Retragere
+        </Button>
+      ) : null}
     >
       <div className="space-y-6">
         {pageError ? (
@@ -735,65 +770,65 @@ export default function CourseDetailPage() {
                     </div>
                     <CardDescription className="mt-1">Doar profesorul proprietar poate modifica datele cursului.</CardDescription>
                   </div>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] text-[#315c7d]">
+                  <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border", theme.btnIconBg, theme.btnIconBorder, theme.btnIconText)}>
                     <ChevronDown className={`h-5 w-5 transition-transform ${courseEditorOpen ? "rotate-180" : ""}`} />
                   </span>
                 </button>
                 {courseEditorOpen ? (
-                <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
-                  <form className="grid gap-5 lg:grid-cols-[1fr_220px]" onSubmit={handleSaveCourse}>
-                    <div className="space-y-2.5">
-                      <Label htmlFor="course-name" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DENUMIRE *</Label>
-                      <Input
-                        id="course-name"
-                        value={courseForm.denumire}
-                        onChange={(event) => updateCourseField("denumire", event.target.value)}
-                        className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                      />
-                      {fieldErrors.denumire ? <p className="text-sm text-rose-600">{fieldErrors.denumire}</p> : null}
-                    </div>
+                  <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
+                    <form className="grid gap-5 lg:grid-cols-[1fr_220px]" onSubmit={handleSaveCourse}>
+                      <div className="space-y-2.5">
+                        <Label htmlFor="course-name" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DENUMIRE *</Label>
+                        <Input
+                          id="course-name"
+                          value={courseForm.denumire}
+                          onChange={(event) => updateCourseField("denumire", event.target.value)}
+                          className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                        />
+                        {fieldErrors.denumire ? <p className="text-sm text-rose-600">{fieldErrors.denumire}</p> : null}
+                      </div>
 
-                    <div className="space-y-2.5">
-                      <Label htmlFor="course-start" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DATA ÎNCEPUT *</Label>
-                      <Input
-                        id="course-start"
-                        type="date"
-                        value={courseForm.dataInceput}
-                        onChange={(event) => updateCourseField("dataInceput", event.target.value)}
-                        className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                      />
-                      {fieldErrors.dataInceput ? <p className="text-sm text-rose-600">{fieldErrors.dataInceput}</p> : null}
-                    </div>
+                      <div className="space-y-2.5">
+                        <Label htmlFor="course-start" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DATA ÎNCEPUT *</Label>
+                        <Input
+                          id="course-start"
+                          type="date"
+                          value={courseForm.dataInceput}
+                          onChange={(event) => updateCourseField("dataInceput", event.target.value)}
+                          className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                        />
+                        {fieldErrors.dataInceput ? <p className="text-sm text-rose-600">{fieldErrors.dataInceput}</p> : null}
+                      </div>
 
-                    <div className="space-y-2.5 lg:col-span-2">
-                      <Label htmlFor="course-description" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DESCRIERE</Label>
-                      <textarea
-                        id="course-description"
-                        value={courseForm.descriere}
-                        onChange={(event) => updateCourseField("descriere", event.target.value)}
-                        className="min-h-28 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
-                      />
-                      {fieldErrors.descriere ? <p className="text-sm text-rose-600">{fieldErrors.descriere}</p> : null}
-                    </div>
+                      <div className="space-y-2.5 lg:col-span-2">
+                        <Label htmlFor="course-description" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DESCRIERE</Label>
+                        <textarea
+                          id="course-description"
+                          value={courseForm.descriere}
+                          onChange={(event) => updateCourseField("descriere", event.target.value)}
+                          className="min-h-28 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                        />
+                        {fieldErrors.descriere ? <p className="text-sm text-rose-600">{fieldErrors.descriere}</p> : null}
+                      </div>
 
-                    <div className="flex flex-wrap gap-2 lg:col-span-2">
-                      <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#4A5681] px-5 text-white hover:bg-[#3f4a72]">
-                        <Save className="h-4 w-4" />
-                        {activeAction === "save-course" ? "Se salvează..." : "Salvează"}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={handleToggleActive} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                        {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
+                      <div className="flex flex-wrap gap-2 lg:col-span-2">
+                        <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl px-5 text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
+                          <Save className="h-4 w-4" />
+                          {activeAction === "save-course" ? "Se salvează..." : "Salvează"}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={handleToggleActive} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                          {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
                 ) : null}
               </Card>
             ) : null}
 
             <div className="flex w-fit max-w-full flex-wrap gap-2 rounded-[1.6rem] border border-[#e4d8cd] bg-white/74 p-2 shadow-[0_14px_34px_rgba(32,46,84,0.06)]">
               {tabs.map((tab) => (
-                <DetailTab key={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)}>
+                <DetailTab key={tab} active={activeTab === tab} theme={theme} onClick={() => setActiveTab(tab)}>
                   {tab === "saptamani" ? "Săptămâni" : tab === "studenti" ? "Studenți" : "Profesor"}
                 </DetailTab>
               ))}
@@ -813,34 +848,34 @@ export default function CourseDetailPage() {
                         <CardTitle className="text-lg text-slate-900">Săptămână nouă</CardTitle>
                         <CardDescription className="mt-1">Adaugă conținutul pentru următoarea săptămână a cursului.</CardDescription>
                       </div>
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] text-[#315c7d]">
+                      <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border", theme.btnIconBg, theme.btnIconBorder, theme.btnIconText)}>
                         <ChevronDown className={`h-5 w-5 transition-transform ${newWeekOpen ? "rotate-180" : ""}`} />
                       </span>
                     </button>
                     {newWeekOpen ? (
-                    <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
-                      <form className="space-y-4" onSubmit={handleCreateWeek}>
-                        <textarea
-                          value={newWeekDescription}
-                          onChange={(event) => setNewWeekDescription(event.target.value)}
-                          placeholder="Descrierea săptămânii"
-                          className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
-                        />
-                        <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#3f698a] text-white hover:bg-[#355b79]">
-                          <Plus className="h-4 w-4" />
-                          {activeAction === "create-week" ? "Se adaugă..." : "Adaugă săptămâna"}
-                        </Button>
-                      </form>
-                    </CardContent>
+                      <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
+                        <form className="space-y-4" onSubmit={handleCreateWeek}>
+                          <textarea
+                            value={newWeekDescription}
+                            onChange={(event) => setNewWeekDescription(event.target.value)}
+                            placeholder="Descrierea săptămânii"
+                            className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                          />
+                          <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
+                            <Plus className="h-4 w-4" />
+                            {activeAction === "create-week" ? "Se adaugă..." : "Adaugă săptămâna"}
+                          </Button>
+                        </form>
+                      </CardContent>
                     ) : null}
                   </Card>
                 ) : null}
 
-                <div className="rounded-[1.75rem] border border-[#e4d8cd] bg-[#fcf8f3]/92 px-5 py-5 shadow-[0_14px_34px_rgba(32,46,84,0.05)] sm:px-6">
+                <div className={cn("rounded-[1.75rem] border px-5 py-5 shadow-[0_14px_34px_rgba(32,46,84,0.04)] sm:px-6", theme.heroBg, theme.heroBorder)}>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p className="text-xs font-semibold tracking-[0.18em] text-[#5d7094] uppercase">Conținut curs</p>
-                      <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#24385b]">Săptămâni și documente</h2>
+                      <p className={cn("text-xs font-semibold tracking-[0.18em] uppercase", theme.sectionLabel)}>Conținut curs</p>
+                      <h2 className={cn("mt-1 text-2xl font-semibold tracking-tight", theme.sectionTitle)}>Săptămâni și documente</h2>
                     </div>
                     <p className="text-sm font-medium text-slate-500">Total: {weeks.length} săptămâni</p>
                   </div>
@@ -849,7 +884,7 @@ export default function CourseDetailPage() {
                 {weeks.length === 0 ? (
                   <Card className="rounded-[1.75rem] border-dashed border-[#d8ccbf] bg-[#fbf6f0]">
                     <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center text-slate-500">
-                      <FileText className="h-8 w-8 text-[#4A5681]" />
+                      <FileText className={cn("h-8 w-8", theme.iconText)} />
                       <div>
                         <p className="font-semibold text-slate-800">Nu există săptămâni pentru acest curs.</p>
                         <p className="mt-1 text-sm">Conținutul va apărea aici după ce este adăugat.</p>
@@ -872,7 +907,7 @@ export default function CourseDetailPage() {
                               onClick={() => toggleWeekExpanded(week.id)}
                               className="flex min-w-0 flex-1 items-start gap-4 text-left"
                             >
-                              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${isStudent && week.finalizata ? "bg-emerald-100 text-emerald-700" : "bg-[#e7f1fb] text-[#315c7d]"}`}>
+                              <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold", isStudent && week.finalizata ? "bg-emerald-100 text-emerald-700" : cn(theme.weekNumBg, theme.weekNumText))}>
                                 S{week.nrSaptamana}
                               </div>
                               <div className="min-w-0 flex-1">
@@ -901,7 +936,7 @@ export default function CourseDetailPage() {
                                 </Button>
                               ) : null}
                               {isStudent ? (
-                                <Button type="button" variant="outline" onClick={() => handleToggleWeekCompletion(week)} disabled={Boolean(activeAction) || !course?.inscris} className="rounded-2xl border-[#d9ccbe] bg-white text-[#24385b]">
+                                <Button type="button" variant="outline" onClick={() => handleToggleWeekCompletion(week)} disabled={Boolean(activeAction) || !course?.inscris} className={cn("rounded-2xl border bg-white", theme.btnIconBorder, theme.sectionTitle)}>
                                   <CheckCircle2 className="h-4 w-4" />
                                   {activeAction === `toggle-week-${week.id}` ? "Se actualizează..." : week.finalizata ? "Marchează neparcursă" : "Marchează finalizată"}
                                 </Button>
@@ -910,7 +945,7 @@ export default function CourseDetailPage() {
                                 type="button"
                                 variant="ghost"
                                 onClick={() => toggleWeekExpanded(week.id)}
-                                className="h-11 w-11 rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] p-0 text-[#315c7d] hover:bg-[#e9f2fb]"
+                                className={cn("h-11 w-11 rounded-2xl border p-0", theme.btnIconBg, theme.btnIconBorder, theme.btnIconText)}
                               >
                                 <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                               </Button>
@@ -919,147 +954,206 @@ export default function CourseDetailPage() {
                         </div>
 
                         {isExpanded ? (
-                        <CardContent className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
-                          {canEdit ? (
-                            <div className="space-y-3 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4">
-                              <div>
-                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Descriere săptămână</p>
-                                <p className="mt-1 text-sm text-slate-500">Actualizează pe scurt ce acoperă această etapă.</p>
-                              </div>
-                              <textarea
-                                value={weekDrafts[week.id] ?? ""}
-                                onChange={(event) => setWeekDrafts((current) => ({ ...current, [week.id]: event.target.value }))}
-                                className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-white px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
-                              />
-                              <Button type="button" variant="outline" onClick={() => handleUpdateWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                                <Save className="h-4 w-4" />
-                                {activeAction === `update-week-${week.id}` ? "Se salvează..." : "Salvează săptămâna"}
-                              </Button>
-                            </div>
-                          ) : null}
-
-                          {canEdit ? (
-                            <form className="space-y-4 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4" onSubmit={(event) => handleUploadDocument(event, week)}>
-                              <div>
-                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Document nou</p>
-                                <p className="mt-1 text-sm text-slate-500">Încarcă materiale pentru această săptămână.</p>
-                              </div>
-                              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`upload-title-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU DOCUMENT</Label>
-                                  <Input
-                                    id={`upload-title-${week.id}`}
-                                    value={uploadDrafts[week.id]?.titlu ?? ""}
-                                    onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], titlu: event.target.value } }))}
-                                    className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                                  />
+                          <CardContent className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
+                            {canEdit ? (
+                              <div className="space-y-3 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4">
+                                <div>
+                                  <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Descriere săptămână</p>
+                                  <p className="mt-1 text-sm text-slate-500">Actualizează pe scurt ce acoperă această etapă.</p>
                                 </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor={`upload-file-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER</Label>
-                                  <Input
-                                    id={`upload-file-${week.id}`}
-                                    type="file"
-                                    ref={(element) => {
-                                      uploadFileInputRefs.current[week.id] = element
-                                    }}
-                                    onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], file: event.target.files?.[0] ?? null } }))}
-                                    className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold file:text-[#4A5681] focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                                  />
-                                </div>
-                                <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#3f698a] text-white hover:bg-[#355b79]">
-                                  <Upload className="h-4 w-4" />
-                                  {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Upload"}
+                                <textarea
+                                  value={weekDrafts[week.id] ?? ""}
+                                  onChange={(event) => setWeekDrafts((current) => ({ ...current, [week.id]: event.target.value }))}
+                                  className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-white px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                                />
+                                <Button type="button" variant="outline" onClick={() => handleUpdateWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                                  <Save className="h-4 w-4" />
+                                  {activeAction === `update-week-${week.id}` ? "Se salvează..." : "Salvează săptămâna"}
                                 </Button>
-                              </div>
-                            </form>
-                          ) : null}
-
-                          <div className="space-y-3">
-                            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                              <div>
-                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Documente</p>
-                                <p className="text-sm text-slate-500">Materialele disponibile pentru săptămâna {week.nrSaptamana}.</p>
-                              </div>
-                              <span className="text-sm font-medium text-slate-500">{documents.length} documente</span>
-                            </div>
-
-                            {documents.length === 0 ? (
-                              <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-[#fbf6f0] px-5 py-7 text-center text-sm text-slate-500">
-                                Nu există documente în această săptămână.
                               </div>
                             ) : null}
 
-                            {documents.map((document) => {
-                              const draft = documentDrafts[document.id] ?? {}
-                              const canRetryIngest = canEdit && canRetryDocumentIngest(document)
+                            {canEdit ? (
+                              <form className="space-y-4 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4" onSubmit={(event) => handleUploadDocument(event, week)}>
+                                <div>
+                                  <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Document nou</p>
+                                  <p className="mt-1 text-sm text-slate-500">Încarcă materiale pentru această săptămână.</p>
+                                </div>
+                                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`upload-title-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU DOCUMENT</Label>
+                                    <Input
+                                      id={`upload-title-${week.id}`}
+                                      value={uploadDrafts[week.id]?.titlu ?? ""}
+                                      onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], titlu: event.target.value } }))}
+                                      className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`upload-file-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER</Label>
+                                    <Input
+                                      id={`upload-file-${week.id}`}
+                                      type="file"
+                                      ref={(element) => {
+                                        uploadFileInputRefs.current[week.id] = element
+                                      }}
+                                      onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], file: event.target.files?.[0] ?? null } }))}
+                                      className={cn("h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold focus-visible:ring-[#24385b]/10", theme.fileIconText)}
+                                    />
+                                  </div>
+                                  <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
+                                    <Upload className="h-4 w-4" />
+                                    {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Upload"}
+                                  </Button>
+                                </div>
+                              </form>
+                            ) : null}
 
-                              return (
-                                <article key={document.id} className="rounded-3xl border border-[#e4d8cd] bg-white p-4">
-                                  <div className="flex flex-col gap-4">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                      <div className="min-w-0 space-y-2">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <FileText className="h-5 w-5 text-[#4A5681]" />
-                                          <h3 className="text-lg font-semibold text-slate-900">{document.titlu}</h3>
-                                          <StatusBadge className={getDocumentStatusClasses(document)}>{getDocumentStatusLabel(document)}</StatusBadge>
+                            <div className="space-y-3">
+                              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Documente</p>
+                                  <p className="text-sm text-slate-500">Materialele disponibile pentru săptămâna {week.nrSaptamana}.</p>
+                                </div>
+                                <span className="text-sm font-medium text-slate-500">{documents.length} documente</span>
+                              </div>
+
+                              {documents.length === 0 ? (
+                                <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-[#fbf6f0] px-5 py-7 text-center text-sm text-slate-500">
+                                  Nu există documente în această săptămână.
+                                </div>
+                              ) : null}
+
+                              {documents.map((document) => {
+                                const draft = documentDrafts[document.id] ?? {}
+                                const canRetryIngest = canEdit && canRetryDocumentIngest(document)
+                                const isEditing = Boolean(editingDocumentIds[document.id])
+                                const currentFilename = extractFilename(document.urlDescarcare)
+                                const previewUrl = document.urlVizualizare || document.urlDescarcare
+
+                                return (
+                                  <article key={document.id} className="rounded-3xl border border-[#e4d8cd] bg-white overflow-hidden">
+                                    {/* View mode */}
+                                    <div className="flex flex-col gap-0">
+                                      <div className="flex items-start gap-3 p-4">
+                                        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", theme.fileIconBg, theme.fileIconText)}>
+                                          <FileText className="h-5 w-5" />
                                         </div>
-                                        {document.urlDescarcare ? (
-                                          <a href={document.urlDescarcare} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#3f698a] underline-offset-4 hover:underline">
-                                            Descarcă documentul
-                                          </a>
-                                        ) : null}
-                                      </div>
-                                      {canEdit ? (
-                                        <div className="flex flex-wrap gap-2">
-                                          {canRetryIngest ? (
-                                            <Button type="button" variant="outline" onClick={() => handleRetryDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                                              <RefreshCcw className="h-4 w-4" />
-                                              Reîncearcă indexarea
-                                            </Button>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <h3 className="text-base font-semibold text-slate-900">{document.titlu}</h3>
+                                            <StatusBadge className={getDocumentStatusClasses(document)}>{getDocumentStatusLabel(document)}</StatusBadge>
+                                          </div>
+                                          {currentFilename ? (
+                                            <div className="mt-1 flex items-center gap-1.5">
+                                              {previewUrl ? (
+                                                <a
+                                                  href={previewUrl}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  className={cn("text-sm font-medium truncate underline-offset-4 hover:underline", theme.linkColor)}
+                                                  title={currentFilename}
+                                                >
+                                                  📎 {currentFilename}
+                                                </a>
+                                              ) : (
+                                                <span className="text-sm text-slate-500 truncate" title={currentFilename}>📎 {currentFilename}</span>
+                                              )}
+                                            </div>
                                           ) : null}
-                                          <Button type="button" variant="outline" onClick={() => handleDeleteDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
-                                            <Trash2 className="h-4 w-4" />
-                                            Șterge
-                                          </Button>
+                                          {document.statusIndex === "ERONAT" && (
+                                            <p className="mt-1 text-xs text-amber-600 font-medium">⚠ Fișier stocat, dar neindexat în AI. Apasă "Reîncearcă indexarea" pentru conectarea cu serviciul RAG.</p>
+                                          )}
+                                        </div>
+                                        {canEdit ? (
+                                          <div className="flex shrink-0 items-center gap-2">
+                                            {canRetryIngest ? (
+                                              <Button type="button" variant="outline" size="sm" onClick={() => handleRetryDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-xl border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs gap-1.5">
+                                                <RefreshCcw className="h-3.5 w-3.5" />
+                                                Reîncearcă indexarea
+                                              </Button>
+                                            ) : null}
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => setEditingDocumentIds((c) => ({ ...c, [document.id]: !c[document.id] }))}
+                                              disabled={Boolean(activeAction)}
+                                              className={cn("rounded-xl text-xs gap-1.5", isEditing ? "border-slate-300 bg-slate-100 text-slate-700" : cn("bg-white hover:bg-white/80", theme.btnIconBorder, theme.iconText))}
+                                            >
+                                              {isEditing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+                                              {isEditing ? "Anulează" : "Editează"}
+                                            </Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDeleteDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs gap-1.5">
+                                              <Trash2 className="h-3.5 w-3.5" />
+                                              Șterge
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          document.urlDescarcare ? (
+                                            <a href={document.urlDescarcare} rel="noreferrer" className={cn("shrink-0 text-sm font-semibold underline-offset-4 hover:underline", theme.linkColor)}>
+                                              Descarcă
+                                            </a>
+                                          ) : null
+                                        )}
+                                      </div>
+
+                                      {/* Download link visible when can edit */}
+                                      {canEdit && document.urlDescarcare ? (
+                                        <div className="border-t border-[#f0eae3] px-4 py-2.5">
+                                          <a href={document.urlDescarcare} download={currentFilename || true} rel="noreferrer" className={cn("text-sm font-medium underline-offset-4 hover:underline", theme.linkColor)}>
+                                            ↓ Descarcă documentul
+                                          </a>
+                                        </div>
+                                      ) : null}
+
+                                      {/* Edit form — revealed only when editing */}
+                                      {canEdit && isEditing ? (
+                                        <div className="border-t border-[#e4d8cd] bg-[#faf6f1] p-4">
+                                          <p className="mb-3 text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Editare document</p>
+                                          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                                            <div className="space-y-1.5">
+                                              <Label htmlFor={`document-title-${document.id}`} className="text-xs font-semibold tracking-[0.14em] text-slate-600">TITLU</Label>
+                                              <Input
+                                                id={`document-title-${document.id}`}
+                                                value={draft.titlu ?? document.titlu ?? ""}
+                                                onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], titlu: event.target.value } }))}
+                                                className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                              />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                              <Label htmlFor={`document-file-${document.id}`} className="text-xs font-semibold tracking-[0.14em] text-slate-600">ÎNLOCUIEȘTE FIȘIERUL (OPȚIONAL)</Label>
+                                              <Input
+                                                id={`document-file-${document.id}`}
+                                                type="file"
+                                                ref={(element) => {
+                                                  documentFileInputRefs.current[document.id] = element
+                                                }}
+                                                onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], file: event.target.files?.[0] ?? null } }))}
+                                                className={cn("h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold focus-visible:ring-[#24385b]/10", theme.fileIconText)}
+                                              />
+                                            </div>
+                                            <Button
+                                              type="button"
+                                              onClick={async () => {
+                                                await handleUpdateDocument(document, week)
+                                                setEditingDocumentIds((c) => ({ ...c, [document.id]: false }))
+                                              }}
+                                              disabled={Boolean(activeAction)}
+                                              className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}
+                                            >
+                                              <Save className="h-4 w-4" />
+                                              {activeAction === `update-document-${document.id}` ? "Se salvează..." : "Salvează"}
+                                            </Button>
+                                          </div>
                                         </div>
                                       ) : null}
                                     </div>
-
-                                    {canEdit ? (
-                                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-                                        <div className="space-y-2">
-                                          <Label htmlFor={`document-title-${document.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU</Label>
-                                          <Input
-                                            id={`document-title-${document.id}`}
-                                            value={draft.titlu ?? document.titlu ?? ""}
-                                            onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], titlu: event.target.value } }))}
-                                            className="h-11 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                                          />
-                                        </div>
-                                        <div className="space-y-2">
-                                          <Label htmlFor={`document-file-${document.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER NOU OPȚIONAL</Label>
-                                          <Input
-                                            id={`document-file-${document.id}`}
-                                            type="file"
-                                            ref={(element) => {
-                                              documentFileInputRefs.current[document.id] = element
-                                            }}
-                                            onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], file: event.target.files?.[0] ?? null } }))}
-                                            className="h-11 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold file:text-[#4A5681] focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
-                                          />
-                                        </div>
-                                        <Button type="button" variant="outline" onClick={() => handleUpdateDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                                          <Save className="h-4 w-4" />
-                                          {activeAction === `update-document-${document.id}` ? "Se salvează..." : "Salvează"}
-                                        </Button>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </article>
-                              )
-                            })}
-                          </div>
-                        </CardContent>
+                                  </article>
+                                )
+                              })}
+                            </div>
+                          </CardContent>
                         ) : null}
                       </Card>
                     )
@@ -1072,7 +1166,7 @@ export default function CourseDetailPage() {
               <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
                 <CardHeader className="border-b border-[#eadfd4] px-6 py-6">
                   <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
-                    <Users className="h-5 w-5 text-[#4A5681]" />
+                    <Users className={cn("h-5 w-5", theme.iconText)} />
                     Studenți înscriși
                   </CardTitle>
                   <CardDescription>Total: {students.length} studenți.</CardDescription>
@@ -1086,7 +1180,7 @@ export default function CourseDetailPage() {
                   {students.map((student) => (
                     <article key={student.id ?? student.mail} className="flex flex-col gap-2 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-[#4A5681]">
+                        <div className={cn("flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-semibold", theme.studentInitialBg, theme.studentInitialText)}>
                           {String(student.prenume || student.mail || "S").charAt(0).toUpperCase()}{String(student.nume || "").charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -1102,34 +1196,34 @@ export default function CourseDetailPage() {
             ) : null}
 
             {activeTab === "profesor" ? (
-              <Card className="mx-auto w-full max-w-[25rem] overflow-hidden rounded-[1.65rem] border-[#d9e4f4] bg-white shadow-[0_18px_42px_rgba(24,49,83,0.16)]">
-                <CardContent className="grid min-h-[26rem] p-0 sm:min-h-[28rem]">
-                  <div className="relative flex min-h-[13rem] flex-col items-center justify-center overflow-hidden bg-[#183153] px-5 py-6 text-center sm:px-6">
-                    <div className="absolute -top-12 right-[-3rem] h-32 w-32 rounded-full bg-white/10 blur-sm" />
-                    <div className="absolute -bottom-14 left-[-3rem] h-36 w-36 rounded-full bg-[#496891]/18 blur-sm" />
-                    <div className="relative flex flex-col items-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white/24 bg-white/12 text-xl font-semibold text-white shadow-[0_12px_26px_rgba(12,27,48,0.22)] backdrop-blur-sm">
+              <Card className={cn("mx-auto w-full max-w-[25rem] overflow-hidden rounded-[1.65rem] border bg-white shadow-sm", theme.heroBorder)}>
+                <CardContent className="flex flex-col p-0">
+                  <div className={cn("relative flex overflow-hidden border-b px-5 py-4.5 text-left sm:px-6", theme.heroStatBg)}>
+                    <div className="relative flex items-center gap-3.5 min-w-0">
+                      <div className={cn("flex h-13 w-13 shrink-0 items-center justify-center rounded-[1.15rem] border text-lg font-bold shadow-xs", theme.heroBorder, theme.weekNumBg, theme.weekNumText)}>
                         {getInitials(professorName)}
                       </div>
-                      <p className="mt-3 text-xs font-semibold tracking-[0.22em] text-white/72 uppercase">Titular curs</p>
-                      <h3 className="mt-1.5 text-2xl font-semibold tracking-tight text-white">{professorName}</h3>
+                      <div className="min-w-0">
+                        <p className={cn("text-[10px] font-bold tracking-[0.22em] uppercase", theme.heroStatLabel)}>Titular curs</p>
+                        <h3 className={cn("mt-0.5 truncate text-lg font-bold tracking-tight", theme.heroStatText)}>{professorName}</h3>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex min-h-[13rem] flex-col justify-center gap-3 bg-white px-5 py-5 text-left sm:px-6 sm:py-6">
-                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#d9e4f4] bg-[#f4f8fd] px-3.5 py-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#e3edf9] text-xl" aria-hidden="true">📧</span>
+                  <div className="flex flex-col justify-center gap-3 bg-white px-5 py-5 text-left sm:px-6 sm:py-6">
+                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">📧</span>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-[#496891] uppercase">Email</p>
-                        <p className="truncate text-sm font-semibold text-[#183153] sm:text-base">{professorEmail}</p>
+                        <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Email</p>
+                        <p className="truncate text-sm font-semibold text-slate-800 sm:text-base">{professorEmail}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#d9e4f4] bg-[#f4f8fd] px-3.5 py-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#e3edf9] text-xl" aria-hidden="true">🎓</span>
+                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">🎓</span>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-[#496891] uppercase">Facultate</p>
-                        <p className="truncate text-sm font-semibold text-[#183153] sm:text-base">{professorFaculty}</p>
+                        <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Facultate</p>
+                        <p className="truncate text-sm font-semibold text-slate-800 sm:text-base">{professorFaculty}</p>
                       </div>
                     </div>
                   </div>
@@ -1144,7 +1238,7 @@ export default function CourseDetailPage() {
           <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
             <CardContent className="space-y-4 px-6 py-8 text-center text-slate-600">
               <p>Cursul cerut nu a putut fi găsit sau nu ai acces la el.</p>
-              <Button type="button" onClick={() => navigate("/courses")} className="rounded-2xl bg-[#4A5681] text-white hover:bg-[#3f4a72]">
+              <Button type="button" onClick={() => navigate("/courses")} className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
                 Înapoi la cursuri
               </Button>
             </CardContent>

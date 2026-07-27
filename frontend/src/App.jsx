@@ -674,22 +674,10 @@ function AdminUsersPage() {
       title="Utilizatori"
       description={`Total: ${usersLoading ? "..." : allUsers.length}. Cereri pending: ${usersLoading ? "..." : stateCounts.PENDING}.`}
       eyebrow="Akadion Admin"
-      heroClassName="relative overflow-hidden border-0 bg-linear-to-r from-[#c6e8c8] via-[#abdcb0] to-[#90cf99] shadow-[0_24px_60px_rgba(80,120,92,0.18)] before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/28 before:content-[''] after:absolute after:-bottom-16 after:left-[-4rem] after:h-60 after:w-60 after:rounded-full after:bg-white/16 after:content-['']"
-      heroEyebrowClassName="text-[#4e7d59]"
-      heroTitleClassName="text-[#244030]"
-      heroDescriptionClassName="text-[#486654]"
-      actions={
-        <Button
-          type="button"
-          variant="outline"
-          onClick={loadUsers}
-          disabled={usersLoading || Boolean(activeAction)}
-          className="rounded-2xl border-[#d9ccbe] bg-white"
-        >
-          <RefreshCcw className="h-4 w-4" />
-          Reîncarcă
-        </Button>
-      }
+      heroClassName="relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+      heroEyebrowClassName="text-white/72"
+      heroTitleClassName="text-white"
+      heroDescriptionClassName="text-white/84"
     >
       <div className="space-y-5">
         {pageError ? (

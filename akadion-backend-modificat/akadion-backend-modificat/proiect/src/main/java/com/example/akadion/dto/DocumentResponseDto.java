@@ -5,5 +5,6 @@ public record DocumentResponseDto(
         String titlu,
         String statusIndex,
         boolean activ,
+        String urlVizualizare,
         String urlDescarcare
 ) {}

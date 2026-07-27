@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -71,13 +72,38 @@ public class MinioStorageService {
         }
     }
 
+    public String getPresignedPreviewUrl(String key) {
+        return getPresignedUrl(key, contentDisposition("inline", key));
+    }
+
+    public String getPresignedDownloadUrl(String key) {
+        return getPresignedUrl(key, contentDisposition("attachment", key));
+    }
+
     public String getPresignedUrl(String key) {
+        return getPresignedDownloadUrl(key);
+    }
+
+    private String getPresignedUrl(String key, String contentDisposition) {
         try {
+            Map<String, String> reqParams = Map.of("response-content-disposition", contentDisposition);
             return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET).bucket(bucket).object(key)
-                    .expiry(1, TimeUnit.HOURS).build());
+                    .method(Method.GET)
+                    .bucket(bucket)
+                    .object(key)
+                    .extraQueryParams(reqParams)
+                    .expiry(1, TimeUnit.HOURS)
+                    .build());
         } catch (Exception e) {
             throw new MinioIntegrationException("Eroare la generarea URL-ului presemnat pentru " + key, e);
         }
+    }
+
+    private String contentDisposition(String dispositionType, String key) {
+        String filename = key.substring(key.lastIndexOf('/') + 1);
+        if (filename.length() > 37 && filename.charAt(8) == '-' && filename.charAt(13) == '-') {
+            filename = filename.substring(37);
+        }
+        return dispositionType + "; filename=\"" + filename.replace("\"", "_") + "\"";
     }
 }
