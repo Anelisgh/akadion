@@ -557,7 +557,7 @@ export default function CoursesPage() {
           </h2>
         </div>
       )}
-      <AkyChatWidget />
+      <AkyChatWidget enabled={true} courseId={null} />
     </AppShell>
   )
 }

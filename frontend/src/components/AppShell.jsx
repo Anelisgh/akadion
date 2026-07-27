@@ -86,10 +86,9 @@ function CourseTabsNav({ user, onNavClick }) {
           end
           onClick={onNavClick}
           className={({ isActive }) =>
-            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-              isActive
-                ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+              ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+              : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
             }`
           }
         >
@@ -104,10 +103,9 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/admin/users"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
@@ -118,10 +116,9 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/courses"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
@@ -170,7 +167,7 @@ function CourseTabsNav({ user, onNavClick }) {
   )
 }
 
-export default function AppShell({ title, description, eyebrow = "Akadion", actions, children, heroClassName, heroEyebrowClassName, heroTitleClassName, heroDescriptionClassName, heroContent, heroVisual, heroVisualClassName }) {
+export default function AppShell({ title, description, eyebrow = "Akadion", actions, children, heroClassName, heroEyebrowClassName, heroTitleClassName, heroDescriptionClassName, heroContent, heroVisual, heroVisualClassName, sideContent }) {
   const { user } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -286,35 +283,45 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
         ) : null}
       </header>
 
-      <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className={cn(
-          "mb-6 flex flex-col gap-4 rounded-[2rem] border border-[#e7d9c8] bg-[#fcf8f3]/92 px-5 py-5 shadow-[0_18px_48px_rgba(32,46,84,0.08)] sm:px-7 lg:flex-row lg:items-end lg:justify-between",
-          heroClassName,
-        )}>
-          {heroVisual ? (
-            <div className={cn("pointer-events-none absolute right-4 bottom-0 hidden h-full items-end justify-end sm:flex lg:right-8", heroVisualClassName)}>
-              {heroVisual}
+      <section className={cn("w-full py-6 lg:py-8", sideContent ? "px-0" : "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8")}>
+        <div className={cn(sideContent && "lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-5")}>
+          {sideContent ? (
+            <div className="mb-6 self-start px-4 sm:px-6 lg:mb-0 lg:px-0">
+              {sideContent}
             </div>
           ) : null}
 
-          <div className={cn("relative z-10", heroVisual ? "lg:max-w-[calc(100%-16rem)] xl:max-w-[calc(100%-20rem)]" : "")}>
-            <p className={cn("mb-2 text-xs font-semibold tracking-[0.22em] text-[#4A5681] uppercase", heroEyebrowClassName)}>{eyebrow}</p>
-            <h1 className={cn("text-3xl font-semibold tracking-tight text-[#24385b] sm:text-4xl", heroTitleClassName)}>{title}</h1>
-            {description ? <p className={cn("mt-3 max-w-3xl text-base leading-7 text-slate-600", heroDescriptionClassName)}>{description}</p> : null}
-            {heroContent ? <div className="mt-5">{heroContent}</div> : null}
+          <div className={cn("min-w-0", sideContent && "px-4 sm:px-6 lg:pr-8 lg:pl-0")}>
+            <div className={cn(
+              "mb-6 flex flex-col gap-4 rounded-[2rem] border border-[#e7d9c8] bg-[#fcf8f3]/92 px-5 py-5 shadow-[0_18px_48px_rgba(32,46,84,0.08)] sm:px-7 lg:flex-row lg:items-end lg:justify-between",
+              heroClassName,
+            )}>
+              {heroVisual ? (
+                <div className={cn("pointer-events-none absolute right-4 bottom-0 hidden h-full items-end justify-end sm:flex lg:right-8", heroVisualClassName)}>
+                  {heroVisual}
+                </div>
+              ) : null}
+
+              <div className={cn("relative z-10", heroVisual ? "lg:max-w-[calc(100%-16rem)] xl:max-w-[calc(100%-20rem)]" : "")}>
+                <p className={cn("mb-2 text-xs font-semibold tracking-[0.22em] text-[#4A5681] uppercase", heroEyebrowClassName)}>{eyebrow}</p>
+                <h1 className={cn("text-3xl font-semibold tracking-tight text-[#24385b] sm:text-4xl", heroTitleClassName)}>{title}</h1>
+                {description ? <p className={cn("mt-3 max-w-3xl text-base leading-7 text-slate-600", heroDescriptionClassName)}>{description}</p> : null}
+                {heroContent ? <div className="mt-5">{heroContent}</div> : null}
+              </div>
+              {actions ? <div className="relative z-10 flex flex-wrap gap-2 lg:justify-end">{actions}</div> : null}
+            </div>
+
+            {logoutError ? (
+              <Alert variant="destructive" className="mb-6 rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Logout indisponibil</AlertTitle>
+                <AlertDescription>{logoutError}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            {children}
           </div>
-          {actions ? <div className="relative z-10 flex flex-wrap gap-2 lg:justify-end">{actions}</div> : null}
         </div>
-
-        {logoutError ? (
-          <Alert variant="destructive" className="mb-6 rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Logout indisponibil</AlertTitle>
-            <AlertDescription>{logoutError}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {children}
       </section>
     </main>
   )

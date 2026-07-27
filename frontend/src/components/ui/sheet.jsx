@@ -33,7 +33,9 @@ function Sheet({ open, onOpenChange, children }) {
   return createPortal(children, document.body)
 }
 
-function SheetContent({ className, onOpenChange, children }) {
+function SheetContent({ className, onOpenChange, side = "right", children }) {
+  const isLeftSide = side === "left"
+
   return (
     <div className="fixed inset-0 z-50">
       <button
@@ -46,7 +48,10 @@ function SheetContent({ className, onOpenChange, children }) {
         role="dialog"
         aria-modal="true"
         className={cn(
-          "absolute inset-y-0 right-0 flex h-full w-full max-w-[26rem] flex-col border-l border-[#e4d8cd] bg-[#fffdfa] shadow-[-20px_0_60px_rgba(32,46,84,0.18)]",
+          "absolute inset-y-0 flex h-full w-full max-w-[26rem] flex-col bg-[#fffdfa]",
+          isLeftSide
+            ? "left-0 border-r border-[#e4d8cd] shadow-[20px_0_60px_rgba(32,46,84,0.18)]"
+            : "right-0 border-l border-[#e4d8cd] shadow-[-20px_0_60px_rgba(32,46,84,0.18)]",
           className,
         )}
       >

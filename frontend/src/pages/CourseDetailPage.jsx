@@ -1,10 +1,10 @@
 import {
   AlertCircle,
-  ArrowLeft,
   ChevronDown,
   CheckCircle2,
   FileText,
   Loader2,
+  Menu,
   Pencil,
   Plus,
   RefreshCcw,
@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react"
 import { useEffect, useEffectEvent, useRef, useState } from "react"
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import AppShell from "@/components/AppShell"
 import AkyChatWidget from "@/components/chat/AkyChatWidget"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -107,6 +107,10 @@ function extractFilename(url) {
   } catch {
     return ""
   }
+}
+
+function getDocumentHref(document) {
+  return document?.urlVizualizare || document?.urlDescarcare || ""
 }
 
 function getDocumentStatusClasses(document) {
@@ -206,11 +210,13 @@ export default function CourseDetailPage() {
   const [uploadDrafts, setUploadDrafts] = useState({})
   const [documentDrafts, setDocumentDrafts] = useState({})
   const [expandedWeekIds, setExpandedWeekIds] = useState({})
+  const [indexExpandedWeekIds, setIndexExpandedWeekIds] = useState({})
   const [pageLoading, setPageLoading] = useState(true)
   const [pageError, setPageError] = useState("")
   const [pageNotice, setPageNotice] = useState("")
   const [activeAction, setActiveAction] = useState("")
   const [activeTab, setActiveTab] = useState("saptamani")
+  const [courseIndexOpen, setCourseIndexOpen] = useState(false)
   const [courseEditorOpen, setCourseEditorOpen] = useState(false)
   const [newWeekOpen, setNewWeekOpen] = useState(false)
   const [editingDocumentIds, setEditingDocumentIds] = useState({})
@@ -237,6 +243,16 @@ export default function CourseDetailPage() {
       }
 
       return next
+    })
+  }, [weeks])
+
+  useEffect(() => {
+    setIndexExpandedWeekIds((current) => {
+      if (weeks.length === 0) {
+        return {}
+      }
+
+      return Object.fromEntries(weeks.map((week, index) => [week.id, current[week.id] ?? index === 0]))
     })
   }, [weeks])
 
@@ -649,11 +665,28 @@ export default function CourseDetailPage() {
     }))
   }
 
+  function toggleIndexWeekExpanded(weekId) {
+    setIndexExpandedWeekIds((current) => ({
+      ...current,
+      [weekId]: !current[weekId],
+    }))
+  }
+
+  function scrollToWeek(weekId) {
+    setActiveTab("saptamani")
+    setExpandedWeekIds((current) => ({ ...current, [weekId]: true }))
+    setCourseIndexOpen(false)
+
+    window.requestAnimationFrame(() => {
+      document.getElementById(`course-week-${weekId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
+
   const [selectedThemeKey, setSelectedThemeKey] = useState(() => {
     try {
       const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${courseId}`)
       if (COURSE_THEME_KEYS.has(key)) return key
-    } catch {}
+    } catch { }
     return "akadion"
   })
 
@@ -679,6 +712,119 @@ export default function CourseDetailPage() {
   const professorName = getProfessorName(course)
   const professorEmail = professorDetails?.mail || course?.profesorMail || "Email indisponibil"
   const professorFaculty = professorDetails?.facultate || "Facultate indisponibilă"
+  const totalCourseDocuments = weeks.reduce((total, week) => total + (documentsByWeek[week.id]?.length ?? 0), 0)
+  const courseIndexPanel = (
+    <aside
+      className="relative z-20 flex max-h-[70vh] w-full min-h-0 flex-col overflow-hidden rounded-[2rem] border border-[#e4d8cd] bg-linear-to-b from-[#f8fafc] via-[#fffdfa] to-[#fbf6f0] shadow-[18px_22px_54px_rgba(32,46,84,0.12)] lg:h-[calc(100vh-9rem)] lg:max-h-none lg:rounded-l-none lg:rounded-r-[2rem] lg:border-l-0"
+      aria-label="Cuprins curs"
+    >
+      <div className="flex items-start justify-between gap-4 border-b border-[#e4d8cd] px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold tracking-tight text-slate-900">Cuprins curs</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            {weeks.length} săptămâni · {totalCourseDocuments} documente
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCourseIndexOpen(false)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#e4d8cd] bg-white text-slate-500 transition hover:bg-[#f7efe6] hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#24385b]/20"
+          aria-label="Închide cuprins curs"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        {weeks.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-white/80 px-4 py-8 text-center text-sm text-slate-500">
+            Nu există săptămâni pentru acest curs.
+          </div>
+        ) : null}
+
+        <div className="space-y-3">
+          {weeks.map((week) => {
+            const documents = documentsByWeek[week.id] ?? []
+            const isIndexExpanded = indexExpandedWeekIds[week.id] ?? false
+
+            return (
+              <article key={week.id} className="overflow-hidden rounded-3xl border border-[#e4d8cd] bg-white shadow-[0_12px_30px_rgba(32,46,84,0.07)]">
+                <div className="flex items-center gap-2 px-3 py-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleIndexWeekExpanded(week.id)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-[#f7efe6] hover:text-slate-900"
+                    aria-expanded={isIndexExpanded}
+                    aria-label={`${isIndexExpanded ? "Închide" : "Deschide"} documentele săptămânii ${week.nrSaptamana}`}
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isIndexExpanded ? "rotate-180" : "-rotate-90"}`} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollToWeek(week.id)}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-[#f7efe6]"
+                  >
+                    <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-xs font-bold", theme.weekNumBg, theme.weekNumText)}>
+                      S{week.nrSaptamana}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-slate-900">Săptămâna {week.nrSaptamana}</span>
+                      <span className="block truncate text-xs font-medium text-slate-500">{documents.length} documente</span>
+                    </span>
+                  </button>
+                </div>
+
+                {isIndexExpanded ? (
+                  <div className="border-t border-[#eee4da] bg-[#fbf7f1]/78 px-3 py-3">
+                    {documents.length === 0 ? (
+                      <p className="rounded-2xl border border-dashed border-[#d8ccbf] bg-white/70 px-3 py-3 text-sm text-slate-500">
+                        Nu există documente în această săptămână.
+                      </p>
+                    ) : null}
+
+                    <div className="space-y-2">
+                      {documents.map((document) => {
+                        const documentHref = getDocumentHref(document)
+                        const filename = extractFilename(document.urlDescarcare)
+
+                        if (!documentHref) {
+                          return (
+                            <div key={document.id} className="flex items-start gap-2 rounded-2xl border border-[#e4d8cd] bg-white/70 px-3 py-3 text-sm text-slate-400">
+                              <FileText className="mt-0.5 h-4 w-4 shrink-0" />
+                              <span className="min-w-0 truncate">{document.titlu || filename || "Document indisponibil"}</span>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <a
+                            key={document.id}
+                            href={documentHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => setCourseIndexOpen(false)}
+                            className="flex items-start gap-2 rounded-2xl border border-[#e4d8cd] bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#cdbca9] hover:bg-white hover:text-slate-950"
+                            title={filename || document.titlu}
+                          >
+                            <FileText className={cn("mt-0.5 h-4 w-4 shrink-0", theme.fileIconText)} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate">{document.titlu || filename || "Document"}</span>
+                              {filename ? <span className="mt-0.5 block truncate text-xs font-medium text-slate-500">{filename}</span> : null}
+                            </span>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            )
+          })}
+        </div>
+      </div>
+    </aside>
+  )
 
   return (
     <AppShell
@@ -724,8 +870,30 @@ export default function CourseDetailPage() {
           Retragere
         </Button>
       ) : null}
+      sideContent={!pageLoading && course && courseIndexOpen ? courseIndexPanel : null}
     >
       <div className="space-y-6">
+        {!pageLoading && course ? (
+          <>
+            {!courseIndexOpen ? (
+              <button
+                type="button"
+                onClick={() => setCourseIndexOpen(true)}
+                className={cn(
+                  "group fixed left-0 top-28 z-20 flex h-14 w-14 items-center justify-center rounded-r-[1.75rem] border border-l-0 bg-white/95 text-slate-700 shadow-[12px_14px_34px_rgba(32,46,84,0.14)] transition hover:w-16 hover:bg-white hover:text-slate-950 focus-visible:w-16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#24385b]/20",
+                  theme.heroBorder,
+                )}
+                aria-label="Deschide cuprins curs"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="pointer-events-none absolute left-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                  Deschide cuprins curs
+                </span>
+              </button>
+            ) : null}
+          </>
+        ) : null}
+
         {pageError ? (
           <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
             <AlertCircle className="h-4 w-4" />
@@ -899,7 +1067,7 @@ export default function CourseDetailPage() {
                     const isExpanded = expandedWeekIds[week.id] ?? false
 
                     return (
-                      <Card key={week.id} className={`overflow-hidden rounded-[1.75rem] bg-white/94 shadow-[0_18px_48px_rgba(32,46,84,0.08)] ${isStudent && week.finalizata ? "border-emerald-200" : "border-[#e4d8cd]"}`}>
+                      <Card id={`course-week-${week.id}`} key={week.id} className={`scroll-mt-28 overflow-hidden rounded-[1.75rem] bg-white/94 shadow-[0_18px_48px_rgba(32,46,84,0.08)] ${isStudent && week.finalizata ? "border-emerald-200" : "border-[#e4d8cd]"}`}>
                         <div className="flex flex-col gap-4 border-b border-[#eadfd4] bg-[#fffdfa] px-5 py-5 sm:px-6">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <button
@@ -1230,7 +1398,11 @@ export default function CourseDetailPage() {
                 </CardContent>
               </Card>
             ) : null}
-            <AkyChatWidget />
+            <AkyChatWidget
+              courseId={course?.id}
+              courseTitle={course?.titlu || course?.denumire}
+              enabled={isStudent}
+            />
           </>
         ) : null}
 
