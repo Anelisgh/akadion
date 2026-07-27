@@ -1,0 +1,4 @@
+- Required verification after edits: `npm run build:theme-css`
+- Confirm compiled CSS exists at `keycloak-theme/university-theme/login/resources/css/theme.css`.
+- If deployment tooling changes, smoke-test `node .\\scripts\\deploy-keycloak-theme.mjs <temp-or-real-themes-dir>`.
+- Re-read `README.md` when build/deploy/manual Keycloak setup changes so docs stay aligned with the actual theme structure.

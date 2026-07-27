@@ -1,0 +1,6 @@
+- Install deps: `npm install`
+- Build final theme CSS: `npm run build:theme-css`
+- Watch CSS during template edits: `npm run watch:theme-css`
+- Deploy theme to a chosen Keycloak themes dir: `set KEYCLOAK_THEMES_DIR=C:\\keycloak-26.7.0\\themes && npm run deploy:keycloak-theme`
+- Alternate deploy with explicit path arg: `node .\\scripts\\deploy-keycloak-theme.mjs C:\\keycloak-26.7.0\\themes`
+- On Windows this repo currently has no `rtk` helper installed; use raw `npm`/`node` commands.

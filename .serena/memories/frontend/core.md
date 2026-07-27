@@ -1,0 +1,8 @@
+- Frontend module path: `frontend`.
+- Single shared Axios client in `src/api/axiosInstance.js`; must stay relative (`baseURL: ""`) with `withCredentials: true`, `xsrfCookieName: "XSRF-TOKEN"`, `xsrfHeaderName: "X-XSRF-TOKEN"`.
+- Vite dev server on `5173`; proxy must forward `/api`, `/oauth2`, `/login`, `/logout` to backend `http://localhost:8081` with `changeOrigin: true`.
+- Auth is BFF/session-based only: no tokens in `localStorage` or `sessionStorage`, no manual Bearer injection.
+- Auth state lives in `src/auth/AuthProvider.jsx` + `src/auth/useAuth.js`, backed by `GET /api/auth/me`.
+- Backend redirect target routes that must exist: `/`, `/complete-profile`, `/asteptare-aprobare`, `/cerere-respinsa`, `/cont-dezactivat`, `/admin/users`.
+- Admin page protection is dual: frontend route guard checks `user.rol === "ADMIN"`, backend still enforces `/api/admin/**`.
+- User responsibility boundary: default to frontend/UI work only in this project; avoid backend logic and endpoint changes unless explicitly requested.

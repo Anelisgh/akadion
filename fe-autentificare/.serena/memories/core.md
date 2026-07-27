@@ -1,0 +1,6 @@
+- Project purpose: standalone workspace for a native Keycloak login theme, not a React app.
+- Main deliverable: `keycloak-theme/university-theme`, intended to be copied into a Keycloak server `themes/` directory.
+- Theme scope: login/register/reset/info/error pages plus shared FreeMarker layout, i18n bundles, local SVG assets, Tailwind-built CSS, and small vanilla JS.
+- Entry docs: `README.md` explains install/build/deploy and required manual Keycloak User Profile setup.
+- Build artifacts live inside the theme so the folder stays self-contained after copy.
+- Related memories: stack/build details in `mem:tech_stack`; routine commands in `mem:suggested_commands`; done criteria in `mem:task_completion`.

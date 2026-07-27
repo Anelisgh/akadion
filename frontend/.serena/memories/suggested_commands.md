@@ -1,0 +1,6 @@
+- Install deps: `npm install`
+- Dev server: `npm run dev`
+- Production build check: `npm run build`
+- Lint: `npm run lint`
+- Preview production build: `npm run preview`
+- Windows shell in this workspace is PowerShell; use native commands or npm scripts directly if helper wrappers are unavailable.

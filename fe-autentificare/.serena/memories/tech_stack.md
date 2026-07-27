@@ -1,0 +1,7 @@
+- Package manager: npm.
+- Runtime/tooling: Node.js, npm scripts, Tailwind CSS v4 via `tailwindcss` + `@tailwindcss/cli`.
+- Templates: Keycloak FreeMarker (`.ftl`) under `keycloak-theme/university-theme/login`.
+- Theme inheritance: `theme.properties` uses `parent=keycloak.v2` and `import=common/keycloak`.
+- Styling flow: source file `login/resources/css/input.css` uses Tailwind v4 `@source` directives to scan `.ftl`; compiled output is `login/resources/css/theme.css`.
+- JS: one small browser script `login/resources/js/theme.js` for password visibility toggles.
+- Optional deployment helper: `scripts/deploy-keycloak-theme.mjs` copies the built theme to a target Keycloak themes directory.

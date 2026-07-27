@@ -1,0 +1,1156 @@
+import {
+  AlertCircle,
+  ArrowLeft,
+  ChevronDown,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Plus,
+  RefreshCcw,
+  Save,
+  Trash2,
+  Upload,
+  Users,
+} from "lucide-react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
+import AppShell from "@/components/AppShell"
+import AkyChatWidget from "@/components/chat/AkyChatWidget"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useAuth } from "@/auth/useAuth"
+import {
+  createCourseWeek,
+  completeStudentWeek,
+  deleteCourseWeek,
+  deleteWeekDocument,
+  getAdminCourse,
+  getAdminCourseProfessor,
+  getCourseErrorMessage,
+  getCourseFieldErrors,
+  getProfessorCourse,
+  getStudentCourseProfessor,
+  listAdminCourseStudents,
+  listAdminCourseWeeks,
+  listAdminWeekDocuments,
+  listCourseWeeks,
+  listProfessorCourseStudents,
+  listStudentAvailableCourses,
+  listStudentCourseWeeks,
+  listStudentCourses,
+  listStudentWeekDocuments,
+  listWeekDocuments,
+  retryDocumentIngest,
+  setProfessorCourseActive,
+  uncompleteStudentWeek,
+  updateCourseWeek,
+  updateProfessorCourse,
+  updateWeekDocument,
+  uploadWeekDocument,
+  withdrawStudentCourse,
+} from "@/lib/professorCourses"
+import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
+
+function formatDisplayDate(value) {
+  if (!value) {
+    return "-"
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return "-"
+  }
+
+  return new Intl.DateTimeFormat("ro-RO", { dateStyle: "medium" }).format(date)
+}
+
+function formatInputDate(value) {
+  return value ? String(value).slice(0, 10) : ""
+}
+
+function getProfessorName(course) {
+  return [course?.profesorPrenume, course?.profesorNume].filter(Boolean).join(" ") || course?.profesorMail || "Profesor nealocat"
+}
+
+function getInitials(value, fallback = "P") {
+  const initials = String(value || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+
+  return initials || fallback
+}
+
+function getStudentName(student) {
+  return [student?.prenume, student?.nume].filter(Boolean).join(" ") || student?.mail || "Student"
+}
+
+function getDocumentStatusClasses(document) {
+  if (document && !("statusIndex" in document) && !("activ" in document)) {
+    return "border-sky-200 bg-sky-50 text-sky-700"
+  }
+
+  if (!document.activ) {
+    return "border-slate-200 bg-slate-100 text-slate-600"
+  }
+
+  switch (String(document.statusIndex || "").toUpperCase()) {
+    case "PRELUAT":
+      return "border-amber-200 bg-amber-50 text-amber-700"
+    case "TRIMIS":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700"
+    case "ERONAT":
+      return "border-rose-200 bg-rose-50 text-rose-700"
+    default:
+      return "border-amber-200 bg-amber-50 text-amber-700"
+  }
+}
+
+function canRetryDocumentIngest(document) {
+  return document.retryable === true || String(document.statusIndex || "").toUpperCase() === "ERONAT"
+}
+
+function getDocumentStatusLabel(document) {
+  if (document && !("statusIndex" in document) && !("activ" in document)) {
+    return "Disponibil"
+  }
+
+  return document.statusIndex || (document.activ ? "Activ" : "Inactiv")
+}
+
+function normalizeStudentEnrolledCourse(course) {
+  return {
+    ...course,
+    inscris: true,
+    activ: true,
+  }
+}
+
+function normalizeStudentAvailableCourse(course) {
+  return {
+    ...course,
+    inscris: false,
+    activ: true,
+    nrSaptamaniCurente: course.nrSaptamani,
+  }
+}
+
+function StatusBadge({ children, className }) {
+  return (
+    <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+function DetailTab({ active, children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-2xl border px-5 py-2.5 text-sm font-semibold transition ${
+        active
+          ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
+          : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+export default function CourseDetailPage() {
+  const { courseId } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, refreshAuth } = useAuth()
+  const isProfessor = isProfessorUser(user)
+  const isAdmin = isAdminUser(user)
+  const isStudent = isStudentUser(user)
+  const canEdit = isProfessor
+  const canViewStudents = isProfessor || isAdmin
+  const [course, setCourse] = useState(location.state?.course ?? null)
+  const [professorDetails, setProfessorDetails] = useState(null)
+  const [students, setStudents] = useState([])
+  const [courseForm, setCourseForm] = useState({ denumire: "", descriere: "", dataInceput: "" })
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [weeks, setWeeks] = useState([])
+  const [weekDrafts, setWeekDrafts] = useState({})
+  const [newWeekDescription, setNewWeekDescription] = useState("")
+  const [documentsByWeek, setDocumentsByWeek] = useState({})
+  const [uploadDrafts, setUploadDrafts] = useState({})
+  const [documentDrafts, setDocumentDrafts] = useState({})
+  const [expandedWeekIds, setExpandedWeekIds] = useState({})
+  const [pageLoading, setPageLoading] = useState(true)
+  const [pageError, setPageError] = useState("")
+  const [pageNotice, setPageNotice] = useState("")
+  const [activeAction, setActiveAction] = useState("")
+  const [activeTab, setActiveTab] = useState("saptamani")
+  const [courseEditorOpen, setCourseEditorOpen] = useState(false)
+  const [newWeekOpen, setNewWeekOpen] = useState(false)
+  const uploadFileInputRefs = useRef({})
+  const documentFileInputRefs = useRef({})
+
+  useEffect(() => {
+    setExpandedWeekIds((current) => {
+      if (weeks.length === 0) {
+        return {}
+      }
+
+      const next = {}
+      let hasExpandedWeek = false
+
+      weeks.forEach((week, index) => {
+        const isExpanded = current[week.id] ?? index === 0
+        next[week.id] = isExpanded
+        hasExpandedWeek ||= isExpanded
+      })
+
+      if (!hasExpandedWeek) {
+        next[weeks[0].id] = true
+      }
+
+      return next
+    })
+  }, [weeks])
+
+  function getCourseApi() {
+    if (isAdmin) {
+      return getAdminCourse
+    }
+    return getProfessorCourse
+  }
+
+  function getWeeksApi() {
+    if (isAdmin) {
+      return listAdminCourseWeeks
+    }
+    if (isStudent) {
+      return listStudentCourseWeeks
+    }
+    return listCourseWeeks
+  }
+
+  function getDocumentsApi() {
+    if (isAdmin) {
+      return listAdminWeekDocuments
+    }
+    if (isStudent) {
+      return listStudentWeekDocuments
+    }
+    return listWeekDocuments
+  }
+
+  function getStudentsApi() {
+    return isAdmin ? listAdminCourseStudents : listProfessorCourseStudents
+  }
+
+  async function runCourseRequest(request, fallbackMessage) {
+    setPageError("")
+    setPageNotice("")
+
+    try {
+      return await request()
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await refreshAuth()
+      }
+      setPageError(getCourseErrorMessage(error, fallbackMessage))
+      throw error
+    }
+  }
+
+  async function loadCourseWorkflow() {
+    setPageLoading(true)
+    setPageError("")
+
+    try {
+      if (isStudent) {
+        const [enrolledCourses, availableCourses] = await Promise.all([
+          listStudentCourses(),
+          listStudentAvailableCourses(),
+        ])
+        const normalizedEnrolledCourses = enrolledCourses.map(normalizeStudentEnrolledCourse)
+        const normalizedAvailableCourses = availableCourses.map(normalizeStudentAvailableCourse)
+        const loadedCourse = normalizedEnrolledCourses.find((item) => String(item.id) === String(courseId))
+          ?? normalizedAvailableCourses.find((item) => String(item.id) === String(courseId))
+
+        if (!loadedCourse) {
+          throw new Error("Cursul cerut nu a putut fi găsit.")
+        }
+
+        const loadedProfessor = await getStudentCourseProfessor(courseId)
+        const loadedWeeks = loadedCourse.inscris ? await listStudentCourseWeeks(courseId) : []
+        const sortedWeeks = [...loadedWeeks].sort((first, second) => (first.nrSaptamana ?? 0) - (second.nrSaptamana ?? 0))
+        const documentsEntries = await Promise.all(
+          sortedWeeks.map(async (week) => [week.id, await listStudentWeekDocuments(week.id)]),
+        )
+
+        setCourse(loadedCourse)
+        setProfessorDetails(loadedProfessor)
+        setCourseForm({
+          denumire: loadedCourse?.denumire ?? "",
+          descriere: loadedCourse?.descriere ?? "",
+          dataInceput: formatInputDate(loadedCourse?.dataInceput),
+        })
+        setWeeks(sortedWeeks)
+        setStudents([])
+        setWeekDrafts(Object.fromEntries(sortedWeeks.map((week) => [week.id, week.descriere ?? ""])))
+        setDocumentsByWeek(Object.fromEntries(documentsEntries))
+        return
+      }
+
+      const [loadedCourse, loadedWeeks, loadedStudents, loadedProfessor] = await Promise.all([
+        getCourseApi()(courseId),
+        getWeeksApi()(courseId),
+        canViewStudents ? getStudentsApi()(courseId) : Promise.resolve([]),
+        isAdmin ? getAdminCourseProfessor(courseId) : Promise.resolve(null),
+      ])
+      const sortedWeeks = [...loadedWeeks].sort((first, second) => (first.nrSaptamana ?? 0) - (second.nrSaptamana ?? 0))
+      const documentsEntries = await Promise.all(
+        sortedWeeks.map(async (week) => [week.id, await getDocumentsApi()(week.id)]),
+      )
+
+      setCourse(loadedCourse)
+      setProfessorDetails(loadedProfessor)
+      setCourseForm({
+        denumire: loadedCourse?.denumire ?? "",
+        descriere: loadedCourse?.descriere ?? "",
+        dataInceput: formatInputDate(loadedCourse?.dataInceput),
+      })
+      setWeeks(sortedWeeks)
+      setStudents(loadedStudents)
+      setWeekDrafts(Object.fromEntries(sortedWeeks.map((week) => [week.id, week.descriere ?? ""])))
+      setDocumentsByWeek(Object.fromEntries(documentsEntries))
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await refreshAuth()
+      }
+      setPageError(getCourseErrorMessage(error, "Nu am putut încărca detaliile cursului."))
+    } finally {
+      setPageLoading(false)
+    }
+  }
+
+  const syncCourseWorkflow = useEffectEvent(async () => {
+    await loadCourseWorkflow()
+  })
+
+  useEffect(() => {
+    syncCourseWorkflow()
+  }, [courseId, isAdmin, isProfessor, isStudent])
+
+  function updateCourseField(field, value) {
+    setCourseForm((current) => ({ ...current, [field]: value }))
+    setFieldErrors((current) => ({ ...current, [field]: "" }))
+    setPageError("")
+    setPageNotice("")
+  }
+
+  async function handleSaveCourse(event) {
+    event.preventDefault()
+    const nextErrors = {}
+
+    if (!courseForm.denumire.trim()) {
+      nextErrors.denumire = "Denumirea cursului este obligatorie."
+    }
+
+    if (!courseForm.dataInceput) {
+      nextErrors.dataInceput = "Data de început este obligatorie."
+    }
+
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
+    setActiveAction("save-course")
+
+    try {
+      const updatedCourse = await runCourseRequest(
+        () => updateProfessorCourse(courseId, courseForm),
+        "Nu am putut actualiza cursul.",
+      )
+      setCourse((current) => ({ ...current, ...updatedCourse }))
+      setPageNotice("Cursul a fost actualizat.")
+    } catch (error) {
+      setFieldErrors((current) => ({ ...current, ...getCourseFieldErrors(error) }))
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleToggleActive() {
+    const nextActive = !course?.activ
+    setActiveAction("toggle-course")
+
+    try {
+      await runCourseRequest(
+        () => setProfessorCourseActive(courseId, nextActive),
+        nextActive ? "Nu am putut reactiva cursul." : "Nu am putut dezactiva cursul.",
+      )
+      setCourse((current) => ({ ...current, activ: nextActive }))
+      setPageNotice(nextActive ? "Cursul a fost reactivat." : "Cursul a fost dezactivat.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleWithdrawCourse() {
+    if (!window.confirm("Confirmi retragerea din acest curs?")) {
+      return
+    }
+
+    setActiveAction("withdraw-course")
+
+    try {
+      await runCourseRequest(
+        () => withdrawStudentCourse(courseId),
+        "Nu am putut finaliza retragerea din curs.",
+      )
+      navigate("/courses")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleToggleWeekCompletion(week) {
+    setActiveAction(`toggle-week-${week.id}`)
+
+    try {
+      await runCourseRequest(
+        () => week.finalizata ? uncompleteStudentWeek(week.id) : completeStudentWeek(week.id),
+        week.finalizata ? "Nu am putut demarca săptămâna." : "Nu am putut marca săptămâna ca finalizată.",
+      )
+      const refreshedWeeks = await listStudentCourseWeeks(courseId)
+      const sortedWeeks = [...refreshedWeeks].sort((first, second) => (first.nrSaptamana ?? 0) - (second.nrSaptamana ?? 0))
+      setWeeks(sortedWeeks)
+      setWeekDrafts(Object.fromEntries(sortedWeeks.map((currentWeek) => [currentWeek.id, currentWeek.descriere ?? ""])))
+      setCourse((current) => {
+        if (!current) {
+          return current
+        }
+
+        const totalWeeks = sortedWeeks.length
+        const completedWeeks = sortedWeeks.filter((currentWeek) => currentWeek.finalizata).length
+        return {
+          ...current,
+          procentajProgres: totalWeeks > 0 ? (completedWeeks / totalWeeks) * 100 : 0,
+        }
+      })
+      setPageNotice(week.finalizata ? "Săptămâna a fost demarcată." : "Săptămâna a fost marcată ca finalizată.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleCreateWeek(event) {
+    event.preventDefault()
+
+    if (newWeekDescription.length > 500) {
+      setPageError("Descrierea săptămânii poate avea maximum 500 de caractere.")
+      return
+    }
+
+    setActiveAction("create-week")
+
+    try {
+      await runCourseRequest(
+        () => createCourseWeek(courseId, { descriere: newWeekDescription }),
+        "Nu am putut adăuga săptămâna.",
+      )
+      setNewWeekDescription("")
+      setPageNotice("Săptămâna a fost adăugată.")
+      await loadCourseWorkflow()
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleUpdateWeek(week) {
+    const descriere = weekDrafts[week.id] ?? ""
+
+    if (descriere.length > 500) {
+      setPageError("Descrierea săptămânii poate avea maximum 500 de caractere.")
+      return
+    }
+
+    setActiveAction(`update-week-${week.id}`)
+
+    try {
+      await runCourseRequest(
+        () => updateCourseWeek(week.id, { descriere }),
+        "Nu am putut actualiza săptămâna.",
+      )
+      setWeeks((current) => current.map((currentWeek) => currentWeek.id === week.id ? { ...currentWeek, descriere } : currentWeek))
+      setPageNotice("Săptămâna a fost actualizată.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleDeleteWeek(week) {
+    if (!window.confirm(`Ștergi săptămâna ${week.nrSaptamana}? Documentele asociate pot fi eliminate.`)) {
+      return
+    }
+
+    setActiveAction(`delete-week-${week.id}`)
+
+    try {
+      await runCourseRequest(() => deleteCourseWeek(week.id), "Nu am putut șterge săptămâna.")
+      setPageNotice("Săptămâna a fost ștearsă.")
+      await loadCourseWorkflow()
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleUploadDocument(event, week) {
+    event.preventDefault()
+    const draft = uploadDrafts[week.id] ?? {}
+
+    if (!draft.titlu?.trim() || !draft.file) {
+      setPageError("Titlul și fișierul sunt obligatorii pentru upload.")
+      return
+    }
+
+    setActiveAction(`upload-document-${week.id}`)
+
+    try {
+      await runCourseRequest(
+        () => uploadWeekDocument(week.id, { titlu: draft.titlu, file: draft.file }),
+        "Nu am putut încărca documentul.",
+      )
+      const refreshedDocuments = await listWeekDocuments(week.id)
+      setUploadDrafts((current) => ({ ...current, [week.id]: { titlu: "", file: null } }))
+      if (uploadFileInputRefs.current[week.id]) {
+        uploadFileInputRefs.current[week.id].value = ""
+      }
+      setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
+      setPageNotice("Documentul a fost încărcat.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleUpdateDocument(document, week) {
+    const draft = documentDrafts[document.id] ?? {}
+    const titlu = draft.titlu ?? document.titlu ?? ""
+
+    if (!titlu.trim() && !draft.file) {
+      setPageError("Adaugă un titlu sau alege un fișier nou pentru document.")
+      return
+    }
+
+    setActiveAction(`update-document-${document.id}`)
+
+    try {
+      await runCourseRequest(
+        () => updateWeekDocument(document.id, { titlu, file: draft.file }),
+        "Nu am putut actualiza documentul.",
+      )
+      const refreshedDocuments = await listWeekDocuments(week.id)
+      setDocumentDrafts((current) => ({ ...current, [document.id]: { titlu, file: null } }))
+      if (documentFileInputRefs.current[document.id]) {
+        documentFileInputRefs.current[document.id].value = ""
+      }
+      setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
+      setPageNotice("Documentul a fost actualizat.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleDeleteDocument(document, week) {
+    if (!window.confirm(`Ștergi documentul "${document.titlu}"?`)) {
+      return
+    }
+
+    setActiveAction(`delete-document-${document.id}`)
+
+    try {
+      await runCourseRequest(() => deleteWeekDocument(document.id), "Nu am putut șterge documentul.")
+      const refreshedDocuments = await listWeekDocuments(week.id)
+      setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
+      setPageNotice("Documentul a fost șters.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  async function handleRetryDocument(document, week) {
+    if (!canRetryDocumentIngest(document)) {
+      setPageError("Indexarea poate fi repornită doar pentru documente eronate.")
+      return
+    }
+
+    setActiveAction(`retry-document-${document.id}`)
+
+    try {
+      await runCourseRequest(() => retryDocumentIngest(document.id), "Nu am putut reporni indexarea documentului.")
+      const refreshedDocuments = await listWeekDocuments(week.id)
+      setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
+      setPageNotice("Indexarea documentului a fost repornită.")
+    } catch {
+      // Error message is already mapped by runCourseRequest.
+    } finally {
+      setActiveAction("")
+    }
+  }
+
+  function toggleWeekExpanded(weekId) {
+    setExpandedWeekIds((current) => ({
+      ...current,
+      [weekId]: !current[weekId],
+    }))
+  }
+
+  const lastWeekNumber = weeks.reduce((highest, week) => Math.max(highest, week.nrSaptamana ?? 0), 0)
+  const tabs = ["saptamani"]
+  if (canViewStudents) {
+    tabs.push("studenti")
+  }
+  if (isAdmin || isStudent) {
+    tabs.push("profesor")
+  }
+  const professorName = getProfessorName(course)
+  const professorEmail = professorDetails?.mail || course?.profesorMail || "Email indisponibil"
+  const professorFaculty = professorDetails?.facultate || "Facultate indisponibilă"
+
+  return (
+    <AppShell
+      title={course?.denumire || "Detalii curs"}
+      description={course ? course.descriere || `Începe la ${formatDisplayDate(course.dataInceput)}.` : "Se încarcă datele cursului."}
+      eyebrow={isAdmin ? "Admin" : isStudent ? "Student" : "Profesor"}
+      heroClassName="relative overflow-hidden border-0 bg-linear-to-r from-[#4e6f91] via-[#476f85] to-[#7d705f] shadow-[0_24px_60px_rgba(53,86,117,0.22)] before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/12 before:content-[''] after:absolute after:-bottom-16 after:left-[-4rem] after:h-60 after:w-60 after:rounded-full after:bg-white/8 after:content-['']"
+      heroEyebrowClassName="text-white/78"
+      heroTitleClassName="text-white"
+      heroDescriptionClassName="text-white/80"
+      heroContent={course ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
+            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Status</p>
+            <p className="mt-1 text-lg font-semibold">{course.activ ? "Activ" : "Inactiv"}</p>
+          </div>
+          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
+            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Perioada</p>
+            <p className="mt-1 text-sm font-semibold">{formatDisplayDate(course.dataInceput)} - {formatDisplayDate(course.dataSfarsit)}</p>
+          </div>
+          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
+            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Săptămâni</p>
+            <p className="mt-1 text-lg font-semibold">{weeks.length}</p>
+          </div>
+          <div className="rounded-[1.35rem] border border-white/18 bg-white/14 px-4 py-3 text-white backdrop-blur-sm">
+            <p className="text-xs font-semibold tracking-[0.16em] text-white/70 uppercase">Profesor</p>
+            <p className="mt-1 text-sm font-semibold">{getProfessorName(course)}</p>
+          </div>
+        </div>
+      ) : null}
+      actions={(
+        <>
+          <Button asChild variant="outline" className="rounded-2xl border-white/30 bg-white/90 text-[#24385b] hover:bg-white">
+            <Link to="/courses">
+              <ArrowLeft className="h-4 w-4" />
+              Înapoi
+            </Link>
+          </Button>
+          <Button type="button" variant="outline" onClick={loadCourseWorkflow} disabled={pageLoading || Boolean(activeAction)} className="rounded-2xl border-white/30 bg-white/90 text-[#24385b] hover:bg-white">
+            <RefreshCcw className="h-4 w-4" />
+            Reîncarcă
+          </Button>
+          {isStudent && course?.inscris ? (
+            <Button type="button" variant="outline" onClick={handleWithdrawCourse} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-white/90 text-rose-700 hover:bg-white">
+              <Trash2 className="h-4 w-4" />
+              Retragere
+            </Button>
+          ) : null}
+        </>
+      )}
+    >
+      <div className="space-y-6">
+        {pageError ? (
+          <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Eroare</AlertTitle>
+            <AlertDescription>{pageError}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {pageNotice ? (
+          <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
+            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+            <AlertTitle>Actualizare reușită</AlertTitle>
+            <AlertDescription className="text-emerald-800">{pageNotice}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {pageLoading ? (
+          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+            <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-600">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Se încarcă fluxul cursului...
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {!pageLoading && course ? (
+          <>
+            {canEdit ? (
+              <Card className="gap-0 overflow-hidden rounded-[1.75rem] border-[#e4d8cd] bg-white/92 py-0 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+                <button
+                  type="button"
+                  onClick={() => setCourseEditorOpen((currentValue) => !currentValue)}
+                  className="flex w-full flex-col gap-3 px-5 py-4 text-left transition hover:bg-[#fbf6f0] sm:flex-row sm:items-center sm:justify-between sm:px-6"
+                  aria-expanded={courseEditorOpen}
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CardTitle className="text-lg text-slate-900">Editare curs</CardTitle>
+                      <StatusBadge className={course.activ ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}>
+                        {course.activ ? "Activ" : "Inactiv"}
+                      </StatusBadge>
+                    </div>
+                    <CardDescription className="mt-1">Doar profesorul proprietar poate modifica datele cursului.</CardDescription>
+                  </div>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] text-[#315c7d]">
+                    <ChevronDown className={`h-5 w-5 transition-transform ${courseEditorOpen ? "rotate-180" : ""}`} />
+                  </span>
+                </button>
+                {courseEditorOpen ? (
+                <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
+                  <form className="grid gap-5 lg:grid-cols-[1fr_220px]" onSubmit={handleSaveCourse}>
+                    <div className="space-y-2.5">
+                      <Label htmlFor="course-name" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DENUMIRE *</Label>
+                      <Input
+                        id="course-name"
+                        value={courseForm.denumire}
+                        onChange={(event) => updateCourseField("denumire", event.target.value)}
+                        className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      />
+                      {fieldErrors.denumire ? <p className="text-sm text-rose-600">{fieldErrors.denumire}</p> : null}
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <Label htmlFor="course-start" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DATA ÎNCEPUT *</Label>
+                      <Input
+                        id="course-start"
+                        type="date"
+                        value={courseForm.dataInceput}
+                        onChange={(event) => updateCourseField("dataInceput", event.target.value)}
+                        className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      />
+                      {fieldErrors.dataInceput ? <p className="text-sm text-rose-600">{fieldErrors.dataInceput}</p> : null}
+                    </div>
+
+                    <div className="space-y-2.5 lg:col-span-2">
+                      <Label htmlFor="course-description" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">DESCRIERE</Label>
+                      <textarea
+                        id="course-description"
+                        value={courseForm.descriere}
+                        onChange={(event) => updateCourseField("descriere", event.target.value)}
+                        className="min-h-28 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                      />
+                      {fieldErrors.descriere ? <p className="text-sm text-rose-600">{fieldErrors.descriere}</p> : null}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 lg:col-span-2">
+                      <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#4A5681] px-5 text-white hover:bg-[#3f4a72]">
+                        <Save className="h-4 w-4" />
+                        {activeAction === "save-course" ? "Se salvează..." : "Salvează"}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={handleToggleActive} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                        {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+                ) : null}
+              </Card>
+            ) : null}
+
+            <div className="flex w-fit max-w-full flex-wrap gap-2 rounded-[1.6rem] border border-[#e4d8cd] bg-white/74 p-2 shadow-[0_14px_34px_rgba(32,46,84,0.06)]">
+              {tabs.map((tab) => (
+                <DetailTab key={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)}>
+                  {tab === "saptamani" ? "Săptămâni" : tab === "studenti" ? "Studenți" : "Profesor"}
+                </DetailTab>
+              ))}
+            </div>
+
+            {activeTab === "saptamani" ? (
+              <div className="space-y-6">
+                {canEdit ? (
+                  <Card className="gap-0 overflow-hidden rounded-[1.75rem] border-[#e4d8cd] bg-white/92 py-0 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+                    <button
+                      type="button"
+                      onClick={() => setNewWeekOpen((currentValue) => !currentValue)}
+                      className="flex w-full flex-col gap-3 px-5 py-4 text-left transition hover:bg-[#fbf6f0] sm:flex-row sm:items-center sm:justify-between sm:px-6"
+                      aria-expanded={newWeekOpen}
+                    >
+                      <div className="min-w-0">
+                        <CardTitle className="text-lg text-slate-900">Săptămână nouă</CardTitle>
+                        <CardDescription className="mt-1">Adaugă conținutul pentru următoarea săptămână a cursului.</CardDescription>
+                      </div>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] text-[#315c7d]">
+                        <ChevronDown className={`h-5 w-5 transition-transform ${newWeekOpen ? "rotate-180" : ""}`} />
+                      </span>
+                    </button>
+                    {newWeekOpen ? (
+                    <CardContent className="border-t border-[#eadfd4] px-5 py-5 sm:px-6 sm:py-6">
+                      <form className="space-y-4" onSubmit={handleCreateWeek}>
+                        <textarea
+                          value={newWeekDescription}
+                          onChange={(event) => setNewWeekDescription(event.target.value)}
+                          placeholder="Descrierea săptămânii"
+                          className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-[#f7efe6] px-4 py-3 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                        />
+                        <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#3f698a] text-white hover:bg-[#355b79]">
+                          <Plus className="h-4 w-4" />
+                          {activeAction === "create-week" ? "Se adaugă..." : "Adaugă săptămâna"}
+                        </Button>
+                      </form>
+                    </CardContent>
+                    ) : null}
+                  </Card>
+                ) : null}
+
+                <div className="rounded-[1.75rem] border border-[#e4d8cd] bg-[#fcf8f3]/92 px-5 py-5 shadow-[0_14px_34px_rgba(32,46,84,0.05)] sm:px-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.18em] text-[#5d7094] uppercase">Conținut curs</p>
+                      <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#24385b]">Săptămâni și documente</h2>
+                    </div>
+                    <p className="text-sm font-medium text-slate-500">Total: {weeks.length} săptămâni</p>
+                  </div>
+                </div>
+
+                {weeks.length === 0 ? (
+                  <Card className="rounded-[1.75rem] border-dashed border-[#d8ccbf] bg-[#fbf6f0]">
+                    <CardContent className="flex flex-col items-center gap-3 px-6 py-10 text-center text-slate-500">
+                      <FileText className="h-8 w-8 text-[#4A5681]" />
+                      <div>
+                        <p className="font-semibold text-slate-800">Nu există săptămâni pentru acest curs.</p>
+                        <p className="mt-1 text-sm">Conținutul va apărea aici după ce este adăugat.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
+
+                <div className="space-y-5">
+                  {weeks.map((week) => {
+                    const documents = documentsByWeek[week.id] ?? []
+                    const isExpanded = expandedWeekIds[week.id] ?? false
+
+                    return (
+                      <Card key={week.id} className={`overflow-hidden rounded-[1.75rem] bg-white/94 shadow-[0_18px_48px_rgba(32,46,84,0.08)] ${isStudent && week.finalizata ? "border-emerald-200" : "border-[#e4d8cd]"}`}>
+                        <div className="flex flex-col gap-4 border-b border-[#eadfd4] bg-[#fffdfa] px-5 py-5 sm:px-6">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <button
+                              type="button"
+                              onClick={() => toggleWeekExpanded(week.id)}
+                              className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                            >
+                              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${isStudent && week.finalizata ? "bg-emerald-100 text-emerald-700" : "bg-[#e7f1fb] text-[#315c7d]"}`}>
+                                S{week.nrSaptamana}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="text-xl font-semibold text-slate-900">Săptămâna {week.nrSaptamana}</h3>
+                                  {isStudent && week.finalizata ? (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                      Finalizată
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
+                                  {week.descriere || "Fără descriere pentru această săptămână."}
+                                </p>
+                              </div>
+                            </button>
+
+                            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:pl-4">
+                              <div className="text-right text-sm text-slate-500">
+                                <p>{documents.length} documente{isStudent ? ` • ${week.finalizata ? "Finalizată" : "În progres"}` : ""}</p>
+                              </div>
+                              {canEdit && week.nrSaptamana === lastWeekNumber ? (
+                                <Button type="button" variant="outline" onClick={() => handleDeleteWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
+                                  <Trash2 className="h-4 w-4" />
+                                  Șterge
+                                </Button>
+                              ) : null}
+                              {isStudent ? (
+                                <Button type="button" variant="outline" onClick={() => handleToggleWeekCompletion(week)} disabled={Boolean(activeAction) || !course?.inscris} className="rounded-2xl border-[#d9ccbe] bg-white text-[#24385b]">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  {activeAction === `toggle-week-${week.id}` ? "Se actualizează..." : week.finalizata ? "Marchează neparcursă" : "Marchează finalizată"}
+                                </Button>
+                              ) : null}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => toggleWeekExpanded(week.id)}
+                                className="h-11 w-11 rounded-2xl border border-[#d9e4f4] bg-[#f4f8fd] p-0 text-[#315c7d] hover:bg-[#e9f2fb]"
+                              >
+                                <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {isExpanded ? (
+                        <CardContent className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
+                          {canEdit ? (
+                            <div className="space-y-3 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4">
+                              <div>
+                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Descriere săptămână</p>
+                                <p className="mt-1 text-sm text-slate-500">Actualizează pe scurt ce acoperă această etapă.</p>
+                              </div>
+                              <textarea
+                                value={weekDrafts[week.id] ?? ""}
+                                onChange={(event) => setWeekDrafts((current) => ({ ...current, [week.id]: event.target.value }))}
+                                className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-white px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
+                              />
+                              <Button type="button" variant="outline" onClick={() => handleUpdateWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                                <Save className="h-4 w-4" />
+                                {activeAction === `update-week-${week.id}` ? "Se salvează..." : "Salvează săptămâna"}
+                              </Button>
+                            </div>
+                          ) : null}
+
+                          {canEdit ? (
+                            <form className="space-y-4 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] p-4" onSubmit={(event) => handleUploadDocument(event, week)}>
+                              <div>
+                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Document nou</p>
+                                <p className="mt-1 text-sm text-slate-500">Încarcă materiale pentru această săptămână.</p>
+                              </div>
+                              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`upload-title-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU DOCUMENT</Label>
+                                  <Input
+                                    id={`upload-title-${week.id}`}
+                                    value={uploadDrafts[week.id]?.titlu ?? ""}
+                                    onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], titlu: event.target.value } }))}
+                                    className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`upload-file-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER</Label>
+                                  <Input
+                                    id={`upload-file-${week.id}`}
+                                    type="file"
+                                    ref={(element) => {
+                                      uploadFileInputRefs.current[week.id] = element
+                                    }}
+                                    onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], file: event.target.files?.[0] ?? null } }))}
+                                    className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold file:text-[#4A5681] focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                  />
+                                </div>
+                                <Button type="submit" disabled={Boolean(activeAction)} className="rounded-2xl bg-[#3f698a] text-white hover:bg-[#355b79]">
+                                  <Upload className="h-4 w-4" />
+                                  {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Upload"}
+                                </Button>
+                              </div>
+                            </form>
+                          ) : null}
+
+                          <div className="space-y-3">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                              <div>
+                                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Documente</p>
+                                <p className="text-sm text-slate-500">Materialele disponibile pentru săptămâna {week.nrSaptamana}.</p>
+                              </div>
+                              <span className="text-sm font-medium text-slate-500">{documents.length} documente</span>
+                            </div>
+
+                            {documents.length === 0 ? (
+                              <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-[#fbf6f0] px-5 py-7 text-center text-sm text-slate-500">
+                                Nu există documente în această săptămână.
+                              </div>
+                            ) : null}
+
+                            {documents.map((document) => {
+                              const draft = documentDrafts[document.id] ?? {}
+                              const canRetryIngest = canEdit && canRetryDocumentIngest(document)
+
+                              return (
+                                <article key={document.id} className="rounded-3xl border border-[#e4d8cd] bg-white p-4">
+                                  <div className="flex flex-col gap-4">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                      <div className="min-w-0 space-y-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <FileText className="h-5 w-5 text-[#4A5681]" />
+                                          <h3 className="text-lg font-semibold text-slate-900">{document.titlu}</h3>
+                                          <StatusBadge className={getDocumentStatusClasses(document)}>{getDocumentStatusLabel(document)}</StatusBadge>
+                                        </div>
+                                        {document.urlDescarcare ? (
+                                          <a href={document.urlDescarcare} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#3f698a] underline-offset-4 hover:underline">
+                                            Descarcă documentul
+                                          </a>
+                                        ) : null}
+                                      </div>
+                                      {canEdit ? (
+                                        <div className="flex flex-wrap gap-2">
+                                          {canRetryIngest ? (
+                                            <Button type="button" variant="outline" onClick={() => handleRetryDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                                              <RefreshCcw className="h-4 w-4" />
+                                              Reîncearcă indexarea
+                                            </Button>
+                                          ) : null}
+                                          <Button type="button" variant="outline" onClick={() => handleDeleteDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
+                                            <Trash2 className="h-4 w-4" />
+                                            Șterge
+                                          </Button>
+                                        </div>
+                                      ) : null}
+                                    </div>
+
+                                    {canEdit ? (
+                                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                                        <div className="space-y-2">
+                                          <Label htmlFor={`document-title-${document.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU</Label>
+                                          <Input
+                                            id={`document-title-${document.id}`}
+                                            value={draft.titlu ?? document.titlu ?? ""}
+                                            onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], titlu: event.target.value } }))}
+                                            className="h-11 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label htmlFor={`document-file-${document.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER NOU OPȚIONAL</Label>
+                                          <Input
+                                            id={`document-file-${document.id}`}
+                                            type="file"
+                                            ref={(element) => {
+                                              documentFileInputRefs.current[document.id] = element
+                                            }}
+                                            onChange={(event) => setDocumentDrafts((current) => ({ ...current, [document.id]: { ...current[document.id], file: event.target.files?.[0] ?? null } }))}
+                                            className="h-11 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold file:text-[#4A5681] focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                          />
+                                        </div>
+                                        <Button type="button" variant="outline" onClick={() => handleUpdateDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
+                                          <Save className="h-4 w-4" />
+                                          {activeAction === `update-document-${document.id}` ? "Se salvează..." : "Salvează"}
+                                        </Button>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </article>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                        ) : null}
+                      </Card>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === "studenti" ? (
+              <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+                <CardHeader className="border-b border-[#eadfd4] px-6 py-6">
+                  <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
+                    <Users className="h-5 w-5 text-[#4A5681]" />
+                    Studenți înscriși
+                  </CardTitle>
+                  <CardDescription>Total: {students.length} studenți.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 px-6 py-6">
+                  {students.length === 0 ? (
+                    <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-[#fbf6f0] px-5 py-8 text-center text-sm text-slate-500">
+                      Nu există studenți înscriși la acest curs.
+                    </div>
+                  ) : null}
+                  {students.map((student) => (
+                    <article key={student.id ?? student.mail} className="flex flex-col gap-2 rounded-3xl border border-[#e4d8cd] bg-[#fbf6f0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-[#4A5681]">
+                          {String(student.prenume || student.mail || "S").charAt(0).toUpperCase()}{String(student.nume || "").charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-slate-900">{getStudentName(student)}</h3>
+                          <p className="text-sm text-slate-500">{student.mail || "-"}</p>
+                          {student.facultate ? <p className="text-sm text-slate-500">{student.facultate}</p> : null}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {activeTab === "profesor" ? (
+              <Card className="mx-auto w-full max-w-[25rem] overflow-hidden rounded-[1.65rem] border-[#d9e4f4] bg-white shadow-[0_18px_42px_rgba(24,49,83,0.16)]">
+                <CardContent className="grid min-h-[26rem] p-0 sm:min-h-[28rem]">
+                  <div className="relative flex min-h-[13rem] flex-col items-center justify-center overflow-hidden bg-[#183153] px-5 py-6 text-center sm:px-6">
+                    <div className="absolute -top-12 right-[-3rem] h-32 w-32 rounded-full bg-white/10 blur-sm" />
+                    <div className="absolute -bottom-14 left-[-3rem] h-36 w-36 rounded-full bg-[#496891]/18 blur-sm" />
+                    <div className="relative flex flex-col items-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white/24 bg-white/12 text-xl font-semibold text-white shadow-[0_12px_26px_rgba(12,27,48,0.22)] backdrop-blur-sm">
+                        {getInitials(professorName)}
+                      </div>
+                      <p className="mt-3 text-xs font-semibold tracking-[0.22em] text-white/72 uppercase">Titular curs</p>
+                      <h3 className="mt-1.5 text-2xl font-semibold tracking-tight text-white">{professorName}</h3>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[13rem] flex-col justify-center gap-3 bg-white px-5 py-5 text-left sm:px-6 sm:py-6">
+                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#d9e4f4] bg-[#f4f8fd] px-3.5 py-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#e3edf9] text-xl" aria-hidden="true">📧</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold tracking-[0.16em] text-[#496891] uppercase">Email</p>
+                        <p className="truncate text-sm font-semibold text-[#183153] sm:text-base">{professorEmail}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#d9e4f4] bg-[#f4f8fd] px-3.5 py-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#e3edf9] text-xl" aria-hidden="true">🎓</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold tracking-[0.16em] text-[#496891] uppercase">Facultate</p>
+                        <p className="truncate text-sm font-semibold text-[#183153] sm:text-base">{professorFaculty}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+            <AkyChatWidget />
+          </>
+        ) : null}
+
+        {!pageLoading && !course ? (
+          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+            <CardContent className="space-y-4 px-6 py-8 text-center text-slate-600">
+              <p>Cursul cerut nu a putut fi găsit sau nu ai acces la el.</p>
+              <Button type="button" onClick={() => navigate("/courses")} className="rounded-2xl bg-[#4A5681] text-white hover:bg-[#3f4a72]">
+                Înapoi la cursuri
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
+    </AppShell>
+  )
+}

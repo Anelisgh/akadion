@@ -1,0 +1,7 @@
+- React 19 + Vite 8, JavaScript with JSX (`type: module`).
+- Styling: Tailwind CSS v4 via `@tailwindcss/vite`, shadcn CSS import, Geist Variable font imported globally.
+- UI libs: shadcn/ui primitives, Radix UI, Lucide React.
+- Networking: Axios instance in `src/api/axiosInstance.js`.
+- Routing: `react-router-dom` v7.
+- Lint: `oxlint` via `npm run lint`.
+- Build: `vite build` via `npm run build`.

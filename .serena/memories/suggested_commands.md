@@ -1,0 +1,5 @@
+- Backend tests: `.\\mvnw.cmd clean test` in `akadion-backend-modificat/akadion-backend-modificat/proiect`.
+- Backend build: `.\\mvnw.cmd clean package -DskipTests` in `akadion-backend-modificat/akadion-backend-modificat/proiect`.
+- Frontend lint: `npm.cmd run lint` in `frontend`.
+- Frontend build: `npm.cmd run build` in `frontend`.
+- Local helpers from workspace root: `pwsh -File scripts/start-postgres.ps1`, `pwsh -File scripts/start-backend.ps1`, `pwsh -File scripts/start-frontend.ps1`, `pwsh -File scripts/check-local-services.ps1`.

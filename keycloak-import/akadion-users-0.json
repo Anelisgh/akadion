@@ -1,0 +1,39 @@
+{
+  "realm" : "akadion",
+  "users" : [ {
+    "id" : "5186b9ef-a846-45b6-b640-6ab114fb8dfa",
+    "username" : "admin@akadion.com",
+    "email" : "admin@akadion.com",
+    "emailVerified" : true,
+    "enabled" : true,
+    "createdTimestamp" : 1783940865411,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "e402b5f5-de32-42f9-bab3-99c933f94c6c",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1783940887715,
+      "secretData" : "{\"value\":\"iqa+n3uIHsS/RZcRDGTfF3YR+hGxaA5/aDE9gfRLvKg=\",\"salt\":\"hNQkt/PiSXo3oz4vUW0jZg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-akadion" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "73fe4048-81b4-434e-b093-cb9a79febb28",
+    "username" : "service-account-backend-admin-api",
+    "emailVerified" : false,
+    "enabled" : true,
+    "createdTimestamp" : 1783940493836,
+    "totp" : false,
+    "serviceAccountClientId" : "backend-admin-api",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-akadion" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}

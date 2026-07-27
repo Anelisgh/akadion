@@ -1,0 +1,9 @@
+- Backend module path: `akadion-backend-modificat/akadion-backend-modificat/proiect`.
+- Spring Boot 4.1 / Java 21 / MVC app using PostgreSQL, Flyway, Spring Security OAuth2 client, Keycloak BFF session flow.
+- Local config invariants: DB `akadion`, user `myuser`, password via `DB_PASSWORD`; Keycloak secrets via `KEYCLOAK_BACKEND_LOGIN_SECRET` and `KEYCLOAK_ADMIN_API_SECRET`; local realm must be `Akadion` (capital A).
+- OAuth registrations expected locally: `keycloak` for normal login, `keycloak-register` for native register redirect, `keycloak-admin` for service-account admin API.
+- `SecurityConfig` intentionally returns 401 for unauthenticated `/api/**`, but keeps OAuth browser redirects for non-API requests; logout uses OIDC client-initiated logout and deletes local cookies.
+- `OAuth2ClientConfig` must provide both `OAuth2AuthorizedClientManager` and `RestClient.Builder` beans; `KeycloakAdminService` depends on the latter.
+- `compose.yaml` contains only PostgreSQL; local Docker Compose auto-start is disabled through local profile/example config, not globally.
+- Flyway history already includes Java migration `V2__alter_cursuri_saptamani`; new SQL migrations must continue from `V3+` rather than reusing `V2`.
+- Non-destructive DB verification script: top-level `scripts/check-admin.sql`.

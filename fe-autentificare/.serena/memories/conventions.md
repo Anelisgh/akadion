@@ -1,0 +1,6 @@
+- Keep the React app separate; this workspace is for a portable Keycloak theme only.
+- Prefer minimal overrides: override only the Keycloak login theme files actually needed.
+- Preserve native Keycloak behavior for form actions, hidden fields, messages, redirects, password handling, and User Profile rendering.
+- Use local assets only; no CDN scripts/styles.
+- Use Tailwind utilities/components plus CSS custom properties for shadcn-like styling; generated CSS must be committed/copied with the theme.
+- Custom registration attributes are `user.attributes.requestedRole` and `user.attributes.faculty`; never expose/administer an Admin role from the registration form.

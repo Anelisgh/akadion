@@ -1,0 +1,3 @@
+- For frontend coding tasks, run `npm run build` and `npm run lint` from project root.
+- Expect current lint baseline to possibly include warnings from generated shadcn files; distinguish pre-existing warnings from task regressions.
+- If routes or styling changed, also sanity-check that `src/App.jsx` routes still include existing pages and `CompleteProfilePage` remains untouched in behavior.

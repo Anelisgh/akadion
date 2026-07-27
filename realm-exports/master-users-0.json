@@ -1,0 +1,47 @@
+{
+  "realm" : "master",
+  "users" : [ {
+    "id" : "ebf0ebe1-ca3d-4ec5-b31f-e235661345aa",
+    "username" : "admin",
+    "email" : "anelis.gheorghias@yahoo.com",
+    "emailVerified" : false,
+    "enabled" : true,
+    "createdTimestamp" : 1759676679562,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "82293f3e-66f1-4a98-aebb-eb39bd959cbe",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1759677147191,
+      "secretData" : "{\"value\":\"s1DXjGRUAq9rjx06xirkuvXXcd2iw/86oRbnla9p9rg=\",\"salt\":\"AMfci1cwlYwpNL5XtSdP9g==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "admin" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "36caeb80-e3e2-4d5f-90cc-2092584ed63e",
+    "username" : "anelis",
+    "emailVerified" : false,
+    "attributes" : {
+      "is_temporary_admin" : [ "true" ]
+    },
+    "enabled" : true,
+    "createdTimestamp" : 1759676621290,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "330554d5-6c4c-4fd1-a273-089b4627e732",
+      "type" : "password",
+      "createdDate" : 1759676621507,
+      "secretData" : "{\"value\":\"2vym948GFzBPEbysjM3A+UmaDRMVjJNPz2t6jhA/5kU=\",\"salt\":\"S1Ke/Yl+SIaWXX7Ian/NeA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-master", "admin" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}

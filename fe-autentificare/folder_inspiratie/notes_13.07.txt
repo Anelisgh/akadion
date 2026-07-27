@@ -1,0 +1,36 @@
+Autentificare Akadion:
+
+http://localhost:8080/realms/Akadion/account
+
+
+
+
+
+
+
+Pornire Keycloak din fisierul bin:
+
+
+C:\Users\Radu\Downloads\keycloak-26.7.0\keycloak-26.7.0\bin
+
+
+cu comanda:
+
+.\kc.bat start-dev
+
+
+
+
+
+formular completare date:
+
+npm run build
+
+npm run dev
+
+http://localhost:5173/complete-profile
+
+
+
+
+http://localhost:5173/admin/users

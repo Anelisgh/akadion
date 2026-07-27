@@ -1,0 +1,15 @@
+{
+  "name": "fe-autentificare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native Keycloak login theme for an educational platform.",
+  "scripts": {
+    "build:theme-css": "tailwindcss -i ./keycloak-theme/university-theme/login/resources/css/input.css -o ./keycloak-theme/university-theme/login/resources/css/theme.css --minify",
+    "watch:theme-css": "tailwindcss -i ./keycloak-theme/university-theme/login/resources/css/input.css -o ./keycloak-theme/university-theme/login/resources/css/theme.css --watch",
+    "deploy:keycloak-theme": "node ./scripts/deploy-keycloak-theme.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.12",
+    "tailwindcss": "^4.1.12"
+  }
+}

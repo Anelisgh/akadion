@@ -1,0 +1,40 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - generic "AKADION" [ref=e5]:
+        - img "AKADION" [ref=e6]
+        - generic [ref=e7]:
+          - generic [ref=e8]: AKADION
+          - generic [ref=e9]: Acces academic centralizat
+      - generic [ref=e10]:
+        - generic [ref=e11]: Platformă de învățare liberă
+        - heading "Înveți ce iubești, în ritmul tău." [level=1] [ref=e12]
+        - paragraph [ref=e13]: Aici nu ești legat de programa fixă a specializării tale — alegi cursurile care te interesează, fie din domeniul tău, fie din altele. Urmărești materialele, îți vezi progresul săptămânal și înveți din curiozitate și dorința de a descoperi lucruri noi.
+        - generic "Beneficii principale" [ref=e14]:
+          - generic [ref=e15]: Cursuri alese de tine
+          - generic [ref=e21]: Progres urmărit săptămânal
+          - generic [ref=e27]: Acces pentru studenți și profesori
+  - main [ref=e32]:
+    - generic [ref=e34]:
+      - generic [ref=e37]:
+        - paragraph [ref=e38]: Cont AKADION
+        - heading "Autentificare" [level=2] [ref=e39]
+        - paragraph [ref=e40]: Folosește datele de acces pentru a continua în platformă.
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]: Email
+            - textbox "Email" [active] [ref=e48]
+          - generic [ref=e49]:
+            - generic [ref=e50]: Parola
+            - generic [ref=e53]:
+              - textbox "Parola" [ref=e54]
+              - button "Afișează parola" [ref=e55]
+          - link "Ai uitat parola?" [ref=e62] [cursor=pointer]:
+            - /url: /realms/Akadion/login-actions/reset-credentials?client_id=backend-login&tab_id=PzkUOdS-Ry0&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9sb2dpbi9vYXV0aDIvY29kZS9rZXljbG9hayIsInJ0IjoiY29kZSIsInN0IjoiZzNvS1BYekM5WmxXQlZkZGJjM29NZm56Vl8weW45Ujlwd2Z3NFE5N0dqND0ifQ
+          - button "Autentificare" [ref=e64]
+        - generic [ref=e67]:
+          - text: Nu ai un cont?
+          - link "Creează cont" [ref=e68] [cursor=pointer]:
+            - /url: /realms/Akadion/login-actions/registration?client_id=backend-login&tab_id=PzkUOdS-Ry0&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9sb2dpbi9vYXV0aDIvY29kZS9rZXljbG9hayIsInJ0IjoiY29kZSIsInN0IjoiZzNvS1BYekM5WmxXQlZkZGJjM29NZm56Vl8weW45Ujlwd2Z3NFE5N0dqND0ifQ
+      - paragraph [ref=e73]: Autentificare securizată prin Keycloak

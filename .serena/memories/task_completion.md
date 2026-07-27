@@ -1,0 +1,3 @@
+- Backend/code change done: run `.\\mvnw.cmd clean test` and `.\\mvnw.cmd clean package -DskipTests` in `akadion-backend-modificat/akadion-backend-modificat/proiect`.
+- Frontend touched or verification requested: run `npm.cmd run lint` and `npm.cmd run build` in `frontend`.
+- If auth/local stack behavior matters, also run `pwsh -File scripts/check-local-services.ps1` and DB verification as needed.

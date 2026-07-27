@@ -1,0 +1,5 @@
+- Single frontend app rooted at `src/App.jsx`; routing handled there with `react-router-dom` and mounted from `src/main.jsx` inside `BrowserRouter`.
+- Shared HTTP client in `src/api/axiosInstance.js`; use relative URLs only, `withCredentials: true`, Vite proxy handles `/api`, `/oauth2`, `/login`, `/logout` to backend on `localhost:8081`.
+- UI stack already wired: shadcn components under `src/components/ui`, helper `cn` in `src/lib/utils.js`, global styling/theme in `src/index.css`.
+- Current project-specific screens live directly in `App.jsx`; preserve existing `CompleteProfilePage` copy/structure/branding when adding routes.
+- Brand assets can come from `folder_inspiratie2/`; current Akadion owl logo used from there by existing pages.

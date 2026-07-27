@@ -1,0 +1,5 @@
+- Keep edits minimal; project currently keeps multiple page components inline in `src/App.jsx` unless extraction clearly helps.
+- Preserve Akadion branding already established in `CompleteProfilePage`: owl logo, navy/indigo/cream palette, Geist font, rounded cards, soft gradients.
+- Reuse shadcn primitives before adding new UI dependencies.
+- Keep backend access centralized through `axiosInstance`; do not hardcode backend host in components.
+- Global page-specific visual styles are added in `src/index.css` under `@layer components` with semantic class names.
