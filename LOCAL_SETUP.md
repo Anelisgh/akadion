@@ -1,14 +1,5 @@
 # Setup local AKADION
 
-## Structura reala folosita local
-
-Backendul real este in:
-
-```text
-akadion-backend-modificat\akadion-backend-modificat\proiect
-```
-
-Scripturile locale pornesc acum backendul din aceasta locatie si folosesc `mvnw.cmd` din acel director.
 
 ## Endpointuri locale
 
@@ -56,50 +47,26 @@ Exemplu cu parametri:
 
 ## Ordinea exacta de pornire
 
-1. Porneste Docker Desktop.
-2. Deschide PowerShell 5.1 in radacina proiectului.
-3. Incarca secretele locale:
+Întreaga stivă (PostgreSQL, MinIO, Keycloak, Backend, Frontend) este acum complet containerizată și orchestrată cu Docker Compose.
 
-```powershell
-. .\scripts\set-local-secrets.ps1
-```
-
-4. Porneste PostgreSQL:
-
-```powershell
-.\scripts\start-postgres.ps1
-```
-
-5. Porneste MinIO:
-
-```powershell
-.\scripts\start-minio.ps1
-```
-
-6. Porneste Keycloak din distributia locala ZIP:
-
-```powershell
-cd C:\Users\Radu\Downloads\keycloak-26.7.0\keycloak-26.7.0\bin
-.\kc.bat start-dev
-```
-
-7. Porneste backendul din radacina proiectului Akadion:
-
-```powershell
-.\scripts\start-backend.ps1
-```
-
-8. In alt terminal, din radacina proiectului, porneste frontendul:
-
-```powershell
-.\scripts\start-frontend.ps1
-```
-
-9. Verifica serviciile:
-
-```powershell
-.\scripts\check-local-services.ps1
-```
+1. Asigură-te că **Docker Desktop** este pornit.
+2. Deschide un terminal în rădăcina proiectului.
+3. Opțional: Pentru a folosi secrete proprii, le poți adăuga direct în fișierul `.env` din rădăcină (Docker Compose îl va citi automat). Alternativ, le poți seta prin scriptul PowerShell înainte de pornire:
+   ```powershell
+   . .\scripts\set-local-secrets.ps1
+   ```
+4. Pornește stiva completă în fundal (detached mode):
+   ```bash
+   docker compose up -d
+   ```
+5. Pentru a urmări log-urile (ex. să vezi când se termină compilarea backend-ului):
+   ```bash
+   docker compose logs -f
+   ```
+6. Pentru a opri mediul de dezvoltare:
+   ```bash
+   docker compose down
+   ```
 
 ## Comenzi de verificare manuala
 
