@@ -31,12 +31,21 @@ public class ConversatieController {
     private final ConversatieService conversatieService;
     private final UserRepository userRepository;
 
+    @GetMapping("/conversatii")
+    public List<ConversatieDTO> getAllConversatii(@AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        List<Conversatie> conversatii = conversatieService.obtineToateConversatiileActive(user.getId());
+        return conversatii.stream()
+                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/cursuri/{cursId}/conversatii")
     public List<ConversatieDTO> getConversatii(@PathVariable Long cursId, @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
         List<Conversatie> conversatii = conversatieService.obtineConversatiiActive(user.getId(), cursId);
         return conversatii.stream()
-                .map(c -> new ConversatieDTO(c.getId(), c.getTitlu(), c.getCreatedAt()))
+                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 

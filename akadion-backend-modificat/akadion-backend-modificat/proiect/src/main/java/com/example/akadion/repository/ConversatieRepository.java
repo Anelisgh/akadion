@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ConversatieRepository extends JpaRepository<Conversatie, Long> {
     List<Conversatie> findByUserIdAndCursIdAndActivTrueOrderByCreatedAtDesc(Long userId, Long cursId);
+    List<Conversatie> findByUserIdAndActivTrueOrderByCreatedAtDesc(Long userId);
 }

@@ -206,6 +206,12 @@ public class ConversatieService {
         return mesajChatRepository.findByConversatieIdOrderByCreatedAtAsc(conversatieId);
     }
 
+    public List<Conversatie> obtineToateConversatiileActive(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResursaNegasitaException("User not found"));
+        return conversatieRepository.findByUserIdAndActivTrueOrderByCreatedAtDesc(userId);
+    }
+
     @Transactional
     public void stergeConversatie(Long userId, Long conversatieId) {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
