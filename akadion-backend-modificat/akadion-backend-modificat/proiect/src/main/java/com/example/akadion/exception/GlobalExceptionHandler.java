@@ -48,6 +48,12 @@ public class GlobalExceptionHandler {
         return Map.of("status", HttpStatus.NOT_FOUND.value(), "eroare", ex.getMessage());
     }
 
+    @ExceptionHandler(ResursaNegasitaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleResursaNegasita(ResursaNegasitaException ex) {
+        return Map.of("status", HttpStatus.NOT_FOUND.value(), "eroare", ex.getMessage());
+    }
+
     // 3. Cazul în care se încearcă o acțiune nepermisă pe starea contului (ex: dezactivarea unui user deja inactiv).
     // Interceptează "InvalidUserStateException" și trimite înapoi codul HTTP 400 (Bad Request).
     @ExceptionHandler(InvalidUserStateException.class)
