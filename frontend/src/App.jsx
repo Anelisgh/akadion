@@ -921,7 +921,7 @@ function PendingApprovalPage() {
 function RejectedRequestPage() {
   return (
     <StatusPage
-      description="Datele trimise necesită corecții. Poți reveni în formularul de profil, actualiza informațiile și retrimite cererea pentru o nouă evaluare."
+      description="Cererea ta a fost respinsă. Editează profilul pentru a retrimite datele corectate. Dacă te deconectezi, revino folosind opțiunea Login."
       accentState="RESPINS"
       accentLabel="Cerere respinsă"
       primaryAction={

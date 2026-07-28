@@ -48,9 +48,10 @@ public class CompleteProfileService {
 
     private void updateExistingUser(User user, String email, CompleteProfileRequestDto dto) {
         String stareCurenta = user.getStareCont().getDenumire();
-        if (!INCOMPLETE_STATE.equals(stareCurenta)) {
+        java.util.Set<String> stariAcceptate = java.util.Set.of(INCOMPLETE_STATE, "RESPINS");
+        if (!stariAcceptate.contains(stareCurenta)) {
             throw new InvalidUserStateException(
-                    "Completarea profilului este permisă doar pentru conturile INCOMPLET (stare curentă: " + stareCurenta + ").");
+                    "Completarea profilului este permisă doar pentru conturile INCOMPLET sau RESPINS (stare curentă: " + stareCurenta + ").");
         }
 
         userRepository.findByMail(email)
