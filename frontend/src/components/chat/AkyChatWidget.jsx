@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { sendAkyCourseQuestion, sendAkyCourseQuestionProfesor } from "@/lib/aky"
 import { COURSE_THEME_KEYS, COURSE_THEMES, DEFAULT_COURSE_THEME, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
-import { isProfessorUser, isStudentUser } from "@/lib/user"
+import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
 import { cn } from "@/lib/utils"
 
 const QUICK_QUESTIONS = [
@@ -30,6 +30,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [themePickerOpen, setThemePickerOpen] = useState(false)
+  const isAdmin = isAdminUser(user)
   const isStudent = isStudentUser(user)
   const isProfessor = isProfessorUser(user)
   const [courses, setCourses] = useState([])
@@ -97,6 +98,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
   }, [isSending, messages, open])
+
+  if (isAdmin) {
+    return null
+  }
 
   function handleOpenChange(nextOpen) {
     setOpen(nextOpen)
