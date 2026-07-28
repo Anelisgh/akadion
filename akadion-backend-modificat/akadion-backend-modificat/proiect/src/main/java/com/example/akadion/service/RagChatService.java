@@ -43,7 +43,7 @@ public class RagChatService {
                 .build();
     }
 
-    public AkyChatResponseDto intreabaAky(Long studentId, Long cursId, AkyChatRequestDto request) {
+    public AkyChatResponseDto intreabaAky(Long userId, Long cursId, AkyChatRequestDto request) {
         try {
             // Map request for Python RAG contract (contract-rag.md)
             List<Map<String, String>> istoricMapped = request.istoricConversatie().stream()
@@ -54,13 +54,13 @@ public class RagChatService {
                     .toList();
 
             Map<String, Object> ragPayload = Map.of(
-                    "studentId", studentId,
+                    "userId", userId,
                     "cursId", cursId,
                     "intrebare", request.intrebare(),
                     "istoricConversatie", istoricMapped
             );
 
-            log.info("Trimitere cerere RAG Chat pentru studentul {} la cursul {}.", studentId, cursId);
+            log.info("Trimitere cerere RAG Chat pentru utilizatorul {} la cursul {}.", userId, cursId);
 
             Map<String, Object> responseMap = restClient.post()
                     .uri(ragBaseUrl + "/chat")

@@ -1,25 +1,12 @@
-import { AlertCircle, ArrowRight, BookOpenText, CalendarDays, Check, CheckCircle2, Palette, Plus, RefreshCcw, Users } from "lucide-react"
-import { useEffect, useEffectEvent, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { ArrowRight, CalendarDays, Check, Palette } from "lucide-react"
+import { useState } from "react"
+import { Link } from "react-router-dom"
 import AppShell from "@/components/AppShell"
-import AkyChatWidget from "@/components/chat/AkyChatWidget"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { useAuth } from "@/auth/useAuth"
-import { COURSE_THEME_KEYS, COURSE_THEMES, DEFAULT_COURSE_THEME, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
-import { getUserGreetingName, isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
-import {
-  enrollStudentCourse,
-  getCourseErrorMessage,
-  listAdminCourses,
-  listProfessorCourses,
-  listStudentAvailableCourses,
-  listStudentCourses,
-} from "@/lib/professorCourses"
+import { COURSE_THEMES, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 
 const COURSE_THEME_STORAGE_PREFIX = "akadion:course-theme"
-const ADMIN_COURSES_PER_PAGE = 6
 
 export function getCourseThemeStorageKey(user, courseId) {
   return `${COURSE_THEME_STORAGE_PREFIX}:${getThemeUserKey(user)}:${courseId}`
@@ -35,32 +22,6 @@ function formatCourseDate(value) {
     day: "numeric",
     month: "short",
   }).format(date)
-}
-
-function ProfessorHeroStats({ totalCourses, activeCourses }) {
-  const stats = [
-    { label: "Cursuri totale", value: totalCourses, icon: BookOpenText },
-    { label: "Cursuri active", value: activeCourses, icon: Users },
-  ]
-
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:max-w-md">
-      {stats.map(({ label, value, icon: Icon }) => (
-        <div
-          key={label}
-          className="flex items-center gap-3 rounded-[1.35rem] border border-white/28 bg-white/20 px-4 py-3 text-white backdrop-blur-md shadow-xs"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/25 text-white">
-            <Icon className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold leading-none text-white">{value}</p>
-            <p className="mt-1 text-xs font-medium text-white/84">{label}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 export function getProfessorName(course) {
@@ -287,290 +248,17 @@ export function AdminCourseList({ courses, currentPage, totalPages, onPageChange
 }
 
 export default function CoursesPage() {
-  const { user, refreshAuth } = useAuth()
-  const navigate = useNavigate()
-  const isProfessor = isProfessorUser(user)
-  const isAdmin = isAdminUser(user)
-  const isStudent = isStudentUser(user)
-  const canListCourses = isProfessor || isAdmin || isStudent
-  const [courses, setCourses] = useState([])
-  const [studentCourses, setStudentCourses] = useState([])
-  const [availableCourses, setAvailableCourses] = useState([])
-  const [coursesLoading, setCoursesLoading] = useState(false)
-  const [pageError, setPageError] = useState("")
-  const [pageNotice, setPageNotice] = useState("")
-  const [activeAction, setActiveAction] = useState("")
-  const [courseThemes, setCourseThemes] = useState({})
-  const [adminCurrentPage, setAdminCurrentPage] = useState(1)
-
-  async function loadCourses() {
-    if (!canListCourses) {
-      setCourses([])
-      setStudentCourses([])
-      setAvailableCourses([])
-      return { studentCourses: [], availableCourses: [] }
-    }
-
-    setCoursesLoading(true)
-    setPageError("")
-
-    try {
-      if (isAdmin) {
-        const nextCourses = await listAdminCourses()
-        setCourses(nextCourses)
-        return { courses: nextCourses }
-      }
-
-      if (isProfessor) {
-        const nextCourses = await listProfessorCourses()
-        setCourses(nextCourses)
-        return { courses: nextCourses }
-      }
-
-      const [enrolled, available] = await Promise.all([
-        listStudentCourses(),
-        listStudentAvailableCourses(),
-      ])
-      const normalizedEnrolled = enrolled.map(normalizeEnrolledCourse)
-      const normalizedAvailable = available.map(normalizeAvailableCourse)
-      setStudentCourses(normalizedEnrolled)
-      setAvailableCourses(normalizedAvailable)
-      return { studentCourses: normalizedEnrolled, availableCourses: normalizedAvailable }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        await refreshAuth()
-      }
-      setPageError(getCourseErrorMessage(error, "Nu am putut încărca lista de cursuri."))
-      throw error
-    } finally {
-      setCoursesLoading(false)
-    }
-  }
-
-  const syncCoursesPage = useEffectEvent(async () => {
-    try {
-      await loadCourses()
-    } catch {
-      // Error state is already mapped in loadCourses.
-    }
-  })
-
-  useEffect(() => {
-    syncCoursesPage()
-  }, [canListCourses, isAdmin, isProfessor, isStudent])
-
-  useEffect(() => {
-    const allCourses = [...courses, ...studentCourses, ...availableCourses]
-    const nextCourseThemes = {}
-
-    for (const course of allCourses) {
-      try {
-        const savedTheme = window.localStorage.getItem(getCourseThemeStorageKey(user, course.id))
-
-        if (COURSE_THEME_KEYS.has(savedTheme)) {
-          nextCourseThemes[course.id] = savedTheme
-        }
-      } catch {
-        // If localStorage is unavailable, course theme customization stays session-only.
-      }
-    }
-
-    setCourseThemes(nextCourseThemes)
-  }, [user, courses, studentCourses, availableCourses])
-
-  function handleCourseThemeChange(courseId, themeKey) {
-    if (!COURSE_THEME_KEYS.has(themeKey)) {
-      return
-    }
-
-    setCourseThemes((currentThemes) => ({
-      ...currentThemes,
-      [courseId]: themeKey,
-    }))
-
-    try {
-      window.localStorage.setItem(getCourseThemeStorageKey(user, courseId), themeKey)
-    } catch {
-      // Visual change still applies for this render even if persistence is blocked.
-    }
-  }
-
-  async function handleEnroll(course) {
-    setActiveAction(`enroll-${course.id}`)
-    setPageError("")
-    setPageNotice("")
-
-    try {
-      await enrollStudentCourse(course.id)
-      const reloaded = await loadCourses()
-      const enrolledCourse = reloaded.studentCourses?.find((currentCourse) => currentCourse.id === course.id)
-      setPageNotice("Înscrierea a fost finalizată cu succes.")
-      navigate(`/courses/${course.id}`, { state: { course: enrolledCourse ?? normalizeEnrolledCourse({ ...course, procentajProgres: 0 }) } })
-    } catch (error) {
-      if (error.response?.status === 401) {
-        await refreshAuth()
-      }
-      setPageError(getCourseErrorMessage(error, "Nu am putut finaliza înscrierea."))
-    } finally {
-      setActiveAction("")
-    }
-  }
-
-  const activeCourses = courses.filter((course) => course.activ).length
-  const studentTotalCourses = studentCourses.length + availableCourses.length
-  const adminTotalPages = Math.max(1, Math.ceil(courses.length / ADMIN_COURSES_PER_PAGE))
-  const adminPageStart = (adminCurrentPage - 1) * ADMIN_COURSES_PER_PAGE
-  const adminPaginatedCourses = courses.slice(adminPageStart, adminPageStart + ADMIN_COURSES_PER_PAGE)
-
-  useEffect(() => {
-    if (adminCurrentPage > adminTotalPages) {
-      setAdminCurrentPage(adminTotalPages)
-    }
-  }, [adminCurrentPage, adminTotalPages])
-
-  const heroClassName = isAdmin
-    ? "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
-    : "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+  const heroClassName = "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
 
   return (
     <AppShell
-      title={isProfessor ? `${getUserGreetingName(user)} 📖` : "Cursuri Akadion"}
-      description={isProfessor ? undefined : isAdmin ? "Toate cursurile create de profesori în platformă." : "Cursurile tale active și cursurile disponibile pentru înscriere."}
-      eyebrow="Cursuri"
+      title=""
+      description={undefined}
+      eyebrow=""
       heroClassName={heroClassName}
       heroEyebrowClassName="text-white/72"
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
-      heroContent={canListCourses ? <ProfessorHeroStats totalCourses={isStudent ? studentTotalCourses : courses.length} activeCourses={isStudent ? studentCourses.length : activeCourses} /> : null}
-    >
-      {canListCourses ? (
-        <div className="space-y-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-2xl font-semibold tracking-tight text-[#24385b]">{isProfessor ? "Cursurile mele" : isAdmin ? "Toate cursurile" : "Catalog cursuri"}</h2>
-            {isProfessor ? (
-              <Button asChild variant="outline" className="rounded-2xl border border-[#d9ccbe] bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:bg-[#f7efe6] hover:text-slate-900 hover:border-[#bcae9e]">
-                <Link to="/courses/new" className="inline-flex items-center gap-2">
-                  <Plus className="h-4 w-4 text-slate-900" />
-                  <span>Curs nou</span>
-                </Link>
-              </Button>
-            ) : null}
-          </div>
-
-          {pageError ? (
-            <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
-              <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Eroare la încărcare</AlertTitle>
-              <AlertDescription>{pageError}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          {pageNotice ? (
-            <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
-              <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-              <AlertTitle>Succes</AlertTitle>
-              <AlertDescription className="text-emerald-800">{pageNotice}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          {coursesLoading ? <p className="text-sm text-slate-500">Se încarcă lista de cursuri...</p> : null}
-
-          {isAdmin && !coursesLoading && courses.length > 0 ? (
-            <AdminCourseList
-              courses={adminPaginatedCourses}
-              currentPage={adminCurrentPage}
-              totalPages={adminTotalPages}
-              onPageChange={setAdminCurrentPage}
-            />
-          ) : null}
-
-          {!isAdmin && !isStudent && !coursesLoading && courses.length > 0 ? (
-            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  mode={isProfessor ? "professor" : "admin"}
-                  selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
-                  onThemeChange={handleCourseThemeChange}
-                  onEnroll={handleEnroll}
-                  actionDisabled={Boolean(activeAction)}
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {!isStudent && !coursesLoading && courses.length === 0 ? (
-            <EmptyCoursesState message={isProfessor ? "Nu ai adăugat încă niciun curs. Creează unul din butonul `Curs nou` și va apărea aici." : "Nu există încă niciun curs creat de profesori."} />
-          ) : null}
-
-          {isStudent ? (
-            <div className="space-y-8">
-              <section className="space-y-4">
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-2xl font-semibold tracking-tight text-[#24385b]">Cursurile mele</h3>
-                  <p className="text-sm text-slate-500">Cursurile la care ești înscris în acest moment.</p>
-                </div>
-
-                {!coursesLoading && studentCourses.length > 0 ? (
-                  <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-                    {studentCourses.map((course) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        mode="student"
-                        selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
-                        onThemeChange={handleCourseThemeChange}
-                        onEnroll={handleEnroll}
-                        actionDisabled={Boolean(activeAction)}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-
-                {!coursesLoading && studentCourses.length === 0 ? (
-                  <EmptyCoursesState message="Nu ești înscris momentan la niciun curs activ." />
-                ) : null}
-              </section>
-
-              <section className="space-y-4">
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-2xl font-semibold tracking-tight text-[#24385b]">Cursuri disponibile</h3>
-                  <p className="text-sm text-slate-500">Cursurile disponibile pentru înscriere.</p>
-                </div>
-
-                {!coursesLoading && availableCourses.length > 0 ? (
-                  <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-                    {availableCourses.map((course) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        mode="student"
-                        selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
-                        onThemeChange={handleCourseThemeChange}
-                        onEnroll={handleEnroll}
-                        actionDisabled={Boolean(activeAction)}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-
-                {!coursesLoading && availableCourses.length === 0 ? (
-                  <EmptyCoursesState message="Nu există cursuri disponibile pentru înscriere momentan." />
-                ) : null}
-              </section>
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold tracking-[0.16em] text-[#5b7595] uppercase">Catalog cursuri</p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#24385b] sm:text-3xl">
-            Cursurile adăugate de profesori în platformă
-          </h2>
-        </div>
-      )}
-      <AkyChatWidget enabled={true} courseId={null} />
-    </AppShell>
+    />
   )
 }

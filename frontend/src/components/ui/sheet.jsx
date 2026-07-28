@@ -59,7 +59,7 @@ function SheetContent({ className, onOpenChange, side = "right", children }) {
           type="button"
           aria-label="Inchide"
           onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-2xl border border-[#e4d8cd] bg-white text-slate-500 transition hover:bg-[#f8f3ed] hover:text-[#24385b]"
+          className="absolute right-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-2xl border border-[#e4d8cd] bg-white text-slate-500 transition hover:bg-[#f8f3ed] hover:text-[#24385b]"
         >
           <X className="h-4 w-4" />
         </button>

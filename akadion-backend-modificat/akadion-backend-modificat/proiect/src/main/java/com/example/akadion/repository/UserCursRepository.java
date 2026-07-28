@@ -29,6 +29,10 @@ public interface UserCursRepository extends JpaRepository<UserCurs, Long> {
 
     java.util.Optional<UserCurs> findByStudentIdAndCursId(Long studentId, Long cursId);
 
+    boolean existsByStudentIdAndCursId(Long studentId, Long cursId);
+
+    boolean existsByStudentIdAndCursIdAndActivTrue(Long studentId, Long cursId);
+
     @Query("""
             SELECT uc FROM UserCurs uc
             JOIN FETCH uc.curs c
