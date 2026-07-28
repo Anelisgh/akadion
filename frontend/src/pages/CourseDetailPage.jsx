@@ -1398,7 +1398,11 @@ export default function CourseDetailPage() {
                 </CardContent>
               </Card>
             ) : null}
-            <AkyChatWidget />
+            <AkyChatWidget
+              courseId={course?.id}
+              courseTitle={course?.titlu || course?.denumire}
+              enabled={isStudent}
+            />
           </>
         ) : null}
 

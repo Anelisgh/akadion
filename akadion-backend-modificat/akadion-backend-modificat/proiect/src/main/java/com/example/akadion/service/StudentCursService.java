@@ -27,6 +27,7 @@ public class StudentCursService {
     private final ParcursRepository parcursRepository;
     private final DocumentRepository documentRepository;
     private final MinioStorageService minioStorageService;
+    private final RagChatService ragChatService;
 
     @Autowired
     @Lazy
@@ -246,5 +247,40 @@ public class StudentCursService {
                 profesor.getMail(),
                 profesor.getFacultate()
         );
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<Long, List<Long>> rateLimitMap = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void checkRateLimit(Long studentId) {
+        long now = System.currentTimeMillis();
+        long windowStart = now - 60000; // 1 minut
+
+        rateLimitMap.compute(studentId, (id, timestamps) -> {
+            List<Long> list = timestamps != null ? timestamps : new java.util.ArrayList<>();
+            list.removeIf(ts -> ts < windowStart);
+            if (list.size() >= 10) {
+                throw new com.example.akadion.exception.TooManyRequestsException("Ai depășit limita de 10 întrebări pe minut. Te rugăm să aștepți puțin.");
+            }
+            list.add(now);
+            return list;
+        });
+    }
+
+    /**
+     * Interogare Chatbot Aky pentru un curs specific.
+     * Verifică înrolarea studentului, parcursul maxim de săptămâni și aplică rate limiting.
+     */
+    @Transactional(readOnly = true)
+    public AkyChatResponseDto intreabaAky(Long studentId, Long cursId, AkyChatRequestDto request) {
+        checkRateLimit(studentId);
+
+        UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
+                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest curs."));
+
+        if (!Boolean.TRUE.equals(enrollment.getActiv())) {
+            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+        }
+
+        return ragChatService.intreabaAky(studentId, cursId, request);
     }
 }

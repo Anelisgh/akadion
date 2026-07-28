@@ -1,12 +1,11 @@
 package com.example.akadion.controller;
 
-import com.example.akadion.dto.CursRequestDto;
-import com.example.akadion.dto.CursResponseDto;
-import com.example.akadion.dto.StudentCursDto;
+import com.example.akadion.dto.*;
 import com.example.akadion.entity.User;
 import com.example.akadion.exception.UserNotFoundException;
 import com.example.akadion.repository.UserRepository;
 import com.example.akadion.service.CursService;
+import com.example.akadion.service.RagChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,7 @@ public class CursProfesorController {
 
     private final CursService cursService;
     private final UserRepository userRepository;
+    private final RagChatService ragChatService;
 
     @GetMapping
     public List<CursResponseDto> listaCursuri(@AuthenticationPrincipal OidcUser oidcUser) {
@@ -80,6 +80,21 @@ public class CursProfesorController {
     public void activeazaCurs(@PathVariable Long id, @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
         cursService.activeazaCurs(id, user.getId());
+    }
+
+    @PostMapping("/{cursId}/chat")
+    @PreAuthorize("hasRole('PROFESOR')")
+    public AkyChatResponseDto chatAkyProfesor(
+            @PathVariable Long cursId,
+            @org.springframework.validation.annotation.Validated @jakarta.validation.Valid @RequestBody AkyChatRequestDto request,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        
+        // Verificăm dacă profesorul are acces la acest curs (dacă este autorul lui)
+        cursService.getCursById(cursId, user.getId(), "PROFESOR");
+        
+        // Dacă a trecut, înseamnă că are drepturi pe curs, chemăm RAG
+        return ragChatService.intreabaAky(user.getId(), cursId, request);
     }
 
     private User getLoggedUser(OidcUser oidcUser) {
