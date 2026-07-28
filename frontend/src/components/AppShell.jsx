@@ -175,10 +175,29 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [logoutError, setLogoutError] = useState("")
+  const accountMenuRef = useRef(null)
   const displayName = getUserDisplayName(user)
   const roleLabel = getRoleLabel(user?.rol)
   const initials = getInitials(displayName)
   const homePath = "/"
+
+  useEffect(() => {
+    if (!accountOpen) {
+      return undefined
+    }
+
+    function handlePointerDown(event) {
+      if (!accountMenuRef.current?.contains(event.target)) {
+        setAccountOpen(false)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+    }
+  }, [accountOpen])
 
   function handleLogout() {
     setLogoutError("")
@@ -208,7 +227,7 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
             <CourseTabsNav user={user} />
           </nav>
 
-          <div className="relative hidden lg:block shrink-0">
+          <div ref={accountMenuRef} className="relative hidden lg:block shrink-0">
             <Button
               type="button"
               variant="outline"

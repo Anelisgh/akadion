@@ -101,6 +101,7 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
   const isProfessorMode = mode === "professor"
   const isAdminMode = mode === "admin"
   const isStudentMode = mode === "student"
+  const isEnrolledStudentCourse = isStudentMode && course.inscris
   const progress = getCourseProgress(course)
 
   return (
@@ -111,14 +112,26 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
         </div>
       </div>
       <CardContent className="space-y-3 px-5 py-5">
-        {(isProfessorMode || isAdminMode) ? (
-          <Link to={`/courses/${course.id}`} className="block">
-            <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b] underline-offset-4 hover:underline">{course.denumire}</h3>
+        {(isProfessorMode || isAdminMode || isEnrolledStudentCourse) ? (
+          <Link to={`/courses/${course.id}`} state={{ course }} className="block">
+            <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b] transition hover:font-extrabold">{course.denumire}</h3>
           </Link>
         ) : (
           <h3 className="text-[1.35rem] font-semibold tracking-tight text-[#24385b]">{course.denumire}</h3>
         )}
-        {(isStudentMode || isAdminMode) ? <p className="text-sm font-semibold text-[#5d7094]">{course.profesorDisplayName || getProfessorName(course)}</p> : null}
+        {(isStudentMode || isAdminMode) ? (
+          isEnrolledStudentCourse ? (
+            <Link
+              to={`/courses/${course.id}#profesor`}
+              state={{ course, initialTab: "profesor" }}
+              className="inline-flex w-fit text-sm font-semibold text-[#5d7094] transition hover:font-extrabold hover:text-[#24385b]"
+            >
+              {course.profesorDisplayName || getProfessorName(course)}
+            </Link>
+          ) : (
+            <p className="text-sm font-semibold text-[#5d7094]">{course.profesorDisplayName || getProfessorName(course)}</p>
+          )
+        ) : null}
         {course.descriere ? <p className="line-clamp-2 text-sm leading-6 text-slate-600">{course.descriere}</p> : null}
         {isStudentMode && course.inscris ? (
           <div className="space-y-2 pt-1">

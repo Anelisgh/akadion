@@ -215,7 +215,7 @@ export default function CourseDetailPage() {
   const [pageError, setPageError] = useState("")
   const [pageNotice, setPageNotice] = useState("")
   const [activeAction, setActiveAction] = useState("")
-  const [activeTab, setActiveTab] = useState("saptamani")
+  const [activeTab, setActiveTab] = useState(() => (location.state?.initialTab === "profesor" || location.hash === "#profesor" ? "profesor" : "saptamani"))
   const [courseIndexOpen, setCourseIndexOpen] = useState(false)
   const [courseEditorOpen, setCourseEditorOpen] = useState(false)
   const [newWeekOpen, setNewWeekOpen] = useState(false)
@@ -381,6 +381,12 @@ export default function CourseDetailPage() {
   useEffect(() => {
     syncCourseWorkflow()
   }, [courseId, isAdmin, isProfessor, isStudent])
+
+  useEffect(() => {
+    if (location.state?.initialTab === "profesor" || location.hash === "#profesor") {
+      setActiveTab("profesor")
+    }
+  }, [location.state, location.hash])
 
   function updateCourseField(field, value) {
     setCourseForm((current) => ({ ...current, [field]: value }))

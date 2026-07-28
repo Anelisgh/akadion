@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Building2, CheckCircle2, KeyRound, Mail, ShieldCheck, UserRound } from "lucide-react"
+import { CheckCircle2, KeyRound, ShieldCheck, UserRound } from "lucide-react"
 import AppShell from "@/components/AppShell"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useAuth } from "@/auth/useAuth"
 import { getRoleLabel, getUserDisplayName, isAdminUser, requestMyPasswordReset, updateMyEmail, updateMyProfile } from "@/lib/user"
 import { cn } from "@/lib/utils"
+import profileLogo from "../../logo_profil.png"
 
 function getInitials(displayName) {
   return displayName
@@ -151,37 +152,47 @@ export default function ProfilePage() {
           </Alert>
         ) : null}
 
-        <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
-          {/* Compact Identity Card */}
-          <Card className="overflow-hidden rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-            <div className="border-b border-[#e4d8cd] bg-[#fcf8f3] px-5 py-5 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#24385b] text-xl font-bold text-white shadow-xs">
-                {initials}
-              </div>
-              <h2 className="mt-3 truncate text-lg font-bold text-slate-900">{displayName}</h2>
-              <span className="mt-1.5 inline-flex items-center rounded-full bg-[#24385b]/10 px-3 py-0.5 text-xs font-bold tracking-wide uppercase text-[#24385b]">
-                {roleLabel}
-              </span>
-            </div>
-            <CardContent className="space-y-3 p-4">
-              <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">📧</span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Email</p>
-                  <p className="truncate text-sm font-semibold text-slate-800">{user?.mail || "-"}</p>
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-stretch">
+          <div className="space-y-6 lg:flex lg:h-full lg:flex-col lg:space-y-0">
+            {/* Compact Identity Card */}
+            <Card className="overflow-hidden rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+              <div className="border-b border-[#e4d8cd] bg-[#fcf8f3] px-5 py-5 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#24385b] text-xl font-bold text-white shadow-xs">
+                  {initials}
                 </div>
+                <h2 className="mt-3 truncate text-lg font-bold text-slate-900">{displayName}</h2>
+                <span className="mt-1.5 inline-flex items-center rounded-full bg-[#24385b]/10 px-3 py-0.5 text-xs font-bold tracking-wide uppercase text-[#24385b]">
+                  {roleLabel}
+                </span>
               </div>
-              {user?.facultate ? (
+              <CardContent className="space-y-3 p-4">
                 <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">🎓</span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">📧</span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Facultate</p>
-                    <p className="truncate text-sm font-semibold text-slate-800">{user.facultate}</p>
+                    <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Email</p>
+                    <p className="truncate text-sm font-semibold text-slate-800">{user?.mail || "-"}</p>
                   </div>
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
+                {user?.facultate ? (
+                  <div className="flex items-center gap-3 rounded-[1.25rem] border border-[#e4d8cd] bg-[#fcf8f3] px-3.5 py-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee5] text-xl" aria-hidden="true">🎓</span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-slate-400">Facultate</p>
+                      <p className="truncate text-sm font-semibold text-slate-800">{user.facultate}</p>
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-1 items-center justify-center pt-6">
+              <img
+                src={profileLogo}
+                alt="Profil Akadion"
+                className="mx-auto max-h-[26rem] w-full object-contain drop-shadow-[0_14px_10px_rgba(32,46,84,0.09)]"
+              />
+            </div>
+          </div>
 
           {/* Form & Security Cards */}
           <div className="space-y-6">
