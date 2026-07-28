@@ -686,7 +686,7 @@ export default function CourseDetailPage() {
     try {
       const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${courseId}`)
       if (COURSE_THEME_KEYS.has(key)) return key
-    } catch { }
+    } catch {}
     return "akadion"
   })
 
@@ -849,11 +849,11 @@ export default function CourseDetailPage() {
           {/* Stat chips */}
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {[
-              { label: "Status", value: course.activ ? "Activ" : "Inactiv", icon: course.activ ? "●" : "○" },
+              !isStudent ? { label: "Status", value: course.activ ? "Activ" : "Inactiv", icon: course.activ ? "●" : "○" } : null,
               { label: "Perioadă", value: `${formatDisplayDate(course.dataInceput)} — ${formatDisplayDate(course.dataSfarsit)}`, small: true },
               { label: "Săptămâni", value: weeks.length },
               { label: "Profesor", value: getProfessorName(course), small: true },
-            ].map(({ label, value, small, icon }) => (
+            ].filter(Boolean).map(({ label, value, small, icon }) => (
               <div key={label} className={cn("rounded-2xl px-4 py-3", theme.heroStatBg)}>
                 <p className={cn("text-[10px] font-bold tracking-[0.18em] uppercase", theme.heroStatLabel)}>{label}</p>
                 <p className={cn("mt-1.5 font-semibold leading-tight", theme.heroStatText, small ? "text-sm" : "text-base")}>

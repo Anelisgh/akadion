@@ -1,9 +1,9 @@
-# Akadion Backend — Ghid de Setup și Documentație API (Flux Înregistrare Nativă Keycloak)
+# Akadion Backend — Ghid de Setup și Documentație API
 
-Acest repository conține backend-ul aplicației **Akadion** (dezvoltată în Spring Boot 3.x și Java 21), configurată după modelul **BFF (Backend-for-Frontend)** cu integrare **Keycloak OAuth2** (înregistrare nativă + flux de completare profil) și baza de date relațională **PostgreSQL**.
+Acest repository conține backend-ul aplicației **Akadion** (Spring Boot 3.x / Java 21), configurată după modelul **BFF (Backend-for-Frontend)** cu integrare **Keycloak OAuth2** și baza de date relațională **PostgreSQL**.
 
 > [!NOTE]
-> Frontend-ul React (Vite) este gestionat separat de un alt membru al echipei. Acest ghid documentează exclusiv structura, setup-ul local și interfețele expuse de backend.
+> Frontend-ul React (Vite) este gestionat separat. Acest ghid documentează exclusiv structura, setup-ul local și interfețele expuse de backend.
 
 ---
 
@@ -54,7 +54,7 @@ spring.security.oauth2.client.registration.keycloak-admin.client-secret=secretul
 Sau setează direct variabilele de mediu: `DB_PASSWORD`, `KEYCLOAK_BACKEND_LOGIN_SECRET` și `KEYCLOAK_ADMIN_API_SECRET`.
 
 ### 4. Bootstrap Admin în Baza de Date
-Inserează manual rândul pentru admin-ul creat la pasul 2 direct în tabelul `app_user` din baza de date `akadion` (folosind `bootstrap-admin.sql` adaptat):
+Inserează manual rândul pentru admin-ul creat la pasul 2 direct în tabelul `app_user` din baza de date `akadion`:
 ```sql
 INSERT INTO app_user (id_keycloak, id_stare_cont, id_rol, nume, prenume, mail, facultate)
 VALUES (
@@ -73,27 +73,30 @@ Rulează compilarea și pornește aplicația:
 ```bash
 mvn spring-boot:run
 ```
-Pentru a popula baza de date cu **~10 cereri de înregistrare PENDING** (care simulează profilul deja completat) de test, pornește aplicația activând profilul `demo`:
+Pentru a popula baza de date cu **~10 cereri de înregistrare PENDING** de test, pornește aplicația activând profilul `demo`:
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
 ---
 
-## 🔒 Arhitectură Securitate & Fluxuri BFF (Noul Flux)
+## 🔒 Arhitectură Securitate & Fluxuri BFF
 
 1. **Register**: Frontend redirecționează către `/oauth2/authorization/keycloak-register`. Utilizatorul completează email + parolă direct în Keycloak (parola nu atinge backend-ul aplicației).
 2. **Prima Autentificare**: Keycloak redirecționează către callback-ul backend-ului.
    - Backend detectează că nu există o înregistrare în DB locală cu acel `id_keycloak` (`sub`).
-   - Inserează un rând schelet în tabela `app_user` cu `id_keycloak`, `mail` (extras din token), `stare_cont` = `INCOMPLET`, restul câmpurilor fiind `NULL`.
+   - Inserează un rând schelet în tabela `app_user` cu `id_keycloak`, `mail`, `stare_cont = INCOMPLET`, restul câmpurilor `NULL`.
    - Redirecționează utilizatorul la `{frontend}/complete-profile`.
-3. **Completare Profil**: Utilizatorul introduce numele, prenumele, facultatea și rolul dorit (STUDENT / PROFESOR), trimițând un request POST la `/api/auth/complete-profile`.
+3. **Completare Profil**: Utilizatorul introduce Numele, Prenumele, Facultatea și Rolul dorit (STUDENT / PROFESOR) via `POST /api/auth/complete-profile`.
    - Backend actualizează datele în DB și setează starea contului pe `PENDING`.
    - Redirecționează utilizatorul la `{frontend}/asteptare-aprobare`.
 4. **Aprobare Admin**:
    - Adminul vizualizează cererile (`GET /api/admin/users?stare=PENDING`).
-   - Adminul acceptă (`POST /api/admin/users/{id}/accept`) -> starea devine `ACTIV` în DB. Rolul este deja stocat în DB. Keycloak nu se atinge.
-   - Adminul respinge (`POST /api/admin/users/{id}/reject`) -> starea devine `RESPINS`, contorul `nr_respingeri` se incrementează. Utilizatorul se poate loga din nou în Keycloak și are posibilitatea să editeze profilul pentru a retrimite cererea (starea revine la `PENDING`).
+   - Adminul acceptă (`PATCH /api/admin/users/{id}/approve`) -> starea devine `ACTIV` în DB. Rolul este deja stocat în DB. Keycloak nu se atinge.
+   - Adminul respinge (`PATCH /api/admin/users/{id}/reject`) -> starea devine `RESPINS`, contorul `nr_respingeri` se incrementează.
+
+> [!CAUTION]
+> **Inconsistență în flux pentru starea `RESPINS`**: `StareContFilter` lasă să treacă `POST /complete-profile` pentru utilizatorii în starea `RESPINS`, dar `CompleteProfileService` aruncă `InvalidUserStateException` (acceptă resubmisii strict din starea `INCOMPLET`). Resubmisia pentru utilizatorii respinși nu este funcțională în implementarea curentă.
 
 ---
 
@@ -108,24 +111,28 @@ mvn spring-boot:run -Dspring-boot.run.profiles=demo
       "nume": "Ionescu",
       "prenume": "Maria",
       "mail": "maria@student.test",
-      "rol": "STUDENT", // poate fi null dacă starea e INCOMPLET
-      "stareCont": "PENDING" // INCOMPLET, PENDING, ACTIV, RESPINS, INACTIV
+      "rol": "STUDENT",
+      "stareCont": "PENDING"
     }
     ```
-- `POST /api/auth/complete-profile` — Salvează detaliile profilului (nume, prenume, facultate, rolDorit). Permis doar în stările `INCOMPLET` și `RESPINS`.
+- `POST /api/auth/complete-profile` — Salvează detaliile profilului. Acceptat **strict** din starea `INCOMPLET`.
   - **Body**:
     ```json
     {
       "nume": "Ionescu",
       "prenume": "Maria",
       "facultate": "Matematică",
-      "rolDorit": "STUDENT" // STUDENT sau PROFESOR
+      "rolDorit": "STUDENT"
     }
     ```
 - `POST /logout` — Delogare din backend și Keycloak.
 
 ### Endpoint-uri Administrator (Rol `ADMIN` cerut în DB local)
-- `GET /api/admin/users?stare=PENDING` — Listează cererile pending de aprobare (include `nrRespingeri` pentru a semnala resubmisiile).
-- `POST /api/admin/users/{id}/accept` — Aprobă cererea (`stareCont` devine `ACTIV`).
-- `POST /api/admin/users/{id}/reject` — Respinge cererea (`stareCont` devine `RESPINS`, `nr_respingeri` se incrementează).
-- `POST /api/admin/users/{id}/deactivate` — Dezactivează utilizatorul (`stareCont` devine `INACTIV` și contul Keycloak este dezactivat).
+- `GET /api/admin/users?stare=PENDING` — Listează cererile pending (include `nrRespingeri` pentru resubmisii).
+- `GET /api/admin/users?stare=ALL` — Listează toți utilizatorii (fără admin).
+- `PATCH /api/admin/users/{id}/approve` — Aprobă cererea (`stareCont` devine `ACTIV`).
+- `PATCH /api/admin/users/{id}/reject` — Respinge cererea (`stareCont` devine `RESPINS`, `nr_respingeri` crește).
+- `POST /api/admin/users/{id}/deactivate` — Dezactivează utilizatorul (`stareCont` devine `INACTIV`, cont Keycloak dezactivat). Dacă e profesor, dezactivează cascadă cursuri + înrolări.
+- `POST /api/admin/users/{id}/activate` — Reactivează utilizatorul (`stareCont` devine `ACTIV`, cont Keycloak reactivat).
+- `GET /api/admin/stats` — Statistici dashboard (cursuri active/inactive, utilizatori activi/pending).
+- `GET /api/admin/cursuri` — Lista tuturor cursurilor din platformă.

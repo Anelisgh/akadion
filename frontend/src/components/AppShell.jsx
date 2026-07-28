@@ -86,9 +86,10 @@ function CourseTabsNav({ user, onNavClick }) {
           end
           onClick={onNavClick}
           className={({ isActive }) =>
-            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-              ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-              : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+              isActive
+                ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
             }`
           }
         >
@@ -103,9 +104,10 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/admin/users"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
@@ -116,9 +118,10 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/courses"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
