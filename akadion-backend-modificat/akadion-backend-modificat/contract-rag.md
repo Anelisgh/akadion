@@ -80,30 +80,33 @@ Acest endpoint este apelat de backend atunci când un student adresează o într
 {
   "studentId": 99,
   "cursId": 45,
-  "maxSaptamanaParcursa": 3,
   "intrebare": "Ce este un EntityManager?",
   "istoricConversatie": [
     {"role": "user", "content": "Salut, am o intrebare despre ORM."},
     {"role": "assistant", "content": "Salut! Cu ce te pot ajuta legat de ORM?"}
   ]
 }
-Reguli de comportament RAG:
-Filtrare pe Context (Metadata Filtering): RAG-ul trebuie să aplice un filtru pe baza de date vectorială folosind condițiile cursId == 45 ȘI nrSaptamana <= maxSaptamanaParcursa.
+```
 
-Izolarea cunoștințelor: Dacă maxSaptamanaParcursa este 3, AI-ul nu trebuie să extragă contexte și nu trebuie să răspundă folosind informații din documentele asociate săptămânilor 4, 5, etc., chiar dacă întrebarea studentului face referire la ele. Va răspunde exclusiv pe baza materialelor parcurse până în acel punct.
+> **Notă privind `maxSaptamanaParcursa`**: Backend-ul **NU trimite** acest câmp către RAG în versiunea actuală a codului (`RagChatService.java`). Payload-ul real trimis conține doar `studentId`, `cursId`, `intrebare` și `istoricConversatie`.
 
-Istoric: RAG-ul trebuie să ia în considerare vectorul istoricConversatie pentru a menține contextul discuției curente.
+#### Reguli de comportament RAG:
+- **Filtrare pe Context**: RAG-ul aplică un filtru pe baza de date vectorială folosind `cursId`.
+- **Istoric**: RAG-ul ia în considerare vectorul `istoricConversatie` pentru a menține contextul discuției curente.
 
-Răspunsuri:
-200 OK: Returnează răspunsul generat de LLM.
+#### Răspunsuri:
+- **`200 OK`**: Returnează răspunsul generat de LLM.
 
-JSON
+```json
 {
   "raspuns": "Un EntityManager este o interfață...",
-  "surseFolosite": [123, 124] 
+  "surseFolosite": [123, 124]
 }
-(Notă: surseFolosite este o listă opțională de documentId-uri din care a extras informația, utilă pentru a afișa referințe studentului).
+```
+*(Notă: `surseFolosite` este o listă opțională de `documentId`-uri sau obiecte `{documentId, numeFisier}` din care a extras informația, utilă pentru afișarea referințelor studentului).*
+
 ---
+
 
 ## 3. Stări Document pe Backend (`statusIndex`)
 
