@@ -81,15 +81,6 @@ public class StudentController {
         return studentCursService.detaliiProfesorCurs(user.getId(), cursId);
     }
 
-    @PostMapping("/cursuri/{cursId}/chat")
-    public AkyChatResponseDto chatAky(
-            @PathVariable Long cursId,
-            @org.springframework.validation.annotation.Validated @jakarta.validation.Valid @RequestBody AkyChatRequestDto request,
-            @AuthenticationPrincipal OidcUser oidcUser) {
-        User user = getLoggedUser(oidcUser);
-        return studentCursService.intreabaAky(user.getId(), cursId, request);
-    }
-
     private User getLoggedUser(OidcUser oidcUser) {
         return userRepository.findByIdKeycloak(oidcUser.getSubject())
                 .orElseThrow(() -> new UserNotFoundException("Utilizatorul autentificat nu are cont local."));

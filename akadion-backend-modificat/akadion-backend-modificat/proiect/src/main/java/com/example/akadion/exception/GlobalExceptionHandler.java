@@ -127,19 +127,4 @@ public class GlobalExceptionHandler {
                 "eroare", "Fișierul depășește dimensiunea maximă permisă (50MB)."
         );
     }
-
-    // 11. Depășire limită de apeluri per minut (Rate Limiting).
-    @ExceptionHandler(TooManyRequestsException.class)
-    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS) // Cod HTTP 429
-    public Map<String, Object> handleTooManyRequests(TooManyRequestsException ex) {
-        return Map.of("status", HttpStatus.TOO_MANY_REQUESTS.value(), "eroare", ex.getMessage());
-    }
-
-    // 12. Eroare de comunicare cu serviciul RAG Chat (Timeout sau service offline).
-    @ExceptionHandler(RagChatException.class)
-    @ResponseStatus(HttpStatus.BAD_GATEWAY) // Cod HTTP 502
-    public Map<String, Object> handleRagChatException(RagChatException ex) {
-        log.error("Eroare RAG Chat: {}", ex.getMessage(), ex);
-        return Map.of("status", HttpStatus.BAD_GATEWAY.value(), "eroare", ex.getMessage());
-    }
 }

@@ -8,7 +8,7 @@ Acest document definește contractul de integrare și regulile de comunicare în
 
 1. **MinIO (Stocare S3)**:
    - Toate fișierele încărcate de profesori sunt salvate în MinIO de către backend înainte de a fi trimise la RAG.
-   - **Bucket**: `course-documents`
+   - **Bucket**: `akadion-documente`
    - **Convenție Cheie (Path)**:  
      `curs-{cursId}/saptamana-{saptamanaId}/{uuid-random}-{nume-fisier-original}`
    - RAG va descărca direct fișierele din MinIO folosind această cheie pentru a le citi, extrage textul, procesa și genera embeddings.
