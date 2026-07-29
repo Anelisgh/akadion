@@ -23,9 +23,12 @@ export async function getIstoric(conversatieId) {
 }
 
 export async function adaugaMesaj(conversatieId, intrebare) {
-  const response = await axiosInstance.post(`/api/conversatii/${conversatieId}/mesaje`, {
-    intrebare
-  })
+  const response = await axiosInstance.post(`/api/conversatii/${conversatieId}/mesaje`, { intrebare })
+  return response.data
+}
+
+export async function retryMesaj(mesajId) {
+  const response = await axiosInstance.post(`/api/conversatii/mesaje/${mesajId}/retry`)
   return response.data
 }
 

@@ -50,15 +50,36 @@ Chatbot-ul este accesibil atât **studenților** înrolați activ, cât și **pr
 Trimiterea unei întrebări noi (`POST /api/conversatii/{id}/mesaje`) e împărțită în **3 pași** de design critici, meniți să prevină blocarea bazei de date (Connection Pool Exhaustion):
 
 1. **Pas 1 - Salvare Întrebare (`@Transactional`)**
-   * Verifică autorizarea.
-   * Aplică **Rate Limiting** în memorie (maxim 10 mesaje pe minut / userId).
-   * **Protecție Retry**: Dacă RAG-ul pică (HTTP 502) și frontend-ul face "Retry", backend-ul nu dublează mesajul utilizatorului în baza de date; pur și simplu întoarce mesajul deja salvat.
+   * Verifică autorizarea și aplică Rate Limiting.
+   * Salvează mesajul utilizatorului în baza de date cu `are_raspuns = false`.
 
 2. **Pas 2 - Apelul către RAG (Fără `@Transactional`)**
-   * Metoda apelează `RagChatService.intreabaAky`. Istoricul curent (ultimele 10 mesaje) este mapat și trimis către `/chat`. Această metodă nu blochează o tranzacție locală DB pe durata timeout-ului HTTP.
+   * Metoda apelează `RagChatService.intreabaAky`. Această metodă nu blochează o tranzacție locală DB pe durata timeout-ului HTTP.
 
 3. **Pas 3 - Salvare Răspuns (`@Transactional`)**
-   * Preia răspunsul și metadatele (sursele, aka array de `documentId`) din răspunsul RAG și le stochează în `mesaje_chat` sub rolul `ASISTENT`.
+   * Preia răspunsul RAG, îl stochează sub rolul `ASISTENT`, și setează `are_raspuns = true` pe mesajul utilizatorului.
+
+- Funcția cheie care creează contextul este `obtineIstoric`, care extrage doar mesajele conversației respective, asigurându-se că îi aparține utilizatorului curent.
+
+### Protecția de Retry și `are_raspuns`
+
+Pentru a gestiona corect situațiile în care RAG-ul eșuează (HTTP 502, timeout) fără a polua UI-ul și fără a pierde întrebarea utilizatorului, am introdus coloana `are_raspuns` în tabelul `mesaje_chat`:
+
+1. **La salvarea inițială (Pasul 1)**: Când un `UTILIZATOR` trimite un mesaj, acesta este salvat cu `are_raspuns = false`.
+2. **Dacă Pasul 2 (RAG) eșuează**: Tranzacția inițială a fost deja finalizată. Mesajul rămâne în baza de date cu `are_raspuns = false`. Frontend-ul știe acum în mod explicit că acest mesaj nu a primit un răspuns din cauza unei erori tehnice (și poate afișa un ⚠️).
+3. **Dacă Pasul 2 (RAG) reușește**: La Pasul 3 (salvarea răspunsului ASISTENT-ului), se actualizează mesajul utilizatorului la `are_raspuns = true`.
+
+**Cum funcționează Retry-ul?**
+Avem un endpoint dedicat: `POST /api/conversatii/mesaje/{mesajId}/retry`.
+Când utilizatorul apasă pe "Reîncearcă" pentru un mesaj eșuat, frontend-ul nu creează un mesaj nou. Se apelează acest endpoint care:
+- Verifică ownership-ul mesajului (siguranța că aparține userului curent).
+- Verifică rate limit-ul user-ului și accesul activ la curs.
+- Apelează RAG-ul direct, folosind contextul conversației existente.
+- Salvează mesajul asistentului și marchează mesajul vechi cu `are_raspuns = true`.
+
+Această arhitectură elimină ambiguitatea din baza de date și oferă o metodă curată și sigură de retry.
+
+---
 
 ### 3. Modificări de Contract
 Contractul pe ruta `/chat` a fost ajustat arhitectural: s-a redenumit câmpul principal din `"studentId"` în `"userId"`, întrucât limitarea chatbot-ului strict la studenți a fost ridicată. Identificatorul unic trimis acum aparține utilizatorului curent (fie student, fie profesor).

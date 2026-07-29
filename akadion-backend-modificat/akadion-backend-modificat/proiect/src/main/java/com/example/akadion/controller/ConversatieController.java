@@ -43,7 +43,9 @@ public class ConversatieController {
     @GetMapping("/cursuri/{cursId}/conversatii")
     public List<ConversatieDTO> getConversatii(@PathVariable Long cursId, @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
+        System.out.println("GET /cursuri/" + cursId + "/conversatii FOR USER " + user.getId() + " (" + user.getMail() + ")");
         List<Conversatie> conversatii = conversatieService.obtineConversatiiActive(user.getId(), cursId);
+        System.out.println("FOUND CONVERSATII: " + conversatii.size());
         return conversatii.stream()
                 .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
                 .collect(Collectors.toList());
@@ -65,11 +67,11 @@ public class ConversatieController {
                 intrebare.getConversatie().getId(), user.getId(), request.intrebare());
         
         // Pas 3
-        MesajChat raspuns = conversatieService.salveazaRaspuns(intrebare.getConversatie().getId(), ragResponse);
+        MesajChat raspuns = conversatieService.salveazaRaspuns(intrebare.getId(), ragResponse);
         
         return new RagRaspunsResponse(
                 intrebare.getConversatie().getId(),
-                new MesajChatDTO(raspuns.getId(), raspuns.getRol(), raspuns.getContinut(), raspuns.getSurseFolosite(), raspuns.getCreatedAt())
+                new MesajChatDTO(raspuns.getId(), raspuns.getRol(), raspuns.getContinut(), raspuns.getSurseFolosite(), raspuns.getCreatedAt(), raspuns.getAreRaspuns())
         );
     }
 
@@ -78,7 +80,7 @@ public class ConversatieController {
         User user = getLoggedUser(oidcUser);
         List<MesajChat> istoric = conversatieService.obtineIstoric(user.getId(), id);
         return istoric.stream()
-                .map(m -> new MesajChatDTO(m.getId(), m.getRol(), m.getContinut(), m.getSurseFolosite(), m.getCreatedAt()))
+                .map(m -> new MesajChatDTO(m.getId(), m.getRol(), m.getContinut(), m.getSurseFolosite(), m.getCreatedAt(), m.getAreRaspuns()))
                 .collect(Collectors.toList());
     }
 
@@ -95,12 +97,28 @@ public class ConversatieController {
         
         // Pas 2
         AkyChatResponseDto ragResponse = conversatieService.obtineRaspunsRag(
-                intrebare.getConversatie().getId(), user.getId(), request.intrebare());
+                id, user.getId(), request.intrebare());
         
         // Pas 3
-        MesajChat raspuns = conversatieService.salveazaRaspuns(intrebare.getConversatie().getId(), ragResponse);
+        MesajChat raspuns = conversatieService.salveazaRaspuns(intrebare.getId(), ragResponse);
         
-        return new MesajChatDTO(raspuns.getId(), raspuns.getRol(), raspuns.getContinut(), raspuns.getSurseFolosite(), raspuns.getCreatedAt());
+        return new MesajChatDTO(raspuns.getId(), raspuns.getRol(), raspuns.getContinut(), raspuns.getSurseFolosite(), raspuns.getCreatedAt(), raspuns.getAreRaspuns());
+    }
+
+    @PostMapping("/conversatii/mesaje/{mesajId}/retry")
+    public MesajChatDTO retryMesaj(
+            @PathVariable Long mesajId,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+        
+        User user = getLoggedUser(oidcUser);
+        
+        // Pas 2: Reluam apelul RAG
+        AkyChatResponseDto ragResponse = conversatieService.retryMesaj(mesajId, user.getId());
+        
+        // Pas 3: Salvam
+        MesajChat raspuns = conversatieService.salveazaRaspuns(mesajId, ragResponse);
+        
+        return new MesajChatDTO(raspuns.getId(), raspuns.getRol(), raspuns.getContinut(), raspuns.getSurseFolosite(), raspuns.getCreatedAt(), raspuns.getAreRaspuns());
     }
 
     @DeleteMapping("/conversatii/{id}")

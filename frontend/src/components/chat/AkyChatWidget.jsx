@@ -1,4 +1,4 @@
-import { AlertCircle, Check, ChevronLeft, FileText, Loader2, MessageCircle, Palette, Plus, Send, Sparkles, Trash2 } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, FileText, Loader2, MessageCircle, Palette, Plus, Send, Sparkles, Trash2, RotateCcw } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import ragHeadLogo from "@/assets/logo_RAG_head.png"
 import ragLogo from "@/assets/logo_RAG-removebg-preview.png"
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { adaugaMesaj, creareConversatieSiMesaj, getConversatii, getIstoric, stergeConversatie } from "@/lib/conversatii"
+import { adaugaMesaj, creareConversatieSiMesaj, getConversatii, getConversatiiGlobale, getIstoric, stergeConversatie, retryMesaj } from "@/lib/conversatii"
 import { COURSE_THEME_KEYS, COURSE_THEMES, DEFAULT_COURSE_THEME, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
@@ -248,26 +248,36 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         
         // Refresh conversatii list in background
         const refreshPromise = courseId ? getConversatii(courseId) : getConversatiiGlobale()
-        refreshPromise.then(data => setConversatii(data)).catch(() => {})
-        
-        const akyMessage = response.raspuns
-        setMessages((current) => [...current, akyMessage])
+        refreshPromise.then(setConversatii).catch(console.error)
       } else {
-        // Adaugare la conversatie existenta
+        // Conversatie existenta
         response = await adaugaMesaj(selectedConversationId, questionText)
-        const akyMessage = response
-        setMessages((current) => [...current, akyMessage])
       }
 
-    } catch (requestError) {
-      if (requestError.response?.status === 429) {
+      setMessages((current) => {
+        const withoutTemp = current.filter((m) => m.id !== userMessage.id)
+        // DTO-ul returnat de backend este mesajul de la ASISTENT. Însă userMessage-ul abia salvat în db e la pasul 1. 
+        // Backend-ul ne dă direct noul mesaj al asistentului (și a actualizat în spate mesajul utilizatorului).
+        // Așa că cel mai sigur e să facem refetch la tot istoricul:
+        getIstoric(response.conversatieId || selectedConversationId).then(setMessages).catch(console.error)
+        return withoutTemp
+      })
+    } catch (err) {
+      console.error("Nu s-a putut trimite mesajul:", err)
+      
+      // În loc de mesaj generic, refetch la istoric ca să primim userMessage-ul salvat cu areRaspuns = false
+      if (selectedConversationId) {
+         getIstoric(selectedConversationId).then(setMessages).catch(console.error)
+      }
+      
+      if (err.response?.status === 429) {
         setError("Ai depășit limita de întrebări pe minut. Te rugăm să aștepți puțin înainte de a încerca din nou.")
-      } else if (requestError.response?.status === 502 || requestError.response?.status === 503) {
+      } else if (err.response?.status === 502 || err.response?.status === 503) {
         setError("Serviciul Aky este temporar indisponibil. Te rugăm să încerci din nou mai târziu.")
-      } else if (requestError.response?.status === 404) {
+      } else if (err.response?.status === 404) {
         setError("Modulul Aky de chat pentru acest curs este în pregătire (API 404). Răspunsul va fi disponibil când backend-ul RAG este activat.")
       } else {
-        setError(requestError.response?.data?.eroare || "Nu am putut primi un răspuns de la Aky. Te rugăm să reîncerci.")
+        setError(err.response?.data?.eroare || "Nu am putut primi un răspuns de la Aky. Te rugăm să reîncerci.")
       }
       
       // Remove optimistic user message on failure since we use Pas 1 which saves it, 
@@ -281,6 +291,23 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         setMessages((current) => current.filter(m => m.id !== userMessage.id))
       }
       
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  async function handleRetry(mesajId) {
+    if (!enabled || isSending) return
+    setIsSending(true)
+    setError(null)
+    
+    try {
+      await retryMesaj(mesajId)
+      const data = await getIstoric(selectedConversationId)
+      setMessages(data)
+    } catch (err) {
+      console.error("Eroare la retry:", err)
+      setError("Aky nu a putut răspunde nici de această dată. Te rog încearcă mai târziu.")
     } finally {
       setIsSending(false)
     }
@@ -565,7 +592,21 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 </div>
                               ) : null}
                             </div>
-                            <span className="px-1 text-[10px] font-medium text-slate-400">{formatTime(message.createdAt)}</span>
+                            <div className="flex items-center gap-2 px-1">
+                              {isUser && message.areRaspuns === false && (
+                                <div className="flex items-center gap-1.5">
+                                  <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+                                  <span className="text-[10px] font-medium text-rose-500">Nu s-a putut răspunde</span>
+                                  <button 
+                                    onClick={() => handleRetry(message.id)}
+                                    className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 transition-colors"
+                                  >
+                                    <RotateCcw className="h-3 w-3" /> Retry
+                                  </button>
+                                </div>
+                              )}
+                              <span className="text-[10px] font-medium text-slate-400">{formatTime(message.createdAt)}</span>
+                            </div>
                           </div>
                         )
                       })}

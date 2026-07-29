@@ -35,4 +35,7 @@ public class MesajChat extends BaseAuditableEntity {
 
     @Column(name = "surse_folosite", columnDefinition = "TEXT")
     private String surseFolosite;
+
+    @Column(name = "are_raspuns", nullable = false)
+    private Boolean areRaspuns = false;
 }

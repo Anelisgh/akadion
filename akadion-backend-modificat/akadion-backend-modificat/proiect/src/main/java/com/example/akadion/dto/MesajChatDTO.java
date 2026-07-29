@@ -8,5 +8,6 @@ public record MesajChatDTO(
     RolMesaj rol,
     String continut,
     String surseFolosite,
-    OffsetDateTime createdAt
+    OffsetDateTime createdAt,
+    Boolean areRaspuns
 ) {}

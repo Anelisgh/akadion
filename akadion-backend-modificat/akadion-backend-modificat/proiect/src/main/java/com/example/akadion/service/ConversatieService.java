@@ -90,15 +90,6 @@ public class ConversatieService {
             curs = conversatie.getCurs();
             verificaAcces(user, curs, true);
             verificaRateLimit(userId);
-
-            // Evitam duplicarea intrebarii in caz de retry dupa fail RAG
-            List<MesajChat> lastMessages = mesajChatRepository.findTop10ByConversatieIdOrderByCreatedAtDesc(conversatieId);
-            if (!lastMessages.isEmpty()) {
-                MesajChat lastMessage = lastMessages.get(0);
-                if (lastMessage.getRol() == RolMesaj.UTILIZATOR && lastMessage.getContinut().equals(intrebare)) {
-                    return lastMessage; // Omitere salvare duplicat
-                }
-            }
         }
 
         MesajChat mesaj = new MesajChat();
@@ -135,9 +126,14 @@ public class ConversatieService {
     }
 
     @Transactional
-    public MesajChat salveazaRaspuns(Long conversatieId, AkyChatResponseDto raspuns) {
-        Conversatie conversatie = conversatieRepository.findById(conversatieId)
-                .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
+    public MesajChat salveazaRaspuns(Long mesajUtilizatorId, AkyChatResponseDto raspuns) {
+        MesajChat mesajUtilizator = mesajChatRepository.findById(mesajUtilizatorId)
+                .orElseThrow(() -> new ResursaNegasitaException("Mesajul utilizatorului nu exista"));
+        
+        mesajUtilizator.setAreRaspuns(true);
+        mesajChatRepository.save(mesajUtilizator);
+
+        Conversatie conversatie = mesajUtilizator.getConversatie();
 
         String surseCsv = null;
         if (raspuns.surseFolosite() != null && !raspuns.surseFolosite().isEmpty()) {
@@ -152,8 +148,33 @@ public class ConversatieService {
         mesaj.setRol(RolMesaj.ASISTENT);
         mesaj.setContinut(raspuns.raspuns());
         mesaj.setSurseFolosite(surseCsv);
+        mesaj.setAreRaspuns(true); // Mesajul asistentului este automat "răspuns" implicit
 
         return mesajChatRepository.save(mesaj);
+    }
+
+    public AkyChatResponseDto retryMesaj(Long mesajId, Long userId) {
+        MesajChat mesaj = mesajChatRepository.findById(mesajId)
+                .orElseThrow(() -> new ResursaNegasitaException("Mesajul nu exista"));
+
+        Conversatie conversatie = mesaj.getConversatie();
+
+        if (!conversatie.getUser().getId().equals(userId)) {
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResursaNegasitaException("User not found"));
+
+        // Verificam acces curs (scriere)
+        verificaAcces(user, conversatie.getCurs(), true);
+        
+        // Verificam rate limit pe user
+        verificaRateLimit(userId);
+
+        // Apelam RAG. Refolosim logica de extragere a ultimelor mesaje (pentru context) 
+        // pe baza conversatiei curente.
+        return obtineRaspunsRag(conversatie.getId(), userId, mesaj.getContinut());
     }
 
     private void verificaAcces(User user, Curs curs, boolean scriere) {
