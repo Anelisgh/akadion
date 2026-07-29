@@ -210,6 +210,48 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     }
   }
 
+  async function handleOpenConversation(convId, cursId) {
+    setSelectedConversationId(convId)
+    if (cursId) {
+      setSelectedCourseId(cursId)
+    }
+    setView("chat")
+    setMessages([])
+    setError(null)
+    try {
+      setIsLoadingMessages(true)
+      const data = await getIstoric(convId)
+      setMessages(data)
+    } catch {
+      setError("Nu s-a putut încărca istoricul conversației.")
+    } finally {
+      setIsLoadingMessages(false)
+    }
+  }
+
+  function handleNewConversation() {
+    setSelectedConversationId(null)
+    if (!courseId) {
+      setSelectedCourseId(null)
+    }
+    setMessages([])
+    setError(null)
+    setView("chat")
+  }
+
+  async function handleDeleteConversation(convId, e) {
+    e.stopPropagation()
+    try {
+      await stergeConversatie(convId)
+      setConversatii((prev) => prev.filter(c => c.id !== convId))
+      if (selectedConversationId === convId) {
+        setView("list")
+      }
+    } catch (err) {
+      console.error("Nu s-a putut sterge conversatia", err)
+    }
+  }
+
   function handleQuickQuestionClick(questionText) {
     if (!enabled || !selectedCourseId || isSending) {
       return

@@ -140,7 +140,7 @@ function LoginRedirect() {
     startLogin()
   }, [])
 
-    return <LoadingPage message="Redirecționare către autentificare..." />
+  return <LoadingPage message="Redirecționare către autentificare..." />
 }
 
 function LoadingPage({ message = "Se verifică sesiunea curentă..." }) {
@@ -527,11 +527,10 @@ function CompleteProfilePage() {
                       return (
                         <label
                           key={value}
-                          className={`flex h-13 cursor-pointer items-center justify-center rounded-2xl border px-4 text-base font-semibold transition focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/15 ${
-                            isSelected
+                          className={`flex h-13 cursor-pointer items-center justify-center rounded-2xl border px-4 text-base font-semibold transition focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/15 ${isSelected
                               ? "border-[#24385b] bg-[#24385b] text-white shadow-[0_14px_30px_rgba(36,56,91,0.18)]"
                               : "border-[#e4d8cd] bg-[#f7efe6] text-slate-600 hover:border-[#24385b]/45"
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"
@@ -726,11 +725,10 @@ function AdminUsersPage() {
                     key={state}
                     type="button"
                     onClick={() => handleFilterChange(state)}
-                    className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
-                      isSelected
+                    className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition ${isSelected
                         ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
                         : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
-                    }`}
+                      }`}
                   >
                     {stateLabels[state] ?? state}
                     <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">{usersLoading ? "..." : count}</span>
@@ -856,11 +854,10 @@ function AdminUsersPage() {
                         key={pageNumber}
                         type="button"
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`flex h-9 min-w-9 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition ${
-                          isCurrent
+                        className={`flex h-9 min-w-9 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition ${isCurrent
                             ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
                             : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
-                        }`}
+                          }`}
                         aria-current={isCurrent ? "page" : undefined}
                       >
                         {pageNumber}
