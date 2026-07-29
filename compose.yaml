@@ -25,6 +25,9 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - default
+      - akadion_shared
 
   minio-setup:
     image: minio/mc:latest
@@ -75,6 +78,11 @@ services:
       - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
       - RAG_SERVICE_USERNAME=${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+      - RAG_BASE_URL=http://llm-response:8000
+      - RAG_EMBEDDER_URL=http://embedder:8001
+    networks:
+      - default
+      - akadion_shared
     depends_on:
       - postgres
       - keycloak
@@ -94,3 +102,7 @@ services:
 volumes:
   minio_data:
   postgres_data:
+
+networks:
+  akadion_shared:
+    external: true

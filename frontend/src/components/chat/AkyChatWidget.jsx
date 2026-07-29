@@ -1,4 +1,6 @@
-import { AlertCircle, Check, ChevronLeft, FileText, Loader2, MessageCircle, Palette, Plus, Send, Sparkles, Trash2, RotateCcw } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, FileText, Loader2, MessageCircle, Palette, Plus, Send, Sparkles, Trash2, RotateCcw, ChevronDown, RefreshCcw, Maximize2, Minimize2 } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { useEffect, useRef, useState } from "react"
 import ragHeadLogo from "@/assets/logo_RAG_head.png"
 import ragLogo from "@/assets/logo_RAG-removebg-preview.png"
@@ -618,18 +620,27 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                   : "rounded-bl-xs border border-[#e4d8cd] bg-white text-slate-800"
                               )}
                             >
-                              <p className="whitespace-pre-wrap">{message.continut}</p>
+                              <div className="whitespace-pre-wrap font-sans text-sm markdown-body">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {message.continut}
+                                </ReactMarkdown>
+                              </div>
 
                               {!isUser && message.surseFolosite ? (
                                 <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
                                   <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Surse folosite:</p>
                                   <div className="flex flex-wrap gap-1.5">
-                                    {message.surseFolosite.split(",").filter(Boolean).map((sourceId, index) => (
-                                      <span key={index} className="inline-flex items-center gap-1 rounded-xl border border-[#d9e4f4] bg-[#f4f8fd] px-2.5 py-1 text-[11px] font-semibold text-[#24385b]">
-                                        <FileText className="h-3 w-3 text-[#3b6ea8]" />
-                                        <span className="max-w-[140px] truncate">Document {sourceId}</span>
-                                      </span>
-                                    ))}
+                                    {message.surseFolosite.split(",").filter(Boolean).map((sourceItem, index) => {
+                                      const parts = sourceItem.split("|");
+                                      const sourceId = parts[0];
+                                      const sourceName = parts.length > 1 ? parts[1] : `Document ${sourceId}`;
+                                      return (
+                                        <span key={index} className="inline-flex items-center gap-1 rounded-xl border border-[#d9e4f4] bg-[#f4f8fd] px-2.5 py-1 text-[11px] font-semibold text-[#24385b]">
+                                          <FileText className="h-3 w-3 text-[#3b6ea8]" />
+                                          <span className="max-w-[140px] truncate">{sourceName}</span>
+                                        </span>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               ) : null}

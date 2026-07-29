@@ -19,12 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RagChatService {
 
-    private final RestClient ragRestClient;
+    @Qualifier("ragChatRestClient")
+    private final RestClient ragChatRestClient;
     private final DocumentRepository documentRepository;
 
     private RestClient restClient;
@@ -35,7 +38,7 @@ public class RagChatService {
         requestFactory.setConnectTimeout((int) Duration.ofSeconds(5).toMillis());
         requestFactory.setReadTimeout((int) Duration.ofSeconds(30).toMillis());
 
-        this.restClient = ragRestClient.mutate()
+        this.restClient = ragChatRestClient.mutate()
                 .requestFactory(requestFactory)
                 .build();
     }
@@ -51,8 +54,9 @@ public class RagChatService {
                     .toList();
 
             Map<String, Object> ragPayload = Map.of(
-                    "userId", userId,
+                    "studentId", userId,
                     "cursId", cursId,
+                    "maxSaptamanaParcursa", 100, // Hardcodat la 100 până implementăm progresul real
                     "intrebare", request.intrebare(),
                     "istoricConversatie", istoricMapped
             );

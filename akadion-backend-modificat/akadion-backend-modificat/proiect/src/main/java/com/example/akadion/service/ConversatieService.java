@@ -139,7 +139,7 @@ public class ConversatieService {
         if (raspuns.surseFolosite() != null && !raspuns.surseFolosite().isEmpty()) {
             surseCsv = raspuns.surseFolosite().stream()
                     .filter(s -> s.documentId() != null)
-                    .map(s -> s.documentId().toString())
+                    .map(s -> s.documentId().toString() + "|" + (s.numeFisier() != null ? s.numeFisier().replace(",", "").replace("|", "") : "Document"))
                     .collect(Collectors.joining(","));
         }
 

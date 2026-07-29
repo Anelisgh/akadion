@@ -16,12 +16,15 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RagIngestService {
 
-    private final RestClient ragRestClient;
+    @Qualifier("ragEmbedderRestClient")
+    private final RestClient ragEmbedderRestClient;
 
     private RestClient restClient;
 
@@ -30,7 +33,7 @@ public class RagIngestService {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setReadTimeout((int) Duration.ofSeconds(120).toMillis());
         
-        this.restClient = ragRestClient.mutate().requestFactory(factory).build();
+        this.restClient = ragEmbedderRestClient.mutate().requestFactory(factory).build();
     }
 
     public boolean trimiteLaIngest(Document document, Saptamana saptamana, Curs curs) {
@@ -40,22 +43,24 @@ public class RagIngestService {
                     ? path.substring(path.lastIndexOf(".") + 1).toLowerCase() 
                     : "";
 
-            restClient.post()
-                    .uri("/ingest")
+            Map<String, Object> response = restClient.post()
+                    .uri("/api/documents/ingest")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
-                            "documentId", document.getId(),
-                            "cursId", curs.getId(),
-                            "saptamanaId", saptamana.getId(),
-                            "profesorId", curs.getProfesor().getId(),
-                            "titlu", document.getTitlu(),
-                            "pathMinio", path != null ? path : "",
-                            "extensie", extensie,
-                            "cursDenumire", curs.getDenumire(),
-                            "nrSaptamana", saptamana.getNrSaptamana()
+                            "document_id", document.getId(),
+                            "course_id", curs.getId(),
+                            "week_id", saptamana.getId(),
+                            "professor_id", curs.getProfesor().getId(),
+                            "document_title", document.getTitlu(),
+                            "path_minio", path != null ? path : ""
                     ))
                     .retrieve()
-                    .toBodilessEntity();
+                    .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
+                    
+            if (response != null && "FAILED".equals(response.get("status"))) {
+                log.error("Serviciul RAG a returnat status FAILED la ingestie pentru documentul {}", document.getId());
+                return false;
+            }
             return true;
         } catch (HttpClientErrorException.Unauthorized e) {
             log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (documentId={})", document.getId());
