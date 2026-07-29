@@ -73,6 +73,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-parola123}
       - KEYCLOAK_BACKEND_LOGIN_SECRET=${KEYCLOAK_BACKEND_LOGIN_SECRET:-ckRYo6MBAP2Ed5LcDRzDTLnYJY085JCK}
       - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
+      - RAG_SERVICE_USERNAME=${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
     depends_on:
       - postgres
       - keycloak

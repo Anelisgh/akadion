@@ -1,9 +1,13 @@
-import { ArrowRight, CalendarDays, Check, Palette } from "lucide-react"
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import { ArrowRight, CalendarDays, Check, Palette, AlertCircle } from "lucide-react"
+import { useState, useEffect, useEffectEvent } from "react"
+import { Link, Navigate } from "react-router-dom"
 import AppShell from "@/components/AppShell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from "@/auth/useAuth"
+import { isAdminUser } from "@/lib/user"
+import { listAdminCourses, getCourseErrorMessage } from "@/lib/professorCourses"
 import { COURSE_THEMES, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 
 const COURSE_THEME_STORAGE_PREFIX = "akadion:course-theme"
@@ -248,17 +252,86 @@ export function AdminCourseList({ courses, currentPage, totalPages, onPageChange
 }
 
 export default function CoursesPage() {
-  const heroClassName = "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+  const { user, refreshAuth } = useAuth()
+  const isAdmin = isAdminUser(user)
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const ADMIN_COURSES_PER_PAGE = 6
+
+  const syncCourses = useEffectEvent(async () => {
+    if (!isAdmin) return
+    setLoading(true)
+    setError("")
+    try {
+      setCourses(await listAdminCourses())
+    } catch (e) {
+      if (e.response?.status === 401) await refreshAuth()
+      setError(getCourseErrorMessage(e, "Nu am putut încărca cursurile."))
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  useEffect(() => {
+    syncCourses()
+  }, [])
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  const totalPages = Math.max(1, Math.ceil(courses.length / ADMIN_COURSES_PER_PAGE))
+  const pageStart = (currentPage - 1) * ADMIN_COURSES_PER_PAGE
+  const paginatedCourses = courses.slice(pageStart, pageStart + ADMIN_COURSES_PER_PAGE)
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const heroClassName = "relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#434f9f] via-[#5869bd] to-[#7c89dc] text-white shadow-[0_24px_60px_rgba(67,79,159,0.26)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
 
   return (
     <AppShell
-      title=""
-      description={undefined}
-      eyebrow=""
+      title="Cursuri Akadion"
+      description="Toate cursurile create de profesori în platformă."
+      eyebrow="Cursuri"
       heroClassName={heroClassName}
       heroEyebrowClassName="text-white/72"
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
-    />
+    >
+      <div className="space-y-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-semibold tracking-tight text-[#24385b]">Toate cursurile</h2>
+        </div>
+
+        {error ? (
+          <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Eroare la încărcare</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {loading ? <p className="text-sm text-slate-500">Se încarcă lista de cursuri...</p> : null}
+
+        {!loading && courses.length > 0 ? (
+          <AdminCourseList
+            courses={paginatedCourses}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        ) : null}
+
+        {!loading && courses.length === 0 ? (
+          <EmptyCoursesState message="Nu există încă niciun curs creat de profesori." />
+        ) : null}
+      </div>
+    </AppShell>
   )
 }

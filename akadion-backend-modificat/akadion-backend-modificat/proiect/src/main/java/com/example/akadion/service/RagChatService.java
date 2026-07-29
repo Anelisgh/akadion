@@ -8,10 +8,10 @@ import com.example.akadion.repository.DocumentRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
@@ -24,11 +24,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RagChatService {
 
-    private final RestClient.Builder restClientBuilder;
+    private final RestClient ragRestClient;
     private final DocumentRepository documentRepository;
-
-    @Value("${app.rag.base-url}")
-    private String ragBaseUrl;
 
     private RestClient restClient;
 
@@ -38,7 +35,7 @@ public class RagChatService {
         requestFactory.setConnectTimeout((int) Duration.ofSeconds(5).toMillis());
         requestFactory.setReadTimeout((int) Duration.ofSeconds(30).toMillis());
 
-        this.restClient = restClientBuilder
+        this.restClient = ragRestClient.mutate()
                 .requestFactory(requestFactory)
                 .build();
     }
@@ -63,7 +60,7 @@ public class RagChatService {
             log.info("Trimitere cerere RAG Chat pentru utilizatorul {} la cursul {}.", userId, cursId);
 
             Map<String, Object> responseMap = restClient.post()
-                    .uri(ragBaseUrl + "/chat")
+                    .uri("/chat")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(ragPayload)
                     .retrieve()
@@ -97,6 +94,9 @@ public class RagChatService {
 
             return new AkyChatResponseDto(raspunsText, surseDtos);
 
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (cursId={})", cursId);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         } catch (RagChatException e) {
             throw e;
         } catch (Exception e) {

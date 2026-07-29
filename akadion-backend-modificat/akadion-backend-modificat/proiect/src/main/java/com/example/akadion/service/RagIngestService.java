@@ -8,9 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Slf4j
@@ -18,16 +21,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RagIngestService {
 
-    private final RestClient.Builder restClientBuilder;
-
-    @Value("${app.rag.base-url}")
-    private String ragBaseUrl;
+    private final RestClient ragRestClient;
 
     private RestClient restClient;
 
     @PostConstruct
     void init() {
-        this.restClient = restClientBuilder.build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setReadTimeout((int) Duration.ofSeconds(120).toMillis());
+        
+        this.restClient = ragRestClient.mutate().requestFactory(factory).build();
     }
 
     public boolean trimiteLaIngest(Document document, Saptamana saptamana, Curs curs) {
@@ -38,7 +41,7 @@ public class RagIngestService {
                     : "";
 
             restClient.post()
-                    .uri(ragBaseUrl + "/ingest")
+                    .uri("/ingest")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
                             "documentId", document.getId(),
@@ -54,6 +57,9 @@ public class RagIngestService {
                     .retrieve()
                     .toBodilessEntity();
             return true;
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (documentId={})", document.getId());
+            return false;
         } catch (Exception e) {
             log.error("Eroare la trimiterea documentului {} către RAG: {}", document.getId(), e.getMessage());
             return false;
@@ -63,9 +69,11 @@ public class RagIngestService {
     public void stergeDinIngest(Long documentId) {
         try {
             restClient.delete()
-                    .uri(ragBaseUrl + "/ingest/" + documentId)
+                    .uri("/ingest/" + documentId)
                     .retrieve()
                     .toBodilessEntity();
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (documentId={})", documentId);
         } catch (Exception e) {
             log.error("Eroare la ștergerea documentului {} din RAG: {}", documentId, e.getMessage());
         }
