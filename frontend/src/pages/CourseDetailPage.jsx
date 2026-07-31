@@ -56,7 +56,7 @@ import {
 } from "@/lib/professorCourses"
 import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
-import { cn } from "@/lib/utils"
+import { cn, formatWeeks } from "@/lib/utils"
 
 function formatDisplayDate(value) {
   if (!value) {
@@ -728,7 +728,7 @@ export default function CourseDetailPage() {
         <div className="min-w-0">
           <h2 className="text-lg font-bold tracking-tight text-slate-900">Cuprins curs</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {weeks.length} săptămâni · {totalCourseDocuments} documente
+            {formatWeeks(weeks.length)} · {totalCourseDocuments} documente
           </p>
         </div>
         <button
@@ -1051,7 +1051,7 @@ export default function CourseDetailPage() {
                       <p className={cn("text-xs font-semibold tracking-[0.18em] uppercase", theme.sectionLabel)}>Conținut curs</p>
                       <h2 className={cn("mt-1 text-2xl font-semibold tracking-tight", theme.sectionTitle)}>Săptămâni și documente</h2>
                     </div>
-                    <p className="text-sm font-medium text-slate-500">Total: {weeks.length} săptămâni</p>
+                    <p className="text-sm font-medium text-slate-500">Total: {formatWeeks(weeks.length)}</p>
                   </div>
                 </div>
 

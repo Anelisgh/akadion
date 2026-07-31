@@ -9,7 +9,7 @@ import { getRoleLabel, getUserDisplayName, isAdminUser, isProfessorUser, isStude
 import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { cn } from "@/lib/utils"
-import completeProfileLogo from "../../folder_inspiratie2/logo_bufnita.jpeg"
+import completeProfileLogo from "../../folder_inspiratie2/logo_bufnita_transparenta.png"
 
 function getInitials(displayName) {
   return displayName
@@ -86,10 +86,9 @@ function CourseTabsNav({ user, onNavClick }) {
           end
           onClick={onNavClick}
           className={({ isActive }) =>
-            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-              isActive
-                ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+              ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+              : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
             }`
           }
         >
@@ -104,10 +103,9 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/admin/users"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
@@ -118,10 +116,9 @@ function CourseTabsNav({ user, onNavClick }) {
               to="/courses"
               onClick={onNavClick}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                    : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
+                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
                 }`
               }
             >
@@ -213,14 +210,8 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
     <main className="app-shell min-h-screen text-slate-900">
       <header className="sticky top-0 z-30 border-b border-[#e7d9c8]/80 bg-[#fbf7f1]/92 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link to={homePath} className="flex items-center gap-3 shrink-0">
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white p-1 shadow-sm ring-1 ring-[#e7d9c8]">
-              <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
-            </span>
-            <span className="hidden sm:block">
-              <span className="block text-base font-semibold tracking-tight text-[#24385b]">Akadion</span>
-              <span className="block text-xs font-medium text-slate-500">{roleLabel}</span>
-            </span>
+          <Link to={homePath} className="-my-3 flex items-center shrink-0">
+            <img src={completeProfileLogo} alt="Akadion" className="h-16 w-auto object-contain" />
           </Link>
 
           <nav className="hidden lg:flex min-w-0 flex-1 justify-center px-4">

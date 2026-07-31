@@ -9,6 +9,7 @@ import { useAuth } from "@/auth/useAuth"
 import { isAdminUser } from "@/lib/user"
 import { listAdminCourses, getCourseErrorMessage } from "@/lib/professorCourses"
 import { COURSE_THEMES, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
+import { formatWeeks, formatStudents } from "@/lib/utils"
 
 const COURSE_THEME_STORAGE_PREFIX = "akadion:course-theme"
 
@@ -114,7 +115,7 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
             <CalendarDays className="h-4 w-4" />
             {formatCourseDate(course.dataInceput)}
           </span>
-            <span>{course.nrSaptamaniCurente ?? 0} săptămâni</span>
+            <span>{formatWeeks(course.nrSaptamaniCurente ?? course.nrSaptamani ?? 0)}</span>
         </div>
         {isProfessorMode ? (
           <Button asChild variant="outline" className="mt-2 rounded-2xl border-[#d9ccbe] bg-white text-[#3f698a]">
@@ -204,7 +205,7 @@ export function AdminCourseList({ courses, currentPage, totalPages, onPageChange
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-base font-semibold text-[#24385b]">{course.denumire}</h3>
                 <p className="mt-1 text-sm text-[#5d7094]">
-                  {course.nrStudentiInscrisi ?? 0} studenti · {course.nrSaptamaniCurente ?? 0} saptamani
+                  {formatStudents(course.nrStudentiInscrisi ?? 0)} · {formatWeeks(course.nrSaptamaniCurente ?? course.nrSaptamani ?? 0)}
                 </p>
               </div>
 

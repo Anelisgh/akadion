@@ -14,7 +14,7 @@ import ProfilePage from "@/pages/ProfilePage"
 import AppShell from "@/components/AppShell"
 import { getRoleLabel, getUserDisplayName, getUserInitials, isAdminUser, isProfessorUser } from "@/lib/user"
 import { startLogout } from "@/auth/logout"
-import completeProfileLogo from "../folder_inspiratie2/logo_bufnita.jpeg"
+import completeProfileLogo from "../folder_inspiratie2/logo_bufnita_transparenta.png"
 import {
   AlertCircle,
   ArrowLeft,
@@ -28,7 +28,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react"
-import { Link, Navigate, Route, Routes, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, Navigate, Route, Routes, useNavigate, useLocation, useSearchParams } from "react-router-dom"
 
 const USER_STATES = ["ALL", "PENDING", "ACTIV", "INACTIV", "RESPINS", "INCOMPLET"]
 
@@ -394,7 +394,7 @@ function CompleteProfilePage() {
 
             <div className="complete-profile-brand-header">
               <div className="complete-profile-brand-logo-shell">
-                <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
+                <img src={completeProfileLogo} alt="Akadion" className="h-full w-full object-contain" />
               </div>
               <div>
                 <p className="text-2xl font-semibold tracking-tight">Akadion</p>
@@ -528,8 +528,8 @@ function CompleteProfilePage() {
                         <label
                           key={value}
                           className={`flex h-13 cursor-pointer items-center justify-center rounded-2xl border px-4 text-base font-semibold transition focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/15 ${isSelected
-                              ? "border-[#24385b] bg-[#24385b] text-white shadow-[0_14px_30px_rgba(36,56,91,0.18)]"
-                              : "border-[#e4d8cd] bg-[#f7efe6] text-slate-600 hover:border-[#24385b]/45"
+                            ? "border-[#24385b] bg-[#24385b] text-white shadow-[0_14px_30px_rgba(36,56,91,0.18)]"
+                            : "border-[#e4d8cd] bg-[#f7efe6] text-slate-600 hover:border-[#24385b]/45"
                             }`}
                         >
                           <input
@@ -726,8 +726,8 @@ function AdminUsersPage() {
                     type="button"
                     onClick={() => handleFilterChange(state)}
                     className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition ${isSelected
-                        ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
-                        : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
+                      ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
+                      : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
                       }`}
                   >
                     {stateLabels[state] ?? state}
@@ -855,8 +855,8 @@ function AdminUsersPage() {
                         type="button"
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`flex h-9 min-w-9 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition ${isCurrent
-                            ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
-                            : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
+                          ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
+                          : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
                           }`}
                         aria-current={isCurrent ? "page" : undefined}
                       >
@@ -879,9 +879,7 @@ function StatusPage({ title, description, accentState, accentLabel, primaryActio
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Card className="w-full max-w-2xl border-border/60 bg-card/95 shadow-sm">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#f7efe6] p-1.5">
-            <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
-          </div>
+          <img src={completeProfileLogo} alt="Akadion" className="mx-auto h-20 w-auto object-contain" />
           <div className="space-y-3">
             <div className="flex justify-center">
               <UserStateBadge state={accentState} label={accentLabel} />
@@ -988,6 +986,32 @@ function NotFoundPage() {
 }
 
 function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const routeTitles = {
+      "/": "Acasă",
+      "/complete-profile": "Finalizare Profil",
+      "/asteptare-aprobare": "Așteptare Aprobare",
+      "/cerere-respinsa": "Cerere Respinsă",
+      "/cont-dezactivat": "Cont Dezactivat",
+      "/courses": "Cursuri",
+      "/courses/new": "Adaugă Curs",
+      "/profile": "Profilul Meu",
+      "/users": "Utilizatori",
+      "/admin/users": "Administrare Utilizatori",
+    }
+
+    let title = "AKADION - Platformă Academică"
+    if (routeTitles[location.pathname]) {
+      title = `${routeTitles[location.pathname]} - AKADION`
+    } else if (location.pathname.startsWith("/courses/")) {
+      title = "Detalii Curs - AKADION"
+    }
+
+    document.title = title
+  }, [location])
+
   return (
     <Routes>
       <Route

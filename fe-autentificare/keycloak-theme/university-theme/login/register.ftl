@@ -120,9 +120,6 @@
 
             <div class="${properties.kcFormGroupClass!}">
                 <div id="kc-form-options" class="${properties.kcFormOptionsClass!}">
-                    <div class="${properties.kcFormOptionsWrapperClass!}">
-                        <a href="${url.loginUrl}">${msg("backToLogin")}</a>
-                    </div>
                 </div>
 
                 <#if recaptchaRequired?? && !(recaptchaVisible!false)>

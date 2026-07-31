@@ -10,7 +10,15 @@
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
         </#list>
     </#if>
-    <title>${title!msg("loginTitle", (realm.displayName!msg("platformName")))}</title>
+    <#if bodyClass?contains("page-forgot-password")>
+        <title>${msg("emailForgotTitle", "Ai uitat parola?")} - ${(realm.displayName!msg("platformName"))}</title>
+    <#elseif bodyClass?contains("page-register")>
+        <title>${msg("registerTitle")} - ${(realm.displayName!msg("platformName"))}</title>
+    <#elseif bodyClass?contains("page-login")>
+        <title>${msg("loginAccountTitle")} - ${(realm.displayName!msg("platformName"))}</title>
+    <#else>
+        <title>${title!msg("loginTitle", (realm.displayName!msg("platformName")))}</title>
+    </#if>
     <#if properties.styles?has_content>
         <#list properties.styles?split(' ') as style>
             <link href="${url.resourcesPath}/${style}" rel="stylesheet" />
@@ -25,9 +33,8 @@
 <body class="${properties.kcBodyClass!} ${bodyClass}" data-page-id="${pageId!'login'}">
     <div class="${properties.kcLoginClass!}">
         <header class="mobile-brand-header" aria-label="${msg('platformName')}">
-            <img src="${url.resourcesPath}/img/logo_bufnita.jpeg" alt="${msg('platformName')}" class="mobile-brand-header__logo" />
+            <img src="${url.resourcesPath}/img/logo_bufnita.png" alt="${msg('platformName')}" class="mobile-brand-header__logo" />
             <div class="mobile-brand-header__copy">
-                <span class="mobile-brand-header__name">${msg("platformName")}</span>
                 <span class="mobile-brand-header__caption">${msg("brandCaption")}</span>
             </div>
         </header>
@@ -36,9 +43,8 @@
             <div class="auth-brand-panel__content">
                 <div class="brand-header" aria-label="${msg('platformName')}">
                     <div class="brand-header__left">
-                        <img src="${url.resourcesPath}/img/logo_bufnita.jpeg" alt="${msg('platformName')}" class="brand-logo" />
+                        <img src="${url.resourcesPath}/img/logo_bufnita.png" alt="${msg('platformName')}" class="brand-logo" />
                         <div class="brand-header__copy">
-                            <span class="brand-name">${msg("platformName")}</span>
                             <span class="brand-caption">${msg("brandCaption")}</span>
                         </div>
                     </div>
@@ -50,19 +56,25 @@
 
                     <div class="brand-benefits" aria-label="${msg('brandBenefitsLabel')}">
                         <div class="brand-benefit-card">
-                            <span class="brand-benefit-card__icon" aria-hidden="true">📚</span>
+                            <span class="brand-benefit-card__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            </span>
                             <span class="brand-benefit-card__copy">
                                 <span>${msg("benefitCourses")}</span>
                             </span>
                         </div>
                         <div class="brand-benefit-card">
-                            <span class="brand-benefit-card__icon" aria-hidden="true">📈</span>
+                            <span class="brand-benefit-card__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                            </span>
                             <span class="brand-benefit-card__copy">
                                 <span>${msg("benefitProgress")}</span>
                             </span>
                         </div>
                         <div class="brand-benefit-card">
-                            <span class="brand-benefit-card__icon" aria-hidden="true">🤝</span>
+                            <span class="brand-benefit-card__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </span>
                             <span class="brand-benefit-card__copy">
                                 <span>${msg("benefitAccess")}</span>
                             </span>
@@ -90,7 +102,6 @@
                         <div>
                             <#-- eyebrow removed -->
                             <h2 id="kc-page-title" class="auth-title"><#nested "header"></h2>
-                            <p class="auth-subtitle">${msg(authSubtitleKey!'authSubtitle')}</p>
                         </div>
 
                         <#if realm.internationalizationEnabled && locale.supported?size gt 1>
@@ -121,9 +132,7 @@
                         </div>
                     </#if>
 
-                    <#if displayRequiredFields>
-                        <p class="required-note"><span>*</span> ${msg("requiredFields")}</p>
-                    </#if>
+
                 </header>
 
                 <div class="auth-card-body">
