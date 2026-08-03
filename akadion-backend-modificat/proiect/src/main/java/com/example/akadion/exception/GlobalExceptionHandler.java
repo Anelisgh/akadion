@@ -87,8 +87,8 @@ public class GlobalExceptionHandler {
         log.error("Eroare integrare Keycloak: {}", ex.getMessage(), ex);
         return Map.of(
                 "status", HttpStatus.BAD_GATEWAY.value(),
-                "eroare", "Eroare de comunicare cu Keycloak. Verificați logurile și reîncercați.",
-                "detalii", ex.getMessage()
+                "eroare", ex.getMessage() != null ? ex.getMessage() : "Eroare de comunicare cu Keycloak.",
+                "detalii", ex.getMessage() != null ? ex.getMessage() : ""
         );
     }
 

@@ -1,12 +1,12 @@
 import axiosInstance from "@/api/axiosInstance"
 
-export async function getConversatiiGlobale() {
-  const response = await axiosInstance.get(`/api/conversatii`)
+export async function getConversatiiGlobale(page = 0, size = 20) {
+  const response = await axiosInstance.get(`/api/conversatii`, { params: { page, size } })
   return response.data
 }
 
-export async function getConversatii(cursId) {
-  const response = await axiosInstance.get(`/api/cursuri/${cursId}/conversatii`)
+export async function getConversatii(cursId, page = 0, size = 20) {
+  const response = await axiosInstance.get(`/api/cursuri/${cursId}/conversatii`, { params: { page, size } })
   return response.data
 }
 
@@ -17,8 +17,10 @@ export async function creareConversatieSiMesaj(cursId, intrebare) {
   return response.data
 }
 
-export async function getIstoric(conversatieId) {
-  const response = await axiosInstance.get(`/api/conversatii/${conversatieId}/mesaje`)
+export async function getIstoric(conversatieId, inainteDe = null, limit = 20) {
+  const params = { limit }
+  if (inainteDe) params.inainteDe = inainteDe
+  const response = await axiosInstance.get(`/api/conversatii/${conversatieId}/mesaje`, { params })
   return response.data
 }
 

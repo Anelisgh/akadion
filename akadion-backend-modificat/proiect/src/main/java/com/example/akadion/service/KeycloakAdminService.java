@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Map;
 
@@ -56,11 +57,19 @@ public class KeycloakAdminService {
                     .uri(keycloakBaseUrl + "/admin/realms/" + realm + "/users/" + idKeycloak)
                     .header("Authorization", "Bearer " + getAdminToken())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("email", newEmail, "emailVerified", emailVerified))
+                    .body(Map.of(
+                            "email", newEmail,
+                            "username", newEmail,
+                            "emailVerified", emailVerified
+                    ))
                     .retrieve()
                     .toBodilessEntity();
 
             log.info("Keycloak: Email actualizat pentru sub={} la email={}, verificat={}", idKeycloak, newEmail, emailVerified);
+        } catch (RestClientResponseException e) {
+            log.error("Eroare răspuns Keycloak (status {}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new KeycloakIntegrationException(
+                    "Eroare Keycloak [" + e.getStatusCode() + "]: " + e.getResponseBodyAsString(), e);
         } catch (RestClientException e) {
             throw new KeycloakIntegrationException(
                     "Eroare Keycloak la actualizarea email-ului pentru sub=" + idKeycloak + ": " + e.getMessage(), e);

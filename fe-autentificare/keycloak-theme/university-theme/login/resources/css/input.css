@@ -369,12 +369,12 @@
   }
 
   .auth-card-header {
-    @apply px-6 pt-9 pb-2 sm:px-8 sm:pt-10 sm:pb-3;
+    @apply px-6 pt-5 pb-1 sm:px-8 sm:pt-6 sm:pb-2;
     border-bottom: none;
   }
 
   .auth-card-body {
-    @apply px-6 pt-2 pb-8 sm:px-8 sm:pt-3 sm:pb-9;
+    @apply px-6 pt-1 pb-6 sm:px-8 sm:pt-2 sm:pb-7;
   }
 
   .header-row {

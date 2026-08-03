@@ -46,10 +46,18 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   
   // Chat & History state
   const [conversatii, setConversatii] = useState([])
+  const [convPage, setConvPage] = useState(0)
+  const [hasMoreConversations, setHasMoreConversations] = useState(false)
+  const [isLoadingMoreConversations, setIsLoadingMoreConversations] = useState(false)
+
   const [view, setView] = useState("list") // "list" | "chat"
   const [selectedConversationId, setSelectedConversationId] = useState(null)
-  
+
   const [messages, setMessages] = useState([])
+  const [hasMoreMessages, setHasMoreMessages] = useState(false)
+  const [oldestLoadedMessageId, setOldestLoadedMessageId] = useState(null)
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false)
+
   const [draft, setDraft] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState(null)
@@ -61,6 +69,36 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setSelectedCourseId(courseId)
   }, [courseId])
 
+  async function fetchConversations(pageToLoad = 0, append = false) {
+    try {
+      if (append) {
+        setIsLoadingMoreConversations(true)
+      } else {
+        setIsLoadingConversations(true)
+      }
+
+      const res = courseId
+        ? await getConversatii(courseId, pageToLoad)
+        : await getConversatiiGlobale(pageToLoad)
+
+      const items = Array.isArray(res) ? res : (res?.continut || [])
+      const hasMore = res?.areUrmatoarea ?? false
+
+      setConversatii((prev) => (append ? [...prev, ...items] : items))
+      setHasMoreConversations(hasMore)
+      setConvPage(pageToLoad)
+
+      if (!append && pageToLoad === 0 && courseId && items.length === 0) {
+        setView("chat")
+      }
+    } catch (err) {
+      console.error("Failed to load conversations", err)
+    } finally {
+      setIsLoadingConversations(false)
+      setIsLoadingMoreConversations(false)
+    }
+  }
+
   // Load conversations
   useEffect(() => {
     if (!open) return
@@ -70,30 +108,19 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setConversatii([])
     setSelectedConversationId(null)
     setView("list")
-    
+    setConvPage(0)
+    setHasMoreConversations(false)
+    setHasMoreMessages(false)
+    setOldestLoadedMessageId(null)
+
     // Reset course selection if it's the global widget
     if (!courseId) {
       setSelectedCourseId(null)
     } else {
       setSelectedCourseId(courseId)
     }
-    
-    async function fetchConversations() {
-      try {
-        setIsLoadingConversations(true)
-        const allConversations = await getConversatiiGlobale()
-        const data = courseId 
-          ? allConversations.filter((c) => String(c.cursId) === String(courseId))
-          : allConversations
-        setConversatii(data)
-      } catch (err) {
-        console.error("Failed to load conversations", err)
-      } finally {
-        setIsLoadingConversations(false)
-      }
-    }
-    
-    fetchConversations()
+
+    fetchConversations(0, false)
   }, [open, courseId])
 
   // Load courses if none are passed
@@ -176,17 +203,67 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setView("chat")
     setMessages([])
     setError(null)
+    setHasMoreMessages(false)
+    setOldestLoadedMessageId(null)
+
     try {
       setIsLoadingMessages(true)
-      const data = await getIstoric(convId)
-      setMessages(data)
+      const res = await getIstoric(convId)
+      const msgList = Array.isArray(res) ? res : (res?.mesaje || [])
+      setMessages(msgList)
+      setHasMoreMessages(res?.areMaiMulte ?? false)
+      setOldestLoadedMessageId(res?.celMaiVechiIdIncarcat ?? null)
     } catch (err) {
       setError("Nu s-a putut încărca istoricul conversației.")
     } finally {
       setIsLoadingMessages(false)
     }
   }
-  
+
+  async function loadOlderMessages() {
+    if (!selectedConversationId || !hasMoreMessages || !oldestLoadedMessageId || isLoadingOlderMessages) return
+
+    try {
+      setIsLoadingOlderMessages(true)
+      const res = await getIstoric(selectedConversationId, oldestLoadedMessageId)
+      const olderMsgs = Array.isArray(res) ? res : (res?.mesaje || [])
+      setMessages((prev) => [...olderMsgs, ...prev])
+      setHasMoreMessages(res?.areMaiMulte ?? false)
+      setOldestLoadedMessageId(res?.celMaiVechiIdIncarcat ?? null)
+    } catch (err) {
+      console.error("Nu s-au putut încărca mesajele anterioare", err)
+    } finally {
+      setIsLoadingOlderMessages(false)
+    }
+  }
+
+  function handleScrollConversations(event) {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    if (hasMoreConversations && !isLoadingMoreConversations && scrollHeight - scrollTop - clientHeight < 60) {
+      fetchConversations(convPage + 1, true)
+    }
+  }
+
+  function handleScrollMessages(event) {
+    const { scrollTop } = event.currentTarget
+    if (hasMoreMessages && !isLoadingOlderMessages && scrollTop < 40) {
+      loadOlderMessages()
+    }
+  }
+
+  async function fetchLatestMessages(convId) {
+    if (!convId) return
+    try {
+      const res = await getIstoric(convId)
+      const msgList = Array.isArray(res) ? res : (res?.mesaje || [])
+      setMessages(msgList)
+      setHasMoreMessages(res?.areMaiMulte ?? false)
+      setOldestLoadedMessageId(res?.celMaiVechiIdIncarcat ?? null)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   function handleNewConversation() {
     setSelectedConversationId(null)
     if (!courseId) {
@@ -194,14 +271,16 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     }
     setMessages([])
     setError(null)
+    setHasMoreMessages(false)
+    setOldestLoadedMessageId(null)
     setView("chat")
   }
-  
+
   async function handleDeleteConversation(convId, e) {
     e.stopPropagation()
     try {
       await stergeConversatie(convId)
-      setConversatii((prev) => prev.filter(c => c.id !== convId))
+      setConversatii((prev) => prev.filter((c) => c.id !== convId))
       if (selectedConversationId === convId) {
         setView("list")
       }
@@ -244,32 +323,22 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       if (!selectedConversationId) {
         // Creare conversatie noua
         response = await creareConversatieSiMesaj(selectedCourseId, questionText)
-        setSelectedConversationId(response.conversatieId)
+        const newConvId = response.conversatieId
+        setSelectedConversationId(newConvId)
         
         // Refresh conversatii list in background
-        getConversatiiGlobale().then((allConvs) => {
-          const data = courseId ? allConvs.filter((c) => String(c.cursId) === String(courseId)) : allConvs
-          setConversatii(data)
-        }).catch(console.error)
+        fetchConversations(0, false)
+        fetchLatestMessages(newConvId)
       } else {
         // Conversatie existenta
         response = await adaugaMesaj(selectedConversationId, questionText)
+        fetchLatestMessages(selectedConversationId)
       }
-
-      setMessages((current) => {
-        const withoutTemp = current.filter((m) => m.id !== userMessage.id)
-        // DTO-ul returnat de backend este mesajul de la ASISTENT. Însă userMessage-ul abia salvat în db e la pasul 1. 
-        // Backend-ul ne dă direct noul mesaj al asistentului (și a actualizat în spate mesajul utilizatorului).
-        // Așa că cel mai sigur e să facem refetch la tot istoricul:
-        getIstoric(response.conversatieId || selectedConversationId).then(setMessages).catch(console.error)
-        return withoutTemp
-      })
     } catch (err) {
       console.error("Nu s-a putut trimite mesajul:", err)
       
-      // În loc de mesaj generic, refetch la istoric ca să primim userMessage-ul salvat cu areRaspuns = false
       if (selectedConversationId) {
-         getIstoric(selectedConversationId).then(setMessages).catch(console.error)
+        fetchLatestMessages(selectedConversationId)
       }
       
       if (err.response?.status === 429) {
@@ -282,17 +351,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         setError(err.response?.data?.eroare || "Nu am putut primi un răspuns de la Aky. Te rugăm să reîncerci.")
       }
       
-      // Remove optimistic user message on failure since we use Pas 1 which saves it, 
-      // but wait, if it fails at pas 2, the message IS in the DB.
-      // We will reload messages from DB on fail to be perfectly in sync.
       if (selectedConversationId) {
-        getIstoric(selectedConversationId).then(setMessages).catch(() => {})
+        fetchLatestMessages(selectedConversationId)
       } else {
-        // We don't have the conversation ID if pas 1 failed entirely.
-        // We'll just pop the last optimistic message.
-        setMessages((current) => current.filter(m => m.id !== userMessage.id))
+        setMessages((current) => current.filter((m) => m.id !== userMessage.id))
       }
-      
     } finally {
       setIsSending(false)
     }
@@ -305,8 +368,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     
     try {
       await retryMesaj(mesajId)
-      const data = await getIstoric(selectedConversationId)
-      setMessages(data)
+      await fetchLatestMessages(selectedConversationId)
     } catch (err) {
       console.error("Eroare la retry:", err)
       setError("Aky nu a putut răspunde nici de această dată. Te rog încearcă mai târziu.")
@@ -386,11 +448,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   onClick={() => {
                     if (!courseId) setSelectedCourseId(null)
                     setView("list")
-                    // Optional: refresh list
-                    getConversatiiGlobale().then((allConvs) => {
-                      const data = courseId ? allConvs.filter((c) => String(c.cursId) === String(courseId)) : allConvs
-                      setConversatii(data)
-                    }).catch(() => {})
+                    fetchConversations(0, false)
                   }}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl hover:bg-white/20 transition-colors"
                 >
@@ -466,7 +524,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   </Button>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3">
+                <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3" onScroll={handleScrollConversations}>
                   <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase px-1 pb-1">Istoric Conversații</h3>
                   
                   {isLoadingConversations ? (
@@ -517,6 +575,32 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       )})}
                     </div>
                   )}
+
+                  {hasMoreConversations ? (
+                    <div className="pt-3 pb-2 text-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchConversations(convPage + 1, true)}
+                        disabled={isLoadingMoreConversations}
+                        className="rounded-xl border-[#d9e4f4] text-xs font-semibold text-[#24385b] hover:bg-[#f4f8fd]"
+                      >
+                        {isLoadingMoreConversations ? (
+                          <>
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                            Se încarcă mai multe conversații...
+                          </>
+                        ) : (
+                          "Încarcă mai multe conversații"
+                        )}
+                      </Button>
+                    </div>
+                  ) : conversatii.length > 0 ? (
+                    <p className="pt-3 pb-2 text-center text-xs font-medium text-slate-400">
+                      — Toate cele {conversatii.length} conversații sunt afișate —
+                    </p>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -524,7 +608,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
             {/* CHAT VIEW */}
             {selectedCourseId && view === "chat" && (
               <>
-                <div className="flex flex-1 flex-col overflow-y-auto px-6 py-5">
+                <div className="flex flex-1 flex-col overflow-y-auto px-6 py-5" onScroll={handleScrollMessages}>
                   {messages.length === 0 && !isLoadingMessages ? (
                     <>
                       <Card className="border-[#d9e4f4] bg-linear-to-br from-[#edf7ff] via-[#f8fbff] to-white shadow-[0_18px_40px_rgba(32,46,84,0.08)] mb-6">
@@ -567,6 +651,31 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </div>
                   ) : (
                     <div className="flex-1 space-y-4">
+                      {hasMoreMessages ? (
+                        <div className="pb-2 text-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={loadOlderMessages}
+                            disabled={isLoadingOlderMessages}
+                            className="rounded-xl text-xs font-semibold text-[#3b6ea8] hover:bg-[#f4f8fd]"
+                          >
+                            {isLoadingOlderMessages ? (
+                              <>
+                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                Se încarcă mesajele mai vechi...
+                              </>
+                            ) : (
+                              "Încărcare mesaje mai vechi"
+                            )}
+                          </Button>
+                        </div>
+                      ) : messages.length > 0 ? (
+                        <p className="pb-2 text-center text-[11px] font-medium text-slate-400">
+                          — Începutul conversației —
+                        </p>
+                      ) : null}
                       {messages.map((message) => {
                         const isUser = message.rol === "UTILIZATOR"
 

@@ -33,6 +33,9 @@
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-akadion" ],
+    "clientRoles" : {
+      "realm-management" : [ "manage-users", "view-users" ]
+    },
     "notBefore" : 0,
     "groups" : [ ]
   } ]

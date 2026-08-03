@@ -6,7 +6,7 @@ export async function updateMyProfile(payload) {
 }
 
 export async function updateMyEmail(email) {
-  const response = await axiosInstance.put("/api/auth/me/email", { email })
+  const response = await axiosInstance.put("/api/auth/me/email", { newEmail: email })
   return response.data
 }
 

@@ -188,8 +188,11 @@
   }
 
   .complete-profile-brand-panel {
-    @apply relative overflow-hidden px-6 py-10 text-white sm:px-8 sm:py-12 lg:px-12 lg:py-14;
-    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.1), transparent 26%), linear-gradient(150deg, #4a5681 0%, #4a5681 56%, #4a5681 100%);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: 0 !important;
+    background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.1), transparent 26%), linear-gradient(150deg, #4a5681 0%, #4a5681 56%, #4a5681 100%);
   }
 
   .complete-profile-brand-panel::before,
@@ -197,59 +200,82 @@
     content: "";
     position: absolute;
     pointer-events: none;
+    z-index: 0;
+    filter: blur(0.5px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 9999px;
   }
 
   .complete-profile-brand-panel::before {
-    top: -2rem;
-    right: -4rem;
-    width: 14rem;
-    height: 14rem;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.08);
-    filter: blur(2px);
+    top: clamp(3rem, 8vh, 5rem);
+    left: clamp(2rem, 8%, 4.5rem);
+    width: 15rem;
+    height: 15rem;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.22) 46%, rgba(255, 255, 255, 0.1) 72%);
   }
 
   .complete-profile-brand-panel::after {
-    left: -5rem;
-    bottom: -6rem;
-    width: 18rem;
-    height: 18rem;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.1);
-    filter: blur(2px);
+    right: clamp(2rem, 8%, 5rem);
+    bottom: clamp(2.5rem, 8vh, 5rem);
+    width: 20rem;
+    height: 20rem;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.19) 48%, rgba(255, 255, 255, 0.08) 74%);
   }
 
   .complete-profile-brand-content {
-    @apply relative flex h-full min-h-[100vh] flex-col gap-8;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+    padding-inline: 1.5rem;
+    padding-top: 1.5rem;
+    padding-bottom: 0;
   }
 
-  .complete-profile-brand-header {
-    @apply mt-8 flex items-center gap-4 sm:mt-10;
+  @media (min-width: 640px) {
+    .complete-profile-brand-content {
+      padding-inline: 2rem;
+    }
   }
 
-  .complete-profile-brand-logo-shell {
-    @apply flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/92 p-1.5;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+  @media (min-width: 1024px) {
+    .complete-profile-brand-content {
+      padding-inline: 3rem;
+      padding-top: 2rem;
+    }
   }
 
-  .complete-profile-brand-copy {
-    @apply flex flex-1 max-w-xl flex-col justify-center space-y-8 py-10 lg:py-16;
-  }
-
-  .complete-profile-brand-benefits {
-    @apply mt-auto grid grid-cols-1 gap-4 pb-4 pt-8;
-  }
-
-  .complete-profile-brand-benefit-card {
-    @apply flex items-center gap-4 text-white;
-  }
-
-  .complete-profile-brand-benefit-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/12;
+  @media (min-width: 1280px) {
+    .complete-profile-brand-content {
+      padding-inline: 3.5rem;
+    }
   }
 
   .complete-profile-form-panel {
-    @apply flex items-center px-4 py-8 sm:px-6 lg:px-10 lg:py-10 xl:px-14;
+    @apply flex items-center justify-center px-4 py-8 sm:px-6 lg:px-10 lg:py-10 xl:px-14;
+  }
+
+  .complete-profile-card {
+    @apply relative w-full max-w-xl overflow-hidden rounded-[1.75rem] bg-[#fcf8f3] px-6 pt-5 pb-6 shadow-[0_24px_60px_rgba(108,84,53,0.12)] sm:px-8 sm:pt-6 sm:pb-7;
+    border: 1px solid #e5d8ca;
+  }
+
+  .complete-profile-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #223349 0%, #595f8f 60%, #fed9b0 100%);
+  }
+
+  .complete-profile-eyebrow {
+    @apply inline-flex rounded-full border px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500;
+    background: #f6eee4;
+    border-color: #e5d8ca;
   }
 
   .complete-profile-stepper {
@@ -288,17 +314,6 @@
     @apply h-px flex-1 bg-slate-300;
   }
 
-  .complete-profile-card {
-    @apply w-full max-w-xl rounded-[1.75rem] bg-[#fcf8f3] px-6 py-6 shadow-[0_24px_60px_rgba(108,84,53,0.12)] sm:px-8 sm:py-8;
-    border: 1px solid #e5d8ca;
-  }
-
-  .complete-profile-eyebrow {
-    @apply inline-flex rounded-full border px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500;
-    background: #f6eee4;
-    border-color: #e5d8ca;
-  }
-
   @media (max-width: 640px) {
     .complete-profile-layout {
       @apply block;
@@ -307,5 +322,240 @@
     .complete-profile-brand-content {
       @apply min-h-0;
     }
+  }
+
+  /* ── Clase identice cu tema Keycloak (overrides pe `complete-profile-brand-content`) ─── */
+
+  .complete-profile-brand-content .brand-header {
+    width: 100%;
+  }
+
+  .complete-profile-brand-content .brand-header__left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .complete-profile-brand-content .brand-header__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .complete-profile-brand-content .brand-logo {
+    height: 18rem;
+    width: 18rem;
+    border-radius: 1rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.22));
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .complete-profile-brand-content .brand-logo:hover {
+    transform: translateY(-10px) scale(1.03);
+    filter: drop-shadow(0 35px 65px rgba(0, 0, 0, 0.38)) brightness(1.05);
+  }
+
+  .complete-profile-brand-content .brand-caption {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    display: block;
+  }
+
+  .complete-profile-brand-content .brand-copy--single {
+    margin-top: 2.5rem;
+    gap: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .complete-profile-brand-content .brand-title {
+    font-size: 2.25rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .complete-profile-brand-content .brand-description {
+    font-size: 1rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 32rem;
+    margin: 0;
+  }
+
+  .complete-profile-brand-content .brand-benefits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .complete-profile-brand-content .brand-benefit-card {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.92);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    box-shadow: 0 14px 28px -24px rgba(9, 17, 33, 0.6);
+    transition: transform 0.15s ease-out, background 0.15s ease-out;
+  }
+
+  .complete-profile-brand-content .brand-benefit-card:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+
+  .complete-profile-brand-content .brand-benefit-card__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    width: 2rem;
+    border-radius: 0.75rem;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .complete-profile-brand-content .brand-benefit-card__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .complete-profile-brand-content .brand-benefit-card__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    line-height: 1.2;
+    min-width: 0;
+  }
+
+  /* ── Badge Aky RAG — identic cu Keycloak (glassmorphism alb & aliniat la dreapta) ─── */
+
+  .auth-aky-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(89, 95, 143, 0.25) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    padding: 0.35rem 1rem 0.35rem 0.5rem !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    width: fit-content !important;
+  }
+
+  .auth-aky-badge:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .auth-aky-badge__logo {
+    height: 3.5rem !important;
+    width: 3.5rem !important;
+    min-width: 3.5rem !important;
+    max-height: 3.5rem !important;
+    max-width: 3.5rem !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+  }
+
+  .auth-aky-badge__copy {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .auth-aky-badge__title {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #223349 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    line-height: 1.25 !important;
+  }
+
+  .auth-aky-badge__subtitle {
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: #595f8f !important;
+    line-height: 1.25 !important;
+  }
+
+  /* ── Buton stilizat identic cu Keycloak (.btn .btn-primary .btn-block .btn-lg) ─── */
+
+  .btn {
+    height: 3rem !important;
+    width: 100% !important;
+    padding-inline: 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: 14px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    display: inline-flex !important;
+    transition: all 0.15s ease-out !important;
+    cursor: pointer !important;
+  }
+
+  .btn-primary {
+    color: #ffffff !important;
+    background-image: linear-gradient(90deg, #223349 0%, #595f8f 100%) !important;
+    box-shadow: 0 16px 28px -18px rgba(89, 95, 143, 0.4) !important;
+    border: none !important;
+  }
+
+  .btn-primary:hover {
+    background-image: linear-gradient(90deg, #1d2c3c 0%, #515783 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 20px 32px -16px rgba(89, 95, 143, 0.5) !important;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0) !important;
+  }
+
+  .btn-block {
+    width: 100% !important;
+  }
+
+  .btn-lg {
+    height: 3rem !important;
   }
 }

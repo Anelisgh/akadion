@@ -22,7 +22,11 @@ function getInitials(displayName) {
 }
 
 function getErrorMessage(error, fallback) {
-  return error.response?.data?.message ?? error.response?.data?.eroare ?? fallback
+  const data = error.response?.data
+  if (data?.detalii && data?.eroare && data.detalii !== data.eroare) {
+    return `${data.eroare} (${data.detalii})`
+  }
+  return data?.message ?? data?.eroare ?? fallback
 }
 
 function getFieldErrors(error) {
@@ -93,7 +97,7 @@ export default function ProfilePage() {
       } else {
         await refreshAuth()
       }
-      setNotice("Adresa a fost schimbată. Te rugăm să verifici Inbox-ul noului email pentru confirmare.")
+      setNotice("Adresa de email a fost actualizată cu succes.")
     } catch (submitError) {
       setEmailErrors(getFieldErrors(submitError))
       setError(getErrorMessage(submitError, "Nu am putut schimba adresa de email."))

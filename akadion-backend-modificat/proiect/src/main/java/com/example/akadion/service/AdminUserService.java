@@ -75,7 +75,10 @@ public class AdminUserService {
 
     @Transactional(readOnly = true)
     public long countUtilizatori(String stare) {
-        return userRepository.countByStareCont_Denumire(stare.toUpperCase());
+        if ("ALL".equalsIgnoreCase(stare)) {
+            return userRepository.countNonAdminAll();
+        }
+        return userRepository.countNonAdminByStareCont_Denumire(stare.toUpperCase());
     }
 
     // 2. Aprobă (acceptă) contul unui utilizator aflat în starea PENDING.

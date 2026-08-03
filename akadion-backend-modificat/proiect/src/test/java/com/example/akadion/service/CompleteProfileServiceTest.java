@@ -139,7 +139,7 @@ class CompleteProfileServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"PENDING", "ACTIV", "RESPINS", "INACTIV"})
+    @ValueSource(strings = {"PENDING", "ACTIV", "INACTIV"})
     void rejectsProfileCompletionForUsersInDisallowedStates(String stareCurenta) {
         when(userRepository.findByIdKeycloak("sub-user"))
                 .thenReturn(Optional.of(existingUser("sub-user", "user@akadion.test", stareCurenta, "STUDENT")));

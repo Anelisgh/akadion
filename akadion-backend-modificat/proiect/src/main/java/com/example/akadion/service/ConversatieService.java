@@ -3,7 +3,10 @@ package com.example.akadion.service;
 import com.example.akadion.dto.AkyChatRequestDto;
 import com.example.akadion.dto.AkyChatResponseDto;
 import com.example.akadion.dto.AkyMessageDto;
-import com.example.akadion.dto.AkySursaDocumentDto;
+import com.example.akadion.dto.ConversatieDTO;
+import com.example.akadion.dto.ConversatiiPaginateDto;
+import com.example.akadion.dto.IstoricMesajeDto;
+import com.example.akadion.dto.MesajChatDTO;
 import com.example.akadion.entity.Conversatie;
 import com.example.akadion.entity.Curs;
 import com.example.akadion.entity.MesajChat;
@@ -19,10 +22,14 @@ import com.example.akadion.repository.UserCursRepository;
 import com.example.akadion.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,6 +97,9 @@ public class ConversatieService {
             curs = conversatie.getCurs();
             verificaAcces(user, curs, true);
             verificaRateLimit(userId);
+            
+            conversatie.setUpdatedAt(OffsetDateTime.now());
+            conversatieRepository.save(conversatie);
         }
 
         MesajChat mesaj = new MesajChat();
@@ -134,6 +144,8 @@ public class ConversatieService {
         mesajChatRepository.save(mesajUtilizator);
 
         Conversatie conversatie = mesajUtilizator.getConversatie();
+        conversatie.setUpdatedAt(OffsetDateTime.now());
+        conversatieRepository.save(conversatie);
 
         String surseCsv = null;
         if (raspuns.surseFolosite() != null && !raspuns.surseFolosite().isEmpty()) {
@@ -179,7 +191,7 @@ public class ConversatieService {
 
     private void verificaAcces(User user, Curs curs, boolean scriere) {
         boolean acces = switch (user.getRol().getDenumire()) {
-            case "PROFESOR" -> curs.getProfesor().getId().equals(user.getId());
+            case "PROFESOR" -> (curs.getProfesor() != null && curs.getProfesor().getId().equals(user.getId())) || (curs.getActiv() != null && curs.getActiv());
             case "STUDENT" -> scriere
                 ? userCursRepository.existsByStudentIdAndCursIdAndActivTrue(user.getId(), curs.getId())
                 : userCursRepository.existsByStudentIdAndCursId(user.getId(), curs.getId());
@@ -208,6 +220,21 @@ public class ConversatieService {
         });
     }
 
+    public ConversatiiPaginateDto obtineConversatiiActive(Long userId, Long cursId, int page, int size) {
+        Curs curs = cursRepository.findById(cursId)
+                .orElseThrow(() -> new ResursaNegasitaException("Curs not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResursaNegasitaException("User not found"));
+        
+        verificaAcces(user, curs, false);
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Conversatie> slice = conversatieRepository.findByUserIdAndCursIdAndActivTrueOrderByUpdatedAtDesc(userId, cursId, pageable);
+        List<ConversatieDTO> dtos = slice.getContent().stream()
+                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
+                .collect(Collectors.toList());
+        return new ConversatiiPaginateDto(dtos, slice.hasNext());
+    }
+
     public List<Conversatie> obtineConversatiiActive(Long userId, Long cursId) {
         Curs curs = cursRepository.findById(cursId)
                 .orElseThrow(() -> new ResursaNegasitaException("Curs not found"));
@@ -218,6 +245,31 @@ public class ConversatieService {
         return conversatieRepository.findByUserIdAndCursIdAndActivTrueOrderByCreatedAtDesc(userId, cursId);
     }
 
+    public IstoricMesajeDto obtineIstoric(Long userId, Long conversatieId, Long inainteDe, int limit) {
+        Conversatie conversatie = conversatieRepository.findById(conversatieId)
+                .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
+        if (!conversatie.getUser().getId().equals(userId)) {
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
+        }
+
+        Long cursor = (inainteDe != null) ? inainteDe : Long.MAX_VALUE;
+        Pageable pageable = PageRequest.of(0, limit + 1);
+        List<MesajChat> rawBatch = mesajChatRepository.findByConversatieIdAndIdLessThanOrderByIdDesc(conversatieId, cursor, pageable);
+
+        boolean areMaiMulte = rawBatch.size() > limit;
+        List<MesajChat> resultList = new ArrayList<>(areMaiMulte ? rawBatch.subList(0, limit) : rawBatch);
+
+        Collections.reverse(resultList);
+
+        Long celMaiVechiIdIncarcat = resultList.isEmpty() ? null : resultList.get(0).getId();
+
+        List<MesajChatDTO> dtos = resultList.stream()
+                .map(m -> new MesajChatDTO(m.getId(), m.getRol(), m.getContinut(), m.getSurseFolosite(), m.getCreatedAt(), m.getAreRaspuns()))
+                .collect(Collectors.toList());
+
+        return new IstoricMesajeDto(dtos, areMaiMulte, celMaiVechiIdIncarcat);
+    }
+
     public List<MesajChat> obtineIstoric(Long userId, Long conversatieId) {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
@@ -225,6 +277,17 @@ public class ConversatieService {
             throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
         }
         return mesajChatRepository.findByConversatieIdOrderByCreatedAtAsc(conversatieId);
+    }
+
+    public ConversatiiPaginateDto obtineToateConversatiileActive(Long userId, int page, int size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResursaNegasitaException("User not found"));
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Conversatie> slice = conversatieRepository.findByUserIdAndActivTrueOrderByUpdatedAtDesc(userId, pageable);
+        List<ConversatieDTO> dtos = slice.getContent().stream()
+                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
+                .collect(Collectors.toList());
+        return new ConversatiiPaginateDto(dtos, slice.hasNext());
     }
 
     public List<Conversatie> obtineToateConversatiileActive(Long userId) {
@@ -244,3 +307,4 @@ public class ConversatieService {
         conversatieRepository.save(conversatie);
     }
 }
+

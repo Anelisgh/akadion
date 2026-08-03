@@ -1407,7 +1407,7 @@ export default function CourseDetailPage() {
             <AkyChatWidget
               courseId={course?.id}
               courseTitle={course?.titlu || course?.denumire}
-              enabled={isStudent}
+              enabled={isStudent || isProfessor}
             />
           </>
         ) : null}

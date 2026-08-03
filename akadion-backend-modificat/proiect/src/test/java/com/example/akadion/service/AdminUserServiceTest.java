@@ -69,6 +69,16 @@ class AdminUserServiceTest {
     }
 
     @Test
+    void countUtilizatoriExcludesAdmin() {
+        when(userRepository.countNonAdminByStareCont_Denumire("ACTIV")).thenReturn(2L);
+
+        long count = adminUserService.countUtilizatori("ACTIV");
+
+        assertThat(count).isEqualTo(2L);
+        verify(userRepository).countNonAdminByStareCont_Denumire("ACTIV");
+    }
+
+    @Test
     void adminApprovesPendingUser() {
         User pendingUser = user(12L, "sub-user", "user@akadion.test", "PENDING", "STUDENT");
         when(userRepository.findById(12L)).thenReturn(Optional.of(pendingUser));

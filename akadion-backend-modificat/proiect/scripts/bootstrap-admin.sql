@@ -9,8 +9,8 @@
 -- Verifică înainte că seed-ul a rulat (trebuie să existe rânduri în 'roluri' și 'stari_cont').
 
 INSERT INTO app_user (id_keycloak, id_stare_cont, id_rol, nume, prenume, mail, facultate)
-SELECT '<UUID_KEYCLOAK>',
+SELECT COALESCE(NULLIF('<UUID_KEYCLOAK>', '<UUID_KEYCLOAK>'), '5186b9ef-a846-45b6-b640-6ab114fb8dfa'),
        (SELECT id FROM stari_cont WHERE denumire = 'ACTIV'),
        (SELECT id FROM roluri WHERE denumire = 'ADMIN'),
-       'Admin', 'Principal', '<EMAIL_ADMIN>', NULL
-WHERE NOT EXISTS (SELECT 1 FROM app_user WHERE mail = '<EMAIL_ADMIN>');
+       'Admin', 'Principal', 'admin@akadion.com', 'Administrare'
+WHERE NOT EXISTS (SELECT 1 FROM app_user WHERE mail = 'admin@akadion.com');

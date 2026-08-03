@@ -2,6 +2,8 @@ package com.example.akadion.controller;
 
 import com.example.akadion.dto.AkyChatResponseDto;
 import com.example.akadion.dto.ConversatieDTO;
+import com.example.akadion.dto.ConversatiiPaginateDto;
+import com.example.akadion.dto.IstoricMesajeDto;
 import com.example.akadion.dto.MesajChatDTO;
 import com.example.akadion.dto.NouaIntrebareRequest;
 import com.example.akadion.dto.RagRaspunsResponse;
@@ -32,23 +34,22 @@ public class ConversatieController {
     private final UserRepository userRepository;
 
     @GetMapping("/conversatii")
-    public List<ConversatieDTO> getAllConversatii(@AuthenticationPrincipal OidcUser oidcUser) {
+    public ConversatiiPaginateDto getAllConversatii(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
-        List<Conversatie> conversatii = conversatieService.obtineToateConversatiileActive(user.getId());
-        return conversatii.stream()
-                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
-                .collect(Collectors.toList());
+        return conversatieService.obtineToateConversatiileActive(user.getId(), page, size);
     }
 
     @GetMapping("/cursuri/{cursId}/conversatii")
-    public List<ConversatieDTO> getConversatii(@PathVariable Long cursId, @AuthenticationPrincipal OidcUser oidcUser) {
+    public ConversatiiPaginateDto getConversatii(
+            @PathVariable Long cursId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
-        System.out.println("GET /cursuri/" + cursId + "/conversatii FOR USER " + user.getId() + " (" + user.getMail() + ")");
-        List<Conversatie> conversatii = conversatieService.obtineConversatiiActive(user.getId(), cursId);
-        System.out.println("FOUND CONVERSATII: " + conversatii.size());
-        return conversatii.stream()
-                .map(c -> new ConversatieDTO(c.getId(), c.getCurs().getId(), c.getTitlu(), c.getCreatedAt()))
-                .collect(Collectors.toList());
+        return conversatieService.obtineConversatiiActive(user.getId(), cursId, page, size);
     }
 
     @PostMapping("/cursuri/{cursId}/conversatii/mesaje")
@@ -76,12 +77,13 @@ public class ConversatieController {
     }
 
     @GetMapping("/conversatii/{id}/mesaje")
-    public List<MesajChatDTO> getIstoric(@PathVariable Long id, @AuthenticationPrincipal OidcUser oidcUser) {
+    public IstoricMesajeDto getIstoric(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long inainteDe,
+            @RequestParam(defaultValue = "20") int limit,
+            @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
-        List<MesajChat> istoric = conversatieService.obtineIstoric(user.getId(), id);
-        return istoric.stream()
-                .map(m -> new MesajChatDTO(m.getId(), m.getRol(), m.getContinut(), m.getSurseFolosite(), m.getCreatedAt(), m.getAreRaspuns()))
-                .collect(Collectors.toList());
+        return conversatieService.obtineIstoric(user.getId(), id, inainteDe, limit);
     }
 
     @PostMapping("/conversatii/{id}/mesaje")

@@ -63,7 +63,7 @@ public class UserProfileService {
         }
 
         // 2. Keycloak UPDATE
-        keycloakAdminService.updateEmail(idKeycloak, newEmail, false);
+        keycloakAdminService.updateEmail(idKeycloak, newEmail, true);
 
         // 3. Local DB UPDATE cu saveAndFlush pentru a prinde DataIntegrityViolationException imediat
         try {
@@ -72,23 +72,28 @@ public class UserProfileService {
         } catch (DataIntegrityViolationException e) {
             log.error("Conflict la salvarea email-ului în baza de date (race condition) pentru idKeycloak={}. Se efectuează rollback în Keycloak...", idKeycloak);
             
-            // COMPENSARE: Restaurare în Keycloak la email-ul vechi și emailVerified=true
-            // (presupunem că era verificat anterior. Ideal ar fi să știm starea reală, 
-            // dar în sistemul nostru toate conturile active au email-ul verificat)
-            keycloakAdminService.updateEmail(idKeycloak, oldEmail, true);
+            try {
+                keycloakAdminService.updateEmail(idKeycloak, oldEmail, true);
+            } catch (Exception rollbackException) {
+                log.warn("Eroare la rollback email Keycloak pentru sub={}: {}", idKeycloak, rollbackException.getMessage());
+            }
             
             throw new ForbiddenOperationException("Acest email este deja utilizat de alt cont (conflict simultan).");
         }
 
         // 5. Declanșare VERIFY_EMAIL
-        keycloakAdminService.executeActionsEmail(
-                idKeycloak,
-                List.of("VERIFY_EMAIL"),
-                KEYCLOAK_CLIENT_ID,
-                frontendUrl
-        );
+        try {
+            keycloakAdminService.executeActionsEmail(
+                    idKeycloak,
+                    List.of("VERIFY_EMAIL"),
+                    KEYCLOAK_CLIENT_ID,
+                    frontendUrl
+            );
+        } catch (Exception e) {
+            log.warn("Nu s-a putut trimite e-mailul VERIFY_EMAIL din Keycloak (posibil SMTP neconfigurat) pentru idKeycloak={}: {}", idKeycloak, e.getMessage());
+        }
 
-        log.info("Email actualizat cu succes pentru idKeycloak={}. Link de verificare trimis.", idKeycloak);
+        log.info("Email actualizat cu succes pentru idKeycloak={}.", idKeycloak);
         return toUserMeDto(user);
     }
 

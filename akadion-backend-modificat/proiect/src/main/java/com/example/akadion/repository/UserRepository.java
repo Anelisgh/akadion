@@ -3,6 +3,8 @@ package com.example.akadion.repository;
 import com.example.akadion.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +31,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByStareCont_Denumire(String denumire);
 
     long countByStareCont_Denumire(String denumire);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.stareCont.denumire = :denumire AND (u.rol IS NULL OR u.rol.denumire <> 'ADMIN')")
+    long countNonAdminByStareCont_Denumire(@Param("denumire") String denumire);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.rol IS NULL OR u.rol.denumire <> 'ADMIN'")
+    long countNonAdminAll();
 
     @Override
     @EntityGraph(attributePaths = {"rol", "stareCont"})
