@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/akadion-backend-modificat.iml" filepath="$PROJECT_DIR$/.idea/akadion-backend-modificat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/proiect-sts.iml" filepath="$PROJECT_DIR$/.idea/proiect-sts.iml" />
     </modules>
   </component>
 </project>

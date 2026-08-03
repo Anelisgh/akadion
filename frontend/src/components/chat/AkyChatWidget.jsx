@@ -69,6 +69,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setError(null)
     setConversatii([])
     setSelectedConversationId(null)
+    setView("list")
     
     // Reset course selection if it's the global widget
     if (!courseId) {
@@ -80,14 +81,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     async function fetchConversations() {
       try {
         setIsLoadingConversations(true)
-        const data = courseId ? await getConversatii(courseId) : await getConversatiiGlobale()
+        const allConversations = await getConversatiiGlobale()
+        const data = courseId 
+          ? allConversations.filter((c) => String(c.cursId) === String(courseId))
+          : allConversations
         setConversatii(data)
-        
-        if (data.length === 0) {
-          setView("chat") // Skip empty list
-        } else {
-          setView("list")
-        }
       } catch (err) {
         console.error("Failed to load conversations", err)
       } finally {
@@ -212,48 +210,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     }
   }
 
-  async function handleOpenConversation(convId, cursId) {
-    setSelectedConversationId(convId)
-    if (cursId) {
-      setSelectedCourseId(cursId)
-    }
-    setView("chat")
-    setMessages([])
-    setError(null)
-    try {
-      setIsLoadingMessages(true)
-      const data = await getIstoric(convId)
-      setMessages(data)
-    } catch {
-      setError("Nu s-a putut încărca istoricul conversației.")
-    } finally {
-      setIsLoadingMessages(false)
-    }
-  }
-
-  function handleNewConversation() {
-    setSelectedConversationId(null)
-    if (!courseId) {
-      setSelectedCourseId(null)
-    }
-    setMessages([])
-    setError(null)
-    setView("chat")
-  }
-
-  async function handleDeleteConversation(convId, e) {
-    e.stopPropagation()
-    try {
-      await stergeConversatie(convId)
-      setConversatii((prev) => prev.filter(c => c.id !== convId))
-      if (selectedConversationId === convId) {
-        setView("list")
-      }
-    } catch (err) {
-      console.error("Nu s-a putut sterge conversatia", err)
-    }
-  }
-
   function handleQuickQuestionClick(questionText) {
     if (!enabled || !selectedCourseId || isSending) {
       return
@@ -291,8 +247,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         setSelectedConversationId(response.conversatieId)
         
         // Refresh conversatii list in background
-        const refreshPromise = courseId ? getConversatii(courseId) : getConversatiiGlobale()
-        refreshPromise.then(setConversatii).catch(console.error)
+        getConversatiiGlobale().then((allConvs) => {
+          const data = courseId ? allConvs.filter((c) => String(c.cursId) === String(courseId)) : allConvs
+          setConversatii(data)
+        }).catch(console.error)
       } else {
         // Conversatie existenta
         response = await adaugaMesaj(selectedConversationId, questionText)
@@ -429,8 +387,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     if (!courseId) setSelectedCourseId(null)
                     setView("list")
                     // Optional: refresh list
-                    const refreshPromise = courseId ? getConversatii(courseId) : getConversatiiGlobale()
-                    refreshPromise.then(data => setConversatii(data)).catch(() => {})
+                    getConversatiiGlobale().then((allConvs) => {
+                      const data = courseId ? allConvs.filter((c) => String(c.cursId) === String(courseId)) : allConvs
+                      setConversatii(data)
+                    }).catch(() => {})
                   }}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl hover:bg-white/20 transition-colors"
                 >
