@@ -73,12 +73,12 @@ Acest document definește contractul de integrare și regulile de comunicare în
 * **Cale**: `/chat` (sau `/query`)
 * **Content-Type**: `application/json`
 
-Acest endpoint este apelat de backend atunci când un student adresează o întrebare chatbot-ului dintr-un anumit curs.
+Acest endpoint este apelat de backend atunci când un utilizator (student sau profesor) adresează o întrebare chatbot-ului dintr-un anumit curs.
 
 #### Payload Request:
 ```json
 {
-  "studentId": 99,
+  "userId": 99,
   "cursId": 45,
   "intrebare": "Ce este un EntityManager?",
   "istoricConversatie": [
@@ -88,7 +88,8 @@ Acest endpoint este apelat de backend atunci când un student adresează o într
 }
 ```
 
-> **Notă privind `maxSaptamanaParcursa`**: Backend-ul **NU trimite** acest câmp către RAG în versiunea actuală a codului (`RagChatService.java`). Payload-ul real trimis conține doar `studentId`, `cursId`, `intrebare` și `istoricConversatie`.
+> **Notă privind `maxSaptamanaParcursa`**: Backend-ul **NU trimite** acest câmp către RAG în versiunea actuală a codului (`RagChatService.java`). Payload-ul real trimis conține doar `userId`, `cursId`, `intrebare` și `istoricConversatie`.
+> **Notă privind `userId`**: Câmpul a fost redenumit din `studentId` în `userId`, deoarece acum chatbot-ul poate fi interogat atât de studenți, cât și de profesori. Backend-ul trimite ID-ul unic al utilizatorului.
 
 #### Reguli de comportament RAG:
 - **Filtrare pe Context**: RAG-ul aplică un filtru pe baza de date vectorială folosind `cursId`.
