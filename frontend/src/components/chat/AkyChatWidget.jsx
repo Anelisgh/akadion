@@ -65,11 +65,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesEndRef = useRef(null)
 
+  const [filterMode, setFilterMode] = useState("course") // "course" | "all"
+
   useEffect(() => {
     setSelectedCourseId(courseId)
+    setFilterMode("course")
   }, [courseId])
 
-  async function fetchConversations(pageToLoad = 0, append = false) {
+  async function fetchConversations(pageToLoad = 0, append = false, overrideFilter = null) {
+    const activeFilter = overrideFilter || filterMode
     try {
       if (append) {
         setIsLoadingMoreConversations(true)
@@ -77,20 +81,28 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         setIsLoadingConversations(true)
       }
 
-      const res = courseId
+      let res = (courseId && activeFilter === "course")
         ? await getConversatii(courseId, pageToLoad)
         : await getConversatiiGlobale(pageToLoad)
 
-      const items = Array.isArray(res) ? res : (res?.continut || [])
-      const hasMore = res?.areUrmatoarea ?? false
+      let items = Array.isArray(res) ? res : (res?.continut || [])
+      let hasMore = res?.areUrmatoarea ?? false
+
+      // dacă suntem pe un curs nou fără conversații proprii, dar utilizatorul are conversații în cont,
+      // comutăm automat pe tab-ul "Toate" pentru ca utilizatorul să își vadă istoricul general
+      if (!append && pageToLoad === 0 && courseId && activeFilter === "course" && items.length === 0) {
+        const globalRes = await getConversatiiGlobale(0)
+        const globalItems = Array.isArray(globalRes) ? globalRes : (globalRes?.continut || [])
+        if (globalItems.length > 0) {
+          items = globalItems
+          hasMore = globalRes?.areUrmatoarea ?? false
+          setFilterMode("all")
+        }
+      }
 
       setConversatii((prev) => (append ? [...prev, ...items] : items))
       setHasMoreConversations(hasMore)
       setConvPage(pageToLoad)
-
-      if (!append && pageToLoad === 0 && courseId && items.length === 0) {
-        setView("chat")
-      }
     } catch (err) {
       console.error("Failed to load conversations", err)
     } finally {
@@ -525,16 +537,59 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3" onScroll={handleScrollConversations}>
-                  <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase px-1 pb-1">Istoric Conversații</h3>
+                  <div className="flex items-center justify-between px-1 pb-1">
+                    <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Istoric Conversații</h3>
+                    {courseId ? (
+                      <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200/60">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilterMode("course")
+                            fetchConversations(0, false, "course")
+                          }}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                            filterMode === "course"
+                              ? "bg-white text-[#1e3a5f] shadow-xs"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          Acest curs
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilterMode("all")
+                            fetchConversations(0, false, "all")
+                          }}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                            filterMode === "all"
+                              ? "bg-white text-[#1e3a5f] shadow-xs"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          Toate
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                   
                   {isLoadingConversations ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
                     </div>
                   ) : conversatii.length === 0 ? (
-                    <div className="text-center py-10 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                      <MessageCircle className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                      <p className="text-sm text-slate-500">Nu ai nicio conversație anterioară la acest curs.</p>
+                    <div className="text-center py-8 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-2">
+                      <MessageCircle className="h-9 w-9 text-slate-300 mx-auto" />
+                      <p className="text-sm font-semibold text-slate-700">
+                        {courseId && filterMode === "course"
+                          ? "Nu ai conversații anterioare la acest curs."
+                          : "Nu ai nicio conversație anterioară."}
+                      </p>
+                      {courseId && filterMode === "course" ? (
+                        <p className="text-xs text-slate-400 pb-1">
+                          Poți adresa prima întrebare la butonul de mai sus sau poți comuta pe separatoarea "Toate" pentru a vedea conversațiile de la celelalte cursuri.
+                        </p>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="space-y-2">

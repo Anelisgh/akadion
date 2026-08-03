@@ -74,7 +74,7 @@ public class RagIngestService {
     public void stergeDinIngest(Long documentId) {
         try {
             restClient.delete()
-                    .uri("/ingest/" + documentId)
+                    .uri("/api/documents/ingest/" + documentId)
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.Unauthorized e) {

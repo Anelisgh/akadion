@@ -220,6 +220,7 @@ public class ConversatieService {
         });
     }
 
+    @Transactional(readOnly = true)
     public ConversatiiPaginateDto obtineConversatiiActive(Long userId, Long cursId, int page, int size) {
         Curs curs = cursRepository.findById(cursId)
                 .orElseThrow(() -> new ResursaNegasitaException("Curs not found"));
@@ -235,6 +236,7 @@ public class ConversatieService {
         return new ConversatiiPaginateDto(dtos, slice.hasNext());
     }
 
+    @Transactional(readOnly = true)
     public List<Conversatie> obtineConversatiiActive(Long userId, Long cursId) {
         Curs curs = cursRepository.findById(cursId)
                 .orElseThrow(() -> new ResursaNegasitaException("Curs not found"));
@@ -245,6 +247,7 @@ public class ConversatieService {
         return conversatieRepository.findByUserIdAndCursIdAndActivTrueOrderByCreatedAtDesc(userId, cursId);
     }
 
+    @Transactional(readOnly = true)
     public IstoricMesajeDto obtineIstoric(Long userId, Long conversatieId, Long inainteDe, int limit) {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
@@ -270,6 +273,7 @@ public class ConversatieService {
         return new IstoricMesajeDto(dtos, areMaiMulte, celMaiVechiIdIncarcat);
     }
 
+    @Transactional(readOnly = true)
     public List<MesajChat> obtineIstoric(Long userId, Long conversatieId) {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
@@ -279,6 +283,7 @@ public class ConversatieService {
         return mesajChatRepository.findByConversatieIdOrderByCreatedAtAsc(conversatieId);
     }
 
+    @Transactional(readOnly = true)
     public ConversatiiPaginateDto obtineToateConversatiileActive(Long userId, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResursaNegasitaException("User not found"));
@@ -290,6 +295,7 @@ public class ConversatieService {
         return new ConversatiiPaginateDto(dtos, slice.hasNext());
     }
 
+    @Transactional(readOnly = true)
     public List<Conversatie> obtineToateConversatiileActive(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResursaNegasitaException("User not found"));

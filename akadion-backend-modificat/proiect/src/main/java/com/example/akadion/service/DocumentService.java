@@ -134,8 +134,12 @@ public class DocumentService {
         document.setActiv(false);
         documentRepository.save(document);
 
+        if (document.getPathMinio() != null && !document.getPathMinio().isBlank()) {
+            minioStorageService.deleteFile(document.getPathMinio());
+        }
+
         ragIngestService.stergeDinIngest(documentId);
-        log.info("Document soft-deleted cu succes: docId={}", documentId);
+        log.info("Document ștears cu succes: docId={}", documentId);
     }
 
     public DocumentResponseDto reincearcaIngest(Long documentId, Long profesorId) {
