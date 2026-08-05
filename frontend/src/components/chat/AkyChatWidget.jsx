@@ -976,14 +976,14 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
               {/* Sursă și acțiuni */}
               <div className="p-4 bg-slate-50 border-b border-slate-100 space-y-3">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2.5">
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Sursa de întrebări:</label>
+                    <label className="text-sm font-bold tracking-wider text-slate-500 uppercase">Sursa de întrebări:</label>
                     <select
                       disabled={isQuizLoading}
                       value={selectedQuizDocId}
                       onChange={(e) => setSelectedQuizDocId(e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm sm:text-base text-slate-700 outline-none focus:border-[#8bc8f1] transition-all"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-base sm:text-lg text-slate-700 outline-none focus:border-[#8bc8f1] transition-all"
                     >
                       <option value="">Toată materia parcursă (până în prezent)</option>
                       {accessibleDocuments.map((doc) => (
@@ -994,12 +994,12 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </select>
                   </div>
                   <div className="col-span-1 flex flex-col gap-1.5">
-                    <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Întrebări:</label>
+                    <label className="text-sm font-bold tracking-wider text-slate-500 uppercase">Întrebări:</label>
                     <select
                       disabled={isQuizLoading}
                       value={quizNumQuestions}
                       onChange={(e) => setQuizNumQuestions(Number(e.target.value))}
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm sm:text-base text-slate-700 outline-none focus:border-[#8bc8f1] transition-all"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-base sm:text-lg text-slate-700 outline-none focus:border-[#8bc8f1] transition-all"
                     >
                       <option value={3}>3</option>
                       <option value={5}>5</option>
@@ -1013,7 +1013,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   disabled={isQuizLoading}
                   onClick={handleStartQuiz}
                   className={cn(
-                    "w-full h-12 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm text-white bg-linear-to-r",
+                    "w-full h-12 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-sm text-white bg-linear-to-r",
                     selectedTheme.accent
                   )}
                 >
@@ -1036,15 +1036,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 {isQuizLoading && (
                   <div className="flex flex-col items-center justify-center h-full space-y-3 text-slate-400">
                     <Loader2 className="h-8 w-8 animate-spin text-[#3b6ea8]" />
-                    <p className="text-xs font-medium text-slate-500 animate-pulse">Se citește materia și se pregătesc întrebările...</p>
+                    <p className="text-sm sm:text-base font-semibold text-slate-500 animate-pulse">Se citește materia și se pregătesc întrebările...</p>
                   </div>
                 )}
 
                 {!isQuizLoading && quizError && (
                   <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-center space-y-2">
                     <AlertCircle className="h-8 w-8 text-rose-500 mx-auto" />
-                    <p className="text-xs font-semibold text-rose-800">{quizError}</p>
-                    <p className="text-[10px] text-slate-500">Asigură-te că există documente încărcate și indexate în săptămânile parcurse de tine la acest curs.</p>
+                    <p className="text-sm sm:text-base font-semibold text-rose-800">{quizError}</p>
+                    <p className="text-xs sm:text-sm text-slate-500">Asigură-te că există documente încărcate și indexate în săptămânile parcurse de tine la acest curs.</p>
                   </div>
                 )}
 
@@ -1053,8 +1053,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     <div className="h-14 w-14 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100 text-amber-500">
                       <Sparkles className="h-7 w-7" />
                     </div>
-                    <h5 className="font-semibold text-sm text-slate-700">Verifică-ți cunoștințele!</h5>
-                    <p className="text-xs text-slate-500 max-w-xs">
+                    <h5 className="font-bold text-base sm:text-lg text-slate-700">Verifică-ți cunoștințele!</h5>
+                    <p className="text-sm sm:text-base text-slate-500 max-w-xs">
                       Alege o sursă și apasă pe butonul de mai sus pentru a genera un test grilă cu feedback instantaneu de la Gemini.
                     </p>
                   </div>
@@ -1063,7 +1063,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 {!isQuizLoading && !quizError && quizQuestions.length > 0 && (
                   <div className="space-y-5">
                     {/* Scorul și Progresul */}
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase">
+                    <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-400 uppercase">
                       <span>Întrebarea {currentQuestionIndex + 1} din {quizQuestions.length}</span>
                       <span>Scor: {getQuizScore()} / {Object.keys(answeredQuestions).length}</span>
                     </div>
