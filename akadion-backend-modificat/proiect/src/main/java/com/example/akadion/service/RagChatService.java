@@ -108,4 +108,35 @@ public class RagChatService {
             throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         }
     }
+
+    public Object genereazaQuiz(Long cursId, Integer maxSaptamana, Long documentId, Integer nrIntrebari) {
+        try {
+            Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("cursId", cursId);
+            if (maxSaptamana != null) {
+                payload.put("maxSaptamana", maxSaptamana);
+            }
+            if (documentId != null) {
+                payload.put("documentId", documentId);
+            }
+            if (nrIntrebari != null) {
+                payload.put("nrIntrebari", nrIntrebari);
+            }
+
+            log.info("Trimitere cerere generare Quiz RAG pentru cursul {} (maxSaptamana={}, documentId={}, nrIntrebari={}).", cursId, maxSaptamana, documentId, nrIntrebari);
+
+            return restClient.post()
+                    .uri("/quiz/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .body(Object.class);
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Autentificare eșuată către serviciul RAG la generare quiz (cursId={})", cursId);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
+        } catch (Exception e) {
+            log.error("Eroare la comunicarea cu RAG la generare quiz pentru cursul {}: {}", cursId, e.getMessage(), e);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
+        }
+    }
 }

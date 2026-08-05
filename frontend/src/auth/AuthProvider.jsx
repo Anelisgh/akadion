@@ -67,11 +67,18 @@ export function AuthProvider({ children }) {
         return response
       },
       (error) => {
+        const is401 = error.response?.status === 401
         const is403 = error.response?.status === 403
         const requestUrl = error.config?.url ?? ""
         const isBusinessEndpoint = !requestUrl.includes("/api/auth/me")
         const currentUser = userRef.current
         const isUserActive = currentUser?.stareCont === "ACTIV"
+
+        if (is401 && isBusinessEndpoint) {
+          console.warn("Sesiune expirată (401). Forțăm relogin.")
+          forceRelogin()
+          return Promise.reject(error)
+        }
 
         if (is403 && isBusinessEndpoint && isUserActive) {
           const alreadyAttempted = sessionStorage.getItem("relogin_attempted")

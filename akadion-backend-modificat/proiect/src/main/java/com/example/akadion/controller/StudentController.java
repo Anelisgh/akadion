@@ -90,6 +90,21 @@ public class StudentController {
         return studentCursService.intreabaAky(user.getId(), cursId, request);
     }
 
+    @GetMapping("/cursuri/{cursId}/documente-accesibile")
+    public List<AkySursaDocumentDto> listaDocumenteAccesibile(@PathVariable Long cursId, @AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        return studentCursService.listaDocumenteAccesibile(user.getId(), cursId);
+    }
+
+    @PostMapping("/cursuri/{cursId}/quiz/generate")
+    public Object genereazaQuiz(
+            @PathVariable Long cursId,
+            @RequestBody QuizGenerateRequestDto request,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        return studentCursService.genereazaQuiz(user.getId(), cursId, request.documentId(), request.nrIntrebari());
+    }
+
     private User getLoggedUser(OidcUser oidcUser) {
         return userRepository.findByIdKeycloak(oidcUser.getSubject())
                 .orElseThrow(() -> new UserNotFoundException("Utilizatorul autentificat nu are cont local."));
