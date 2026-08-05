@@ -59,7 +59,13 @@ export function AuthProvider({ children }) {
   // este ACTIV în DB — semn că sesiunea nu conține autoritățile actualizate.
   useEffect(() => {
     const interceptorId = axiosInstance.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        const requestUrl = response.config?.url ?? ""
+        if (!requestUrl.includes("/api/auth/me")) {
+          sessionStorage.removeItem("relogin_attempted")
+        }
+        return response
+      },
       (error) => {
         const is403 = error.response?.status === 403
         const requestUrl = error.config?.url ?? ""
@@ -68,9 +74,13 @@ export function AuthProvider({ children }) {
         const isUserActive = currentUser?.stareCont === "ACTIV"
 
         if (is403 && isBusinessEndpoint && isUserActive) {
-          // Sesiunea Spring Security nu are autorități, deși DB-ul spune ACTIV.
-          // Forțăm re-autentificarea pentru a reîmprospăta sesiunea.
-          forceRelogin()
+          const alreadyAttempted = sessionStorage.getItem("relogin_attempted")
+          if (!alreadyAttempted) {
+            sessionStorage.setItem("relogin_attempted", "true")
+            forceRelogin()
+          } else {
+            console.warn("Relogin deja încercat, dar endpoint-ul returnează tot 403. Propagăm eroarea.")
+          }
         }
 
         return Promise.reject(error)
