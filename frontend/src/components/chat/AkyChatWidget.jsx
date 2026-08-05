@@ -508,11 +508,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           onOpenChange={handleOpenChange}
           className={cn(
             "flex bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 w-full transition-all duration-300",
-            quizMode ? "sm:max-w-[92vw] flex-row" : "sm:max-w-xl flex-col"
+            quizMode ? "sm:max-w-[62vw] flex-row" : "sm:max-w-xl flex-col"
           )}
         >
           {/* STÂNGA: Chat-ul existent */}
-          <div className={cn("flex flex-col flex-1 h-full min-w-[350px]", quizMode && "sm:max-w-[40%] border-r border-slate-200/80")}>
+          <div className={cn("flex flex-col flex-1 h-full min-w-[350px]", quizMode && "sm:max-w-[45%] border-r border-slate-200/80")}>
             <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
               <div className="absolute -top-10 right-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-sm" />
               <div className="absolute -bottom-12 left-[-1.5rem] h-28 w-28 rounded-full bg-[#8bc8f1]/14 blur-sm" />
@@ -1075,14 +1075,14 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       />
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                      <p className="text-base sm:text-lg font-semibold text-slate-800 leading-relaxed">
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                      <p className="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
                         {quizQuestions[currentQuestionIndex].intrebare}
                       </p>
                     </div>
 
                     {/* Opțiunile de răspuns */}
-                    <div className="space-y-2.5">
+                    <div className="space-y-3">
                       {Object.entries(quizQuestions[currentQuestionIndex].optiuni || {}).map(([key, value]) => {
                         const isAnswered = answeredQuestions[currentQuestionIndex] !== undefined;
                         const questionState = answeredQuestions[currentQuestionIndex];
@@ -1095,10 +1095,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         if (isAnswered) {
                           if (isThisOptionCorrect) {
                             buttonStyle = "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold shadow-xs";
-                            iconBadge = <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><Check className="h-3 w-3" /></div>;
+                            iconBadge = <div className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><Check className="h-3.5 w-3.5" /></div>;
                           } else if (isThisOptionSelected && !isThisOptionCorrect) {
                             buttonStyle = "border-rose-300 bg-rose-50 text-rose-800 font-semibold shadow-xs";
-                            iconBadge = <div className="h-5 w-5 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0"><AlertCircle className="h-3 w-3" /></div>;
+                            iconBadge = <div className="h-6 w-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0"><AlertCircle className="h-3.5 w-3.5" /></div>;
                           } else {
                             buttonStyle = "border-slate-100 bg-white text-slate-400 opacity-60";
                           }
@@ -1110,12 +1110,12 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             disabled={isAnswered}
                             onClick={() => handleAnswerClick(key)}
                             className={cn(
-                              "w-full text-left p-4 rounded-xl border text-sm sm:text-base flex items-start gap-3 transition-all",
+                              "w-full text-left p-4 sm:p-5 rounded-2xl border text-base sm:text-lg font-medium flex items-start gap-4 transition-all",
                               buttonStyle
                             )}
                           >
                             <span className={cn(
-                              "h-7 w-7 rounded-lg border font-bold flex items-center justify-center shrink-0 text-xs sm:text-sm",
+                              "h-9 w-9 rounded-xl border font-bold flex items-center justify-center shrink-0 text-base sm:text-lg",
                               isAnswered ? "border-transparent bg-slate-100 text-slate-500" : "border-slate-200 bg-slate-50 text-slate-600"
                             )}>
                               {key}
@@ -1129,9 +1129,9 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
                     {/* Explicația */}
                     {answeredQuestions[currentQuestionIndex] !== undefined && (
-                      <div className="p-5 bg-blue-50/70 border border-blue-100/60 rounded-2xl space-y-2.5">
-                        <p className="text-xs font-bold tracking-wider text-blue-700 uppercase">Explicație:</p>
-                        <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      <div className="p-6 bg-blue-50/70 border border-blue-100/60 rounded-2xl space-y-2.5">
+                        <p className="text-sm font-bold tracking-wider text-blue-700 uppercase">Explicație:</p>
+                        <p className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-wrap">
                           {quizQuestions[currentQuestionIndex].explicatie}
                         </p>
                       </div>
