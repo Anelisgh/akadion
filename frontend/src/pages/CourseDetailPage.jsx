@@ -1069,15 +1069,7 @@ export default function CourseDetailPage() {
 
                 <div className="space-y-5">
                   {weeks.map((week) => {
-                    const rawDocuments = documentsByWeek[week.id] ?? []
-                    const documents = rawDocuments.map(doc => {
-                      const sanitize = (url) => url && url.includes("http://minio:9000") ? url.replace("http://minio:9000", "http://localhost:9000") : url
-                      return {
-                        ...doc,
-                        urlVizualizare: sanitize(doc.urlVizualizare),
-                        urlDescarcare: sanitize(doc.urlDescarcare)
-                      }
-                    })
+                    const documents = documentsByWeek[week.id] ?? []
                     const isExpanded = expandedWeekIds[week.id] ?? false
 
                     return (

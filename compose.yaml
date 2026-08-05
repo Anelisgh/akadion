@@ -73,6 +73,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/akadion
       - APP_FRONTEND_BASE_URL=http://localhost:5173
       - MINIO_URL=http://minio:9000
+      - MINIO_EXTERNAL_URL=http://localhost:9000
       - DB_PASSWORD=${DB_PASSWORD:-parola123}
       - KEYCLOAK_BACKEND_LOGIN_SECRET=${KEYCLOAK_BACKEND_LOGIN_SECRET:-ckRYo6MBAP2Ed5LcDRzDTLnYJY085JCK}
       - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
