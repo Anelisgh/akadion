@@ -139,7 +139,7 @@ public class DocumentService {
         }
 
         ragIngestService.stergeDinIngest(documentId);
-        log.info("Document ștears cu succes: docId={}", documentId);
+        log.info("Document șters cu succes: docId={}", documentId);
     }
 
     public DocumentResponseDto reincearcaIngest(Long documentId, Long profesorId) {
