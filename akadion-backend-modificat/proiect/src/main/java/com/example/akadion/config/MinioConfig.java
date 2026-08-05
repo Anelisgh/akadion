@@ -10,9 +10,6 @@ public class MinioConfig {
     
     @Value("${minio.url}") 
     private String url;
-
-    @Value("${minio.external-url}") 
-    private String externalUrl;
     
     @Value("${minio.access-key}") 
     private String accessKey;
@@ -27,7 +24,6 @@ public class MinioConfig {
     private boolean autoCreateBucket;
 
     @Bean
-    @org.springframework.context.annotation.Primary
     public MinioClient minioClient() {
         MinioClient client = MinioClient.builder()
             .endpoint(url)
@@ -46,13 +42,5 @@ public class MinioConfig {
         }
         
         return client;
-    }
-
-    @Bean(name = "externalMinioClient")
-    public MinioClient externalMinioClient() {
-        return MinioClient.builder()
-            .endpoint(externalUrl)
-            .credentials(accessKey, secretKey)
-            .build();
     }
 }
