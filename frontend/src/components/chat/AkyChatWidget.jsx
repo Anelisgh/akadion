@@ -963,7 +963,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   <Sparkles className="h-5 w-5 text-amber-300 animate-pulse" />
                   <div>
                     <h4 className="font-semibold text-base sm:text-lg">Teste Grilă Akadion</h4>
-                    <p className="text-xs text-white/80">Gemini îți evaluează cunoștințele din curs</p>
+                    <p className="text-xs text-white/80">Aky îți evaluează cunoștințele din curs</p>
                   </div>
                 </div>
                 <button
@@ -1055,7 +1055,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </div>
                     <h5 className="font-bold text-base sm:text-lg text-slate-700">Verifică-ți cunoștințele!</h5>
                     <p className="text-sm sm:text-base text-slate-500 max-w-xs">
-                      Alege o sursă și apasă pe butonul de mai sus pentru a genera un test grilă cu feedback instantaneu de la Gemini.
+                      Alege o sursă și apasă pe butonul de mai sus pentru a genera un test grilă cu feedback instantaneu.
                     </p>
                   </div>
                 )}
