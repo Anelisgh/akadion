@@ -14,7 +14,8 @@ function sanitizeUrls(obj) {
   }
   if (typeof obj === "string") {
     if (obj.includes("http://minio:9000")) {
-      return obj.replace(/http:\/\/minio:9000/g, "http://localhost:9000")
+      const baseUrl = obj.replace(/http:\/\/minio:9000/g, "http://localhost:9000")
+      return baseUrl.split("?")[0]
     }
     return obj
   }
