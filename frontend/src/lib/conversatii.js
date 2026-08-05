@@ -37,3 +37,16 @@ export async function retryMesaj(mesajId) {
 export async function stergeConversatie(conversatieId) {
   await axiosInstance.delete(`/api/conversatii/${conversatieId}`)
 }
+
+export async function getDocumenteAccesibile(cursId) {
+  const response = await axiosInstance.get(`/api/student/cursuri/${cursId}/documente-accesibile`)
+  return response.data
+}
+
+export async function genereazaQuiz(cursId, documentId = null, nrIntrebari = 5) {
+  const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/quiz/generate`, {
+    documentId,
+    nrIntrebari
+  })
+  return response.data
+}

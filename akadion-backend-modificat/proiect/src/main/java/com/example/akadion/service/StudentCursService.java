@@ -283,4 +283,78 @@ public class StudentCursService {
 
         return ragChatService.intreabaAky(studentId, cursId, request);
     }
+
+    @Transactional(readOnly = true)
+    public int determinaSaptamanaParcursaMax(Long studentId, Long cursId) {
+        List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
+        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
+        
+        int maxWeek = 1;
+        for (Saptamana s : saptamani) {
+            if (completedIds.contains(s.getId())) {
+                if (s.getNrSaptamana() >= maxWeek) {
+                    maxWeek = s.getNrSaptamana() + 1;
+                }
+            }
+        }
+        
+        int totalSapt = saptamani.size();
+        if (maxWeek > totalSapt && totalSapt > 0) {
+            maxWeek = totalSapt;
+        }
+        return maxWeek;
+    }
+
+    @Transactional(readOnly = true)
+    public List<AkySursaDocumentDto> listaDocumenteAccesibile(Long studentId, Long cursId) {
+        UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
+                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest curs."));
+
+        if (!Boolean.TRUE.equals(enrollment.getActiv())) {
+            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+        }
+
+        int maxWeek = determinaSaptamanaParcursaMax(studentId, cursId);
+        
+        List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
+        List<Long> saptamaniAccesibileIds = saptamani.stream()
+                .filter(s -> s.getNrSaptamana() <= maxWeek)
+                .map(Saptamana::getId)
+                .toList();
+
+        List<AkySursaDocumentDto> documents = new java.util.ArrayList<>();
+        for (Long saptId : saptamaniAccesibileIds) {
+            documentRepository.findBySaptamanaIdAndActivTrue(saptId).forEach(doc -> {
+                documents.add(new AkySursaDocumentDto(doc.getId(), doc.getTitlu()));
+            });
+        }
+        
+        return documents;
+    }
+
+    @Transactional(readOnly = true)
+    public Object genereazaQuiz(Long studentId, Long cursId, Long documentId, Integer nrIntrebari) {
+        checkRateLimit(studentId);
+
+        UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
+                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest curs."));
+
+        if (!Boolean.TRUE.equals(enrollment.getActiv())) {
+            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+        }
+
+        int maxWeek = determinaSaptamanaParcursaMax(studentId, cursId);
+
+        if (documentId != null) {
+            Document doc = documentRepository.findById(documentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
+            
+            Saptamana sapt = doc.getSaptamana();
+            if (sapt == null || !sapt.getCurs().getId().equals(cursId) || sapt.getNrSaptamana() > maxWeek) {
+                throw new AccesInterzisException("Nu aveți acces la acest document.");
+            }
+        }
+
+        return ragChatService.genereazaQuiz(cursId, maxWeek, documentId, nrIntrebari);
+    }
 }
