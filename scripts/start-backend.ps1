@@ -57,7 +57,7 @@ function Test-TcpPort {
 }
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$backendDir = Join-Path $projectRoot "akadion-backend-modificat\akadion-backend-modificat\proiect"
+$backendDir = Join-Path $projectRoot "akadion-backend-modificat\proiect"
 $mavenWrapper = Join-Path $backendDir "mvnw.cmd"
 $keycloakWellKnownUrl = "http://localhost:8080/realms/Akadion/.well-known/openid-configuration"
 

@@ -3,7 +3,7 @@ param()
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$composePath = Join-Path $projectRoot "akadion-backend-modificat\akadion-backend-modificat\proiect\compose.yaml"
+$composePath = Join-Path $projectRoot "compose.yaml"
 
 if (-not $composePath) {
     throw "Nu am gasit compose.yaml pentru PostgreSQL in proiect."

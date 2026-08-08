@@ -1,5 +1,1 @@
-- Backend tests: `.\\mvnw.cmd clean test` in `akadion-backend-modificat/akadion-backend-modificat/proiect`.
-- Backend build: `.\\mvnw.cmd clean package -DskipTests` in `akadion-backend-modificat/akadion-backend-modificat/proiect`.
-- Frontend lint: `npm.cmd run lint` in `frontend`.
-- Frontend build: `npm.cmd run build` in `frontend`.
-- Local helpers from workspace root: `pwsh -File scripts/start-postgres.ps1`, `pwsh -File scripts/start-backend.ps1`, `pwsh -File scripts/start-frontend.ps1`, `pwsh -File scripts/check-local-services.ps1`.
+Windows PowerShell commands from repo root: `npm run build` and `npm run lint` in `frontend`; `./mvnw.cmd test` and `./mvnw.cmd package -DskipTests` in `akadion-backend-modificat/proiect`; `docker compose -f compose.yaml config --quiet` in root and backend directory. `rtk` may be unavailable on Windows; direct commands are fallback. Do not start compose for validation.

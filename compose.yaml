@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       - 'POSTGRES_DB=akadion'
-      - 'POSTGRES_PASSWORD=${DB_PASSWORD:-parola123}'
+      - 'POSTGRES_PASSWORD=${DB_PASSWORD:-secret}'
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432:5432'
@@ -25,6 +25,9 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - default
+      - akadion_shared
 
   minio-setup:
     image: minio/mc:latest
@@ -47,8 +50,8 @@ services:
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://postgres:5432/akadion
       - KC_DB_USERNAME=myuser
-      - KC_DB_PASSWORD=${DB_PASSWORD:-parola123}
-    command: start-dev --import-realm
+      - KC_DB_PASSWORD=${DB_PASSWORD:-secret}
+    command: start-dev --import-realm --hostname=http://localhost:8080 --hostname-strict=false
     ports:
       - "8080:8080"
     volumes:
@@ -59,7 +62,7 @@ services:
 
   backend:
     build:
-      context: ./akadion-backend-modificat/akadion-backend-modificat/proiect
+      context: ./akadion-backend-modificat/proiect
       dockerfile: Dockerfile
     container_name: akadion-backend
     restart: unless-stopped
@@ -67,16 +70,50 @@ services:
       - "8081:8081"
     environment:
       - APP_KEYCLOAK_BASE_URL=http://keycloak:8080
+      - APP_KEYCLOAK_BROWSER_BASE_URL=http://localhost:8080
+      - APP_KEYCLOAK_REALM=Akadion
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/akadion
       - APP_FRONTEND_BASE_URL=http://localhost:5173
+      - KEYCLOAK_AUTHORIZATION_URI=http://localhost:8080/realms/Akadion/protocol/openid-connect/auth
+      - KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/Akadion/protocol/openid-connect/token
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/Akadion/protocol/openid-connect/certs
+      - KEYCLOAK_USER_INFO_URI=http://keycloak:8080/realms/Akadion/protocol/openid-connect/userinfo
       - MINIO_URL=http://minio:9000
-      - DB_PASSWORD=${DB_PASSWORD:-parola123}
-      - KEYCLOAK_BACKEND_LOGIN_SECRET=${KEYCLOAK_BACKEND_LOGIN_SECRET:-ckRYo6MBAP2Ed5LcDRzDTLnYJY085JCK}
-      - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - KEYCLOAK_BACKEND_LOGIN_SECRET=${KEYCLOAK_BACKEND_LOGIN_SECRET:-CXjLqtrWOxFIqujnPSHXmr8BssiFBqNH5L5t4UPUoT3b6mnli3hzH3E7HWo5AF8UJyKGf7ULfEGzbzdpd3eP5A}
+      - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-qkFpqAaDSjl4E9jcHgBe6kFJw0yRwpxWVs6waB1pitVQOboDQodvmbLbnt2pItjxHBeBwbVcVUddreumBT7BHf}
+      - RAG_SERVICE_USERNAME=${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+      - RAG_BASE_URL=${RAG_BASE_URL:-http://llm-response:8000}
+      - RAG_EMBEDDER_URL=${RAG_EMBEDDER_URL:-http://embedder:8001}
+      - TZ=Europe/Bucharest
+      - OTEL_SERVICE_NAME=akadion-backend
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_INSTRUMENTATION_LOGBACK_MDC_ENABLED=true
+    networks:
+      - default
+      - akadion_shared
     depends_on:
       - postgres
       - keycloak
       - minio
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.66.0
+    container_name: akadion-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+    networks:
+      - default
+      - akadion_shared
 
   frontend:
     build:
@@ -92,3 +129,7 @@ services:
 volumes:
   minio_data:
   postgres_data:
+
+networks:
+  akadion_shared:
+    external: true

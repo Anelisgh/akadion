@@ -33,7 +33,7 @@ function Sheet({ open, onOpenChange, children }) {
   return createPortal(children, document.body)
 }
 
-function SheetContent({ className, onOpenChange, side = "right", children }) {
+function SheetContent({ className, onOpenChange, side = "right", children, style }) {
   const isLeftSide = side === "left"
 
   return (
@@ -54,6 +54,7 @@ function SheetContent({ className, onOpenChange, side = "right", children }) {
             : "right-0 border-l border-[#e4d8cd] shadow-[-20px_0_60px_rgba(32,46,84,0.18)]",
           className,
         )}
+        style={style}
       >
         <button
           type="button"

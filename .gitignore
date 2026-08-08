@@ -2,3 +2,6 @@ scripts/set-local-secrets.ps1
 akadion-backend/proiect/src/main/resources/application-local.properties
 
 .env
+.env.local
+.playwright-mcp/
+logs.txt

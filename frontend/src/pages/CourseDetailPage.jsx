@@ -56,7 +56,7 @@ import {
 } from "@/lib/professorCourses"
 import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
-import { cn } from "@/lib/utils"
+import { cn, formatWeeks } from "@/lib/utils"
 
 function formatDisplayDate(value) {
   if (!value) {
@@ -208,6 +208,7 @@ export default function CourseDetailPage() {
   const [newWeekDescription, setNewWeekDescription] = useState("")
   const [documentsByWeek, setDocumentsByWeek] = useState({})
   const [uploadDrafts, setUploadDrafts] = useState({})
+  const [uploadErrors, setUploadErrors] = useState({})
   const [documentDrafts, setDocumentDrafts] = useState({})
   const [expandedWeekIds, setExpandedWeekIds] = useState({})
   const [indexExpandedWeekIds, setIndexExpandedWeekIds] = useState({})
@@ -570,10 +571,14 @@ export default function CourseDetailPage() {
     const draft = uploadDrafts[week.id] ?? {}
 
     if (!draft.titlu?.trim() || !draft.file) {
-      setPageError("Titlul și fișierul sunt obligatorii pentru upload.")
+      setUploadErrors((current) => ({
+        ...current,
+        [week.id]: "Titlul documentului și fișierul sunt obligatorii pentru upload.",
+      }))
       return
     }
 
+    setUploadErrors((current) => ({ ...current, [week.id]: "" }))
     setActiveAction(`upload-document-${week.id}`)
 
     try {
@@ -583,6 +588,7 @@ export default function CourseDetailPage() {
       )
       const refreshedDocuments = await listWeekDocuments(week.id)
       setUploadDrafts((current) => ({ ...current, [week.id]: { titlu: "", file: null } }))
+      setUploadErrors((current) => ({ ...current, [week.id]: "" }))
       if (uploadFileInputRefs.current[week.id]) {
         uploadFileInputRefs.current[week.id].value = ""
       }
@@ -728,7 +734,7 @@ export default function CourseDetailPage() {
         <div className="min-w-0">
           <h2 className="text-lg font-bold tracking-tight text-slate-900">Cuprins curs</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {weeks.length} săptămâni · {totalCourseDocuments} documente
+            {formatWeeks(weeks.length)} · {totalCourseDocuments} documente
           </p>
         </div>
         <button
@@ -1051,7 +1057,7 @@ export default function CourseDetailPage() {
                       <p className={cn("text-xs font-semibold tracking-[0.18em] uppercase", theme.sectionLabel)}>Conținut curs</p>
                       <h2 className={cn("mt-1 text-2xl font-semibold tracking-tight", theme.sectionTitle)}>Săptămâni și documente</h2>
                     </div>
-                    <p className="text-sm font-medium text-slate-500">Total: {weeks.length} săptămâni</p>
+                    <p className="text-sm font-medium text-slate-500">Total: {formatWeeks(weeks.length)}</p>
                   </div>
                 </div>
 
@@ -1153,33 +1159,57 @@ export default function CourseDetailPage() {
                                   <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Document nou</p>
                                   <p className="mt-1 text-sm text-slate-500">Încarcă materiale pentru această săptămână.</p>
                                 </div>
-                                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start">
                                   <div className="space-y-2">
                                     <Label htmlFor={`upload-title-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU DOCUMENT</Label>
                                     <Input
                                       id={`upload-title-${week.id}`}
                                       value={uploadDrafts[week.id]?.titlu ?? ""}
                                       onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], titlu: event.target.value } }))}
-                                      className="h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                                      className="h-14 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
                                     />
                                   </div>
                                   <div className="space-y-2">
                                     <Label htmlFor={`upload-file-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">FIȘIER</Label>
-                                    <Input
-                                      id={`upload-file-${week.id}`}
-                                      type="file"
-                                      ref={(element) => {
-                                        uploadFileInputRefs.current[week.id] = element
-                                      }}
-                                      onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], file: event.target.files?.[0] ?? null } }))}
-                                      className={cn("h-11 rounded-2xl border-[#e4d8cd] bg-white px-4 shadow-none file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-semibold focus-visible:ring-[#24385b]/10", theme.fileIconText)}
-                                    />
+                                    <Label
+                                      htmlFor={`upload-file-${week.id}`}
+                                      className={cn(
+                                        "flex h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dashed bg-white px-4 text-sm shadow-none transition hover:border-[#24385b] hover:bg-[#fffaf4] focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/10",
+                                        uploadDrafts[week.id]?.file ? "border-emerald-300 text-emerald-800" : "border-[#d9ccbe] text-slate-600"
+                                      )}
+                                    >
+                                      <Upload className={cn("h-4 w-4 shrink-0", uploadDrafts[week.id]?.file ? "text-emerald-700" : theme.fileIconText)} />
+                                      <span className="min-w-0 flex-1">
+                                        <span className="block font-semibold">
+                                          {uploadDrafts[week.id]?.file?.name ?? "Apasă aici pentru a selecta documentul"}
+                                        </span>
+                                      </span>
+                                      <span className="shrink-0 rounded-full bg-[#24385b]/10 px-4 py-2 text-sm font-bold text-[#24385b]">Alege fișier</span>
+                                      <Input
+                                        id={`upload-file-${week.id}`}
+                                        type="file"
+                                        ref={(element) => {
+                                          uploadFileInputRefs.current[week.id] = element
+                                        }}
+                                        onChange={(event) => setUploadDrafts((current) => ({ ...current, [week.id]: { ...current[week.id], file: event.target.files?.[0] ?? null } }))}
+                                        className="sr-only"
+                                      />
+                                    </Label>
                                   </div>
-                                  <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
+                                  <Button type="submit" disabled={Boolean(activeAction)} className={cn("h-14 rounded-2xl px-5 text-white lg:mt-5", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
                                     <Upload className="h-4 w-4" />
-                                    {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Upload"}
+                                    {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Încarcă documentul"}
                                   </Button>
                                 </div>
+                                {uploadErrors[week.id] ? (
+                                  <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-rose-700 shadow-[0_12px_30px_rgba(225,29,72,0.08)]">
+                                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+                                    <div>
+                                      <p className="text-sm font-bold text-rose-700">Nu putem încărca documentul încă</p>
+                                      <p className="mt-1 text-sm font-semibold leading-6 text-rose-600">{uploadErrors[week.id]}</p>
+                                    </div>
+                                  </div>
+                                ) : null}
                               </form>
                             ) : null}
 
@@ -1407,7 +1437,7 @@ export default function CourseDetailPage() {
             <AkyChatWidget
               courseId={course?.id}
               courseTitle={course?.titlu || course?.denumire}
-              enabled={isStudent}
+              enabled={isStudent || isProfessor}
             />
           </>
         ) : null}

@@ -45,35 +45,57 @@ Exemplu cu parametri:
   -MinioSecretKey "INLOCUIESTE_CU_MINIO_SECRET_KEY"
 ```
 
-## Ordinea exacta de pornire
+## Pornire si oprire one-click
 
-Întreaga stivă (PostgreSQL, MinIO, Keycloak, Backend, Frontend) este acum complet containerizată și orchestrată cu Docker Compose.
+Intreaga stiva (PostgreSQL, MinIO, Keycloak, Backend, Frontend) este containerizata si orchestrata cu Docker Compose.
 
-1. Asigură-te că **Docker Desktop** este pornit.
-2. Deschide un terminal în rădăcina proiectului.
-3. Opțional: Pentru a folosi secrete proprii, le poți adăuga direct în fișierul `.env` din rădăcină (Docker Compose îl va citi automat). Alternativ, le poți seta prin scriptul PowerShell înainte de pornire:
-   ```powershell
-   . .\scripts\set-local-secrets.ps1
-   ```
-4. Pornește stiva completă în fundal (detached mode):
-   ```bash
-   docker compose up -d
-   ```
-5. Pentru a urmări log-urile (ex. să vezi când se termină compilarea backend-ului):
-   ```bash
-   docker compose logs -f
-   ```
-6. Pentru a opri mediul de dezvoltare:
-   ```bash
-   docker compose down
-   ```
+1. Asigura-te ca **Docker Desktop** este pornit.
+2. Verifica fisierul `.env.local` din radacina proiectului. Acesta contine credentialele locale si este ignorat de Git.
+3. Porneste aplicatia cu dublu-click pe `Start Akadion.cmd`.
+4. Opreste aplicatia cu dublu-click pe `Stop Akadion.cmd`.
+
+Launcherul de pornire:
+
+- incarca automat variabilele din `.env.local` daca exista, altfel din `.env`
+- creeaza reteaua Docker externa `akadion_shared` daca lipseste
+- ruleaza `docker compose up -d --build`
+- verifica serviciile principale
+- deschide `http://localhost:5173`
+
+Launcherul de oprire ruleaza `docker compose down` si pastreaza volumele Docker locale.
+
+## Comenzi manuale fallback
+
+Pornire:
+
+```powershell
+.\scripts\start-akadion.ps1
+```
+
+Oprire:
+
+```powershell
+.\scripts\stop-akadion.ps1
+```
+
+Loguri:
+
+```bash
+docker compose logs -f
+```
+
+Oprire cu stergerea volumelor locale:
+
+```powershell
+.\scripts\stop-akadion.ps1 -RemoveVolumes
+```
 
 ## Comenzi de verificare manuala
 
 Backend tests:
 
 ```powershell
-cd .\akadion-backend-modificat\akadion-backend-modificat\proiect
+cd .\akadion-backend-modificat\proiect
 .\mvnw.cmd test
 .\mvnw.cmd package -DskipTests
 ```

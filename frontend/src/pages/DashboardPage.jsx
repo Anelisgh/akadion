@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { AlertCircle, BookOpenText, CheckCircle2, Clock3, GraduationCap, Plus, RefreshCcw, Users } from "lucide-react"
+import { AlertCircle, BookOpenText, CheckCircle2, Clock3, Plus, Users } from "lucide-react"
 import adminDashboardLogo from "../../logo_dasboard_admin.png"
 import professorDashboardLogo from "../../logo_dasboard_profesor.png"
 import studentDashboardLogo from "../../logo_dashboard_student.png"
@@ -17,19 +17,21 @@ import {
   listStudentAvailableCourses,
   listStudentCourses,
 } from "@/lib/professorCourses"
-import { getUserGreetingName, isAdminUser, isProfessorUser, normalizeRole } from "@/lib/user"
+import { getUserGreetingName, isAdminUser, isProfessorUser } from "@/lib/user"
 import { useAuth } from "@/auth/useAuth"
 import { COURSE_THEME_KEYS, DEFAULT_COURSE_THEME } from "@/lib/courseThemes"
 import {
   CourseCard,
   EmptyCoursesState,
-  getCourseThemeStorageKey,
-  normalizeAvailableCourse,
-  normalizeEnrolledCourse,
 } from "@/pages/CoursesPage"
+import { getCourseThemeStorageKey, normalizeAvailableCourse, normalizeEnrolledCourse } from "@/lib/courseView"
 
 function DashboardStatCard({ icon: Icon, label, value, note, tone = "blue", action }) {
-  const toneClass = tone === "amber" ? "bg-amber-50 text-amber-700" : tone === "emerald" ? "bg-emerald-50 text-emerald-700" : "bg-[#eef1fb] text-[#4A5681]"
+  const toneClass = tone === "amber"
+    ? "border border-[#f0c16f] bg-linear-to-br from-[#fff3df] via-[#ffdea8] to-[#ffc36b] text-[#8a3f0f] shadow-[0_12px_28px_rgba(168,93,21,0.10)]"
+    : tone === "emerald"
+      ? "border border-[#8fdcae] bg-linear-to-br from-[#e6f9ed] via-[#c8efd7] to-[#91dfaf] text-[#175c34] shadow-[0_12px_28px_rgba(31,107,63,0.10)]"
+      : "border border-[#9fc2f4] bg-linear-to-br from-[#edf4ff] via-[#d6e7fb] to-[#a9cdf7] text-[#1f4f86] shadow-[0_12px_28px_rgba(47,95,159,0.10)]"
 
   return (
     <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
@@ -91,8 +93,8 @@ function AdminDashboard() {
       heroEyebrowClassName="text-white/72"
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
-      heroVisual={<img src={adminDashboardLogo} alt="Dashboard administrator" className="h-auto w-30 object-contain drop-shadow-[0_14px_24px_rgba(20,62,92,0.14)] lg:w-34 xl:w-38" />}
-      heroVisualClassName="right-2 bottom-[-1rem] top-auto h-full items-end justify-center lg:right-5"
+      heroVisual={<img src={adminDashboardLogo} alt="Dashboard administrator" className="pointer-events-auto h-full max-h-full w-auto origin-bottom translate-y-[11%] cursor-pointer object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]" />}
+      heroVisualClassName="right-2 bottom-0 top-auto h-full items-end justify-center lg:right-5"
     >
       <div className="space-y-6">
         {error ? (
@@ -110,7 +112,7 @@ function AdminDashboard() {
             value={loading ? "..." : (stats?.utilizatoriPending ?? 0)}
             tone="amber"
             action={
-              <Button asChild variant="outline" size="sm" className="rounded-xl border-amber-200 bg-white text-amber-700 hover:bg-amber-50">
+              <Button asChild variant="outline" size="sm" className="rounded-xl border-[#f2bd68] bg-[#fff8eb] text-[#9a4d13] hover:bg-[#ffefd0]">
                 <Link to="/admin/users?stare=PENDING">Vezi detalii</Link>
               </Button>
             }
@@ -129,11 +131,11 @@ function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-4 px-6 pb-6">
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="flex items-center justify-between rounded-2xl border border-cyan-200/80 bg-linear-to-r from-[#dff7ff] via-[#c7efff] to-[#a8dcff] px-4 py-3 text-[#1c4f73]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#89abe2] bg-linear-to-r from-[#cfe0fb] via-[#b8d3fa] to-[#91bff4] px-4 py-3 text-[#173b72] shadow-[0_14px_32px_rgba(47,95,159,0.12)]">
                     <span className="text-sm font-semibold">ACTIVE</span>
                     <span className="text-lg font-semibold">{loading ? "..." : (stats?.cursuriActive ?? 0)}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-linear-to-r from-[#ffe1e1] via-[#ffc9c9] to-[#ffb1b1] px-4 py-3 text-[#8f2d2d]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#ff8fa3] bg-linear-to-r from-[#ffd4dd] via-[#ffb8c7] to-[#ff8fa3] px-4 py-3 text-[#881337] shadow-[0_14px_32px_rgba(159,18,57,0.12)]">
                     <span className="text-sm font-semibold">INACTIVE</span>
                     <span className="text-lg font-semibold">{loading ? "..." : (stats?.cursuriInactive ?? 0)}</span>
                   </div>
@@ -155,11 +157,11 @@ function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-4 px-6 pb-6">
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-linear-to-r from-[#dff8e7] via-[#c8f1d6] to-[#a7e7bf] px-4 py-3 text-[#1f6a3d]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#7fd69f] bg-linear-to-r from-[#c8efd7] via-[#aee6c4] to-[#88dca8] px-4 py-3 text-[#14532d] shadow-[0_14px_32px_rgba(31,107,63,0.12)]">
                     <span className="text-sm font-semibold">ACTIVI</span>
                     <span className="text-lg font-semibold">{loading ? "..." : (stats?.utilizatoriActivi ?? 0)}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-amber-200/80 bg-linear-to-r from-[#fff2dc] via-[#ffe3bf] to-[#ffd39c] px-4 py-3 text-[#9a5a16]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#f2bd68] bg-linear-to-r from-[#ffdda3] via-[#ffcc82] to-[#ffb95c] px-4 py-3 text-[#7c2d12] shadow-[0_14px_32px_rgba(168,93,21,0.12)]">
                     <span className="text-sm font-semibold">PENDING</span>
                     <span className="text-lg font-semibold">{loading ? "..." : (stats?.utilizatoriPending ?? 0)}</span>
                   </div>
@@ -260,8 +262,8 @@ function ProfessorDashboard() {
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
       heroContent={heroContentStats}
-      heroVisual={<img src={professorDashboardLogo} alt="Dashboard profesor" className="h-auto w-28 object-contain drop-shadow-[0_14px_24px_rgba(20,62,92,0.14)] lg:w-32 xl:w-36" />}
-      heroVisualClassName="right-2 bottom-[-0.35rem] top-auto h-full items-end justify-center lg:right-5"
+      heroVisual={<img src={professorDashboardLogo} alt="Dashboard profesor" className="pointer-events-auto h-full max-h-full w-auto origin-bottom translate-y-[7.5%] cursor-pointer object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]" />}
+      heroVisualClassName="right-2 bottom-0 top-auto h-full items-end justify-center lg:right-5"
     >
       <div className="space-y-6">
         {error ? (
@@ -430,8 +432,8 @@ function StudentDashboard() {
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
       heroContent={studentHeroContentStats}
-      heroVisual={<img src={studentDashboardLogo} alt="Dashboard student" className="h-auto w-28 object-contain drop-shadow-[0_14px_24px_rgba(20,62,92,0.14)] lg:w-32 xl:w-36" />}
-      heroVisualClassName="right-2 bottom-[-1rem] top-auto h-full items-end justify-center lg:right-5"
+      heroVisual={<img src={studentDashboardLogo} alt="Dashboard student" className="pointer-events-auto h-full max-h-full w-auto origin-bottom translate-y-[14%] cursor-pointer object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]" />}
+      heroVisualClassName="right-2 bottom-0 top-auto h-full items-end justify-center lg:right-5"
     >
       <div className="space-y-6">
         {error ? (

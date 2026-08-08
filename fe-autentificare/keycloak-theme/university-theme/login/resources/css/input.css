@@ -60,6 +60,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -83,6 +84,7 @@
 }
 
 @layer components {
+
   .theme-html,
   .theme-body {
     @apply min-h-screen;
@@ -153,6 +155,7 @@
   }
 
   @keyframes auth-orb-bounce-top {
+
     0%,
     100% {
       opacity: 0.72;
@@ -191,6 +194,7 @@
   }
 
   @keyframes auth-orb-bounce-bottom {
+
     0%,
     100% {
       opacity: 0.68;
@@ -229,6 +233,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+
     .auth-brand-panel::before,
     .auth-brand-panel::after {
       animation: none;
@@ -237,11 +242,22 @@
   }
 
   .auth-brand-panel__content {
-    @apply relative z-10 flex min-h-screen flex-col px-6 py-10 sm:px-8 lg:px-12 lg:py-14 xl:px-14;
+    @apply relative z-10 flex h-full flex-col px-6 pt-6 pb-0 sm:px-8 lg:px-12 lg:pt-8 xl:px-14;
   }
 
   .brand-header {
-    @apply flex items-center gap-5 self-start;
+    @apply flex items-center justify-between gap-5 self-start w-full;
+  }
+
+  .brand-header__left {
+    @apply flex items-center gap-5;
+  }
+
+  .brand-header__badge {
+    @apply shrink-0;
+    font-size: 0.7rem;
+    padding-inline: 0.65rem;
+    padding-block: 0.35rem;
   }
 
   .brand-header__copy {
@@ -300,8 +316,10 @@
   }
 
   .brand-benefit-card__icon {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/92;
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl;
     background: rgba(255, 255, 255, 0.1);
+    font-size: 1.25rem;
+    line-height: 1;
   }
 
   .brand-benefit-card__icon svg {
@@ -325,18 +343,18 @@
   }
 
   .auth-rag-promo {
-    @apply -mt-2 mb-8 ml-auto mr-[-2.2rem] flex w-fit flex-col items-center justify-center gap-0.5 text-right;
+    @apply mb-5 ml-auto flex w-fit flex-row items-center gap-2;
+    opacity: 0.72;
   }
 
   .auth-rag-promo__label {
-    @apply m-0 whitespace-nowrap text-[0.64rem] font-medium tracking-[0.08em] text-[color:var(--owl-ink)];
-    opacity: 0.58;
+    @apply m-0 whitespace-nowrap text-[0.62rem] font-medium text-[color:var(--owl-ink)];
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
   }
 
   .auth-rag-promo__logo {
-    @apply h-18 w-18 max-w-full object-contain sm:h-20 sm:w-20;
+    @apply h-8 w-8 max-w-full object-contain;
   }
 
   .auth-card-shell {
@@ -351,12 +369,12 @@
   }
 
   .auth-card-header {
-    @apply px-6 py-9 sm:px-8 sm:py-10;
-    border-bottom: 1px solid color-mix(in srgb, var(--owl-indigo) 16%, white);
+    @apply px-6 pt-5 pb-1 sm:px-8 sm:pt-6 sm:pb-2;
+    border-bottom: none;
   }
 
   .auth-card-body {
-    @apply px-6 py-8 sm:px-8 sm:py-9;
+    @apply px-6 pt-1 pb-6 sm:px-8 sm:pt-2 sm:pb-7;
   }
 
   .header-row {
@@ -450,18 +468,18 @@
     @apply grid gap-5 md:grid-cols-2;
   }
 
-  .register-grid > .kc-field,
-  .register-grid > .profile-group-header {
+  .register-grid>.kc-field,
+  .register-grid>.profile-group-header {
     @apply md:col-span-1;
   }
 
   .profile-group-header,
-  .register-grid > .profile-group-header,
-  .register-grid > .kc-field:has(#email),
-  .register-grid > .kc-field:has(#username),
-  .register-grid > .kc-field:has(#password),
-  .register-grid > .kc-field:has(#password-confirm),
-  .register-grid > .kc-field:has(textarea) {
+  .register-grid>.profile-group-header,
+  .register-grid>.kc-field:has(#email),
+  .register-grid>.kc-field:has(#username),
+  .register-grid>.kc-field:has(#password),
+  .register-grid>.kc-field:has(#password-confirm),
+  .register-grid>.kc-field:has(textarea) {
     @apply md:col-span-2;
   }
 
@@ -526,7 +544,7 @@
   }
 
   .field-input {
-    @apply flex h-12 w-full rounded-[var(--radius)] px-4 py-2 text-sm shadow-[inset_0_1px_1px_rgba(34,51,73,0.04)] outline-none transition-[border-color,box-shadow,background-color,transform] disabled:cursor-not-allowed disabled:opacity-70;
+    @apply flex h-12 w-full rounded-[var(--radius)] px-4 py-2 text-sm shadow-[inset_0_1px_1px_rgba(34,51,73,0.04)] outline-none transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70;
     background: var(--owl-cream);
     border: 1px solid color-mix(in srgb, var(--owl-indigo) 22%, white);
     color: var(--owl-ink);
@@ -634,7 +652,7 @@
   }
 
   .btn {
-    @apply inline-flex h-12 w-full items-center justify-center rounded-[14px] border border-transparent px-4 text-sm font-semibold transition-[transform,background-color,box-shadow] duration-150 outline-none disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-12 w-full items-center justify-center rounded-[14px] border border-transparent px-4 text-sm font-semibold transition-all duration-150 outline-none disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn:focus-visible {
@@ -664,20 +682,16 @@
     @apply h-11;
   }
 
-  .auth-info-box {
-    @apply mt-6 rounded-[var(--radius)] px-4 py-4 text-sm leading-6;
-    background: rgba(89, 95, 143, 0.06);
-    border: 1px solid color-mix(in srgb, var(--owl-indigo) 16%, white);
-  }
-
+  .auth-info-box,
   .auth-switch-copy {
-    @apply mt-5 rounded-[var(--radius)] border px-4 py-3 text-center text-sm text-[color:var(--muted-foreground)];
-    background: color-mix(in srgb, var(--muted) 40%, white);
-    border-color: color-mix(in srgb, var(--owl-indigo) 10%, white);
+    @apply mt-6 text-left text-[15px] leading-6 text-[color:var(--muted-foreground)];
+    background: transparent;
+    border: none;
+    padding: 0;
   }
 
   .inline-alert {
-    @apply mb-5 flex items-start gap-3 rounded-[var(--radius)] border px-4 py-3.5;
+    @apply mb-5 flex items-center gap-3 rounded-[var(--radius)] border px-4 py-3.5;
   }
 
   .inline-alert--info {
@@ -687,7 +701,7 @@
   }
 
   .inline-alert__icon {
-    @apply mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full;
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full;
     background: color-mix(in srgb, var(--owl-indigo) 10%, white);
   }
 
@@ -844,6 +858,87 @@
     background: #f7f0e7;
   }
 
+  .page-forgot-password .auth-card-header {
+    @apply pb-2;
+  }
+
+  .forgot-password-intro {
+    @apply -mt-2 mb-5 max-w-2xl text-sm leading-6 text-[color:var(--muted-foreground)];
+  }
+
+  .page-forgot-password .auth-form {
+    @apply gap-5;
+  }
+
+  .page-forgot-password .form-buttons {
+    @apply w-full pt-5;
+  }
+
+  .page-forgot-password .form-buttons::after {
+    @apply hidden;
+  }
+
+  .page-forgot-password .btn {
+    @apply w-full;
+  }
+
+  .page-update-password .auth-card-header {
+    @apply pb-3;
+  }
+
+  .page-update-password .auth-form {
+    @apply gap-5;
+  }
+
+  .page-update-password .alert-warning {
+    @apply rounded-2xl px-4 py-4;
+    background: #fff8e6;
+    border-color: color-mix(in srgb, #e8b949 42%, white);
+    color: #8a4b00;
+  }
+
+  .page-update-password .update-password-options {
+    @apply pt-1;
+  }
+
+  .page-update-password .checkbox-row {
+    @apply text-sm font-medium text-[#595f8f];
+  }
+
+  .page-update-password .checkbox-input {
+    @apply shrink-0;
+    border-color: color-mix(in srgb, var(--owl-indigo) 28%, white);
+  }
+
+  .page-update-password .form-buttons {
+    @apply flex w-full flex-col gap-3 pt-4;
+  }
+
+  .page-update-password .form-buttons::after {
+    @apply hidden;
+  }
+
+  .page-update-password .btn {
+    @apply h-14 w-full rounded-2xl text-base;
+  }
+
+  .page-update-password .btn-primary {
+    background-image: linear-gradient(90deg, #223349 0%, #595f8f 100%);
+    box-shadow: 0 18px 34px -18px rgba(36, 56, 91, 0.55);
+  }
+
+  .page-update-password .update-password-cancel {
+    @apply border-[#d9ccbe] bg-white text-[#24385b] hover:bg-[#f7efe6];
+  }
+
+  .forgot-password-back-link {
+    @apply pt-1 text-left text-sm;
+  }
+
+  .forgot-password-back-link a {
+    @apply rounded-md font-medium text-[color:var(--owl-indigo)] outline-none transition-colors duration-150 hover:text-[color:var(--owl-ink)] hover:underline focus-visible:ring-4 focus-visible:ring-[color:color-mix(in_oklab,var(--ring)_14%,transparent)];
+  }
+
   .page-register .auth-layout {
     @apply lg:grid-cols-[0.95fr_1.15fr];
   }
@@ -871,187 +966,8 @@
     mask-image: none;
   }
 
-  .page-register .auth-brand-panel__content {
-    @apply px-6 py-10 sm:px-8 lg:px-12 lg:py-14 xl:px-14;
-  }
-
-  .page-register .brand-header {
-    @apply mt-12 gap-5 sm:mt-16;
-  }
-
-  .page-register .brand-logo {
-    @apply h-16 w-16 rounded-2xl bg-white/92 p-1.5;
-    border: none;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
-  }
-
-  .page-register .brand-name {
-    @apply text-2xl font-semibold tracking-tight;
-  }
-
-  .page-register .brand-caption {
-    color: rgba(255, 255, 255, 0.72);
-  }
-
-  .page-register .brand-copy--single {
-    @apply mt-18 max-w-md space-y-9 lg:mt-28;
-  }
-
-  .page-register .brand-badge {
-    display: none;
-  }
-
-  .page-register .brand-title {
-    @apply text-4xl font-semibold tracking-tight sm:text-5xl;
-  }
-
-  .page-register .brand-description {
-    @apply max-w-sm text-base leading-9 text-white/80 sm:text-lg;
-  }
-
-  .page-register .brand-benefits {
-    @apply mt-0 grid-cols-1 gap-6 pt-10;
-  }
-
-  .page-register .brand-benefit-card {
-    @apply rounded-none border-0 bg-transparent px-0 py-0 text-base font-medium leading-7 text-white shadow-none;
-  }
-
-  .page-register .brand-benefit-card:hover {
-    transform: none;
-    background: transparent;
-  }
-
-  .page-register .brand-benefit-card__icon {
-    @apply h-11 w-11 rounded-2xl;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
   .page-register .auth-form-panel {
-    @apply items-center px-4 py-10 sm:px-6 lg:px-10 lg:py-14 xl:px-16;
-  }
-
-  .page-register .auth-card-shell {
-    @apply max-w-xl rounded-[1.75rem] px-6 py-7 shadow-[0_24px_60px_rgba(108,84,53,0.12)] sm:px-9 sm:py-10;
-    background: #fcf8f3;
-    border-color: #e5d8ca;
-  }
-
-  .page-register .auth-card-shell::before {
-    display: none;
-  }
-
-  .page-register .auth-card-header {
-    @apply space-y-4 px-0 pt-0 pb-8;
-    border-bottom: 0;
-  }
-
-  .page-register .auth-card-body {
-    @apply px-0 py-0;
-  }
-
-  .page-register .header-row {
-    @apply block;
-  }
-
-  .page-register .eyebrow {
-    @apply inline-flex rounded-full border px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500;
-    background: #f6eee4;
-    border-color: #e5d8ca;
-  }
-
-  .page-register .auth-title {
-    @apply mt-4 text-3xl font-semibold tracking-tight text-slate-900;
-  }
-
-  .page-register .auth-subtitle {
-    @apply mt-4 text-base leading-8 text-slate-500;
-  }
-
-  .page-register .required-note {
-    @apply mt-0 text-sm text-slate-500;
-  }
-
-  .page-register .field-label {
-    @apply text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600 uppercase;
-  }
-
-  .page-register .field-input,
-  .page-register .password-field .field-input {
-    @apply h-[3.25rem] rounded-2xl px-4 text-base shadow-none;
-    background: #f7efe6;
-    border-color: #e4d8cd;
-  }
-
-  .page-register .field-input::placeholder {
-    color: #94a3b8;
-  }
-
-  .page-register .field-input:focus,
-  .page-register .field-input:focus-visible {
-    border-color: #24385b;
-    box-shadow: 0 0 0 4px rgba(36, 56, 91, 0.1);
-    background: #f7efe6;
-  }
-
-  .page-register .field-control--with-icon .field-input,
-  .page-register .password-field .field-input {
-    @apply pl-11;
-  }
-
-  .page-register .field-icon {
-    color: #64748b;
-  }
-
-  .page-register .inline-alert {
-    @apply rounded-3xl px-4 py-4;
-    background: #f6efe6;
-    border-color: #e4d8cd;
-    color: #475569;
-  }
-
-  .page-register .inline-alert__icon {
-    background: transparent;
-    color: #24385b;
-  }
-
-  .page-register .form-intro {
-    @apply m-0 text-sm leading-7 text-slate-600;
-  }
-
-  .page-register .form-buttons {
-    @apply pt-5;
-  }
-
-  .page-register .btn {
-    @apply h-14 rounded-2xl text-lg;
-  }
-
-  .page-register .btn-primary {
-    background: #d8ccbf;
-    color: white;
-    box-shadow: none;
-  }
-
-  .page-register .btn-primary:hover {
-    background: #cdbdac;
-  }
-
-  .page-register .form-options-wrapper,
-  .page-register .auth-switch-copy {
-    @apply text-sm text-slate-500;
-  }
-
-  .page-register .auth-switch-copy {
-    @apply mt-6 rounded-[var(--radius)] border px-4 py-4 text-center;
-    background: #f6eee4;
-    border-color: #e5d8ca;
-  }
-
-  .page-register .auth-footer {
-    @apply px-0 pt-6 pb-0;
-    border-top: 0;
+    @apply items-start pt-6 sm:pt-8 lg:pt-10;
   }
 
   @media (max-width: 640px) {
@@ -1081,15 +997,6 @@
       @apply px-5;
     }
 
-    .page-register .auth-card-header,
-    .page-register .auth-card-body,
-    .page-register .auth-footer {
-      @apply px-0;
-    }
-
-    .page-register .auth-card-shell {
-      @apply p-5;
-    }
 
     .header-row {
       @apply gap-3;
@@ -1110,5 +1017,191 @@
     .form-buttons::after {
       @apply hidden;
     }
+  }
+
+  /* Custom Theme Overrides */
+  .auth-aky-badge {
+    @apply inline-flex items-center ml-auto;
+    gap: 0.85rem !important;
+    width: fit-content !important;
+    cursor: default !important;
+    user-select: none !important;
+    background: rgba(255, 255, 255, 0.76) !important;
+    border: 1px solid rgba(36, 56, 91, 0.16) !important;
+    border-radius: 1.35rem !important;
+    box-shadow: 0 16px 42px rgba(32, 46, 84, 0.1) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.25rem !important;
+    padding: 0.68rem 0.9rem 0.68rem 0.7rem !important;
+  }
+
+  .auth-aky-badge__logo-shell {
+    @apply inline-flex items-center justify-center shrink-0;
+    height: 3.65rem !important;
+    width: 3.65rem !important;
+    border-radius: 1.15rem !important;
+    border: 1px solid rgba(36, 56, 91, 0.14) !important;
+    background: linear-gradient(135deg, rgba(255,253,250,0.98), rgba(247,239,230,0.92)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9) !important;
+  }
+
+  .auth-aky-badge__logo {
+    height: 3.15rem !important;
+    width: 3.15rem !important;
+    min-width: 3.15rem !important;
+    max-height: 3.15rem !important;
+    max-width: 3.15rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+  }
+
+  .auth-aky-badge__copy {
+    @apply flex flex-col items-start;
+    gap: 0.05rem !important;
+    min-width: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .auth-aky-badge__eyebrow {
+    color: #7a819c !important;
+    font-size: 0.66rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
+  }
+
+  .auth-aky-badge__title {
+    @apply text-[#223349] leading-tight;
+    font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif !important;
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: none;
+  }
+
+  .auth-aky-badge__subtitle {
+    @apply font-medium leading-tight;
+    color: #4f5d83;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+
+  .auth-form-stack {
+    max-width: 34rem !important;
+  }
+
+
+
+  /* Removed Google Fonts import as Inter is now used */
+
+  /* Brand Header & Logo - Expert UI/UX Polish */
+  .brand-header {
+    width: 100% !important;
+  }
+
+  .brand-header__left {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .brand-header__copy {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .brand-logo {
+    height: 18rem !important;
+    width: 18rem !important;
+    border-radius: 1rem !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.22));
+  }
+
+  .brand-logo:hover {
+    transform: translateY(-10px) scale(1.03) !important;
+    filter: drop-shadow(0 35px 65px rgba(0, 0, 0, 0.38)) brightness(1.05) !important;
+  }
+
+  .brand-name {
+    display: none !important;
+  }
+
+  .brand-caption {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    margin-top: 0.5rem !important;
+    display: block !important;
+  }
+
+  /* Brand Copy, Title & Description Spacing Fixes */
+  .brand-copy--single {
+    margin-top: 2.5rem !important;
+    gap: 1.25rem !important;
+  }
+
+  .brand-title {
+    font-size: 2.25rem !important;
+    line-height: 1.2 !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+  }
+
+  .brand-description {
+    font-size: 1rem !important;
+    line-height: 1.55 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    max-width: 32rem !important;
+    margin: 0 !important;
+  }
+
+  /* brand-benefits: 3 columns horizontal side-by-side */
+  .brand-benefits {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+    margin-top: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .brand-benefit-card {
+    padding: 0.65rem 0.75rem !important;
+    gap: 0.5rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .brand-benefit-card__emoji {
+    font-size: 1.25rem !important;
+  }
+
+  .brand-benefit-card__copy {
+    gap: 0.15rem !important;
+    line-height: 1.2 !important;
   }
 }

@@ -11,24 +11,25 @@ import CoursesPage from "@/pages/CoursesPage"
 import CourseDetailPage from "@/pages/CourseDetailPage"
 import NewCoursePage from "@/pages/NewCoursePage"
 import ProfilePage from "@/pages/ProfilePage"
+import DiscoverAkyPage from "@/pages/DiscoverAkyPage"
+import OwlHall from "@/pages/OwlHall"
+import LogoutPage from "@/pages/LogoutPage"
 import AppShell from "@/components/AppShell"
 import { getRoleLabel, getUserDisplayName, getUserInitials, isAdminUser, isProfessorUser } from "@/lib/user"
 import { startLogout } from "@/auth/logout"
-import completeProfileLogo from "../folder_inspiratie2/logo_bufnita.jpeg"
+import completeProfileLogo from "@/assets/logo_bufnita.png"
+import akyRagLogo from "@/assets/logo_RAG-removebg-preview.png"
+
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCheck,
-  Clock3,
-  RefreshCcw,
-  Sparkles,
   UserCog,
   UserMinus,
   UserPlus,
   X,
 } from "lucide-react"
-import { Link, Navigate, Route, Routes, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, Navigate, Route, Routes, useNavigate, useLocation, useSearchParams } from "react-router-dom"
 
 const USER_STATES = ["ALL", "PENDING", "ACTIV", "INACTIV", "RESPINS", "INCOMPLET"]
 
@@ -243,7 +244,7 @@ function LegacyUsersRedirect() {
     return <Navigate to={routeByState[user?.stareCont] ?? "/"} replace />
   }
 
-  return <Navigate to={isAdminUser(user) ? "/admin/users" : getActiveHomeRoute(user)} replace />
+  return <Navigate to={getActiveHomeRoute(user)} replace />
 }
 
 function RequireActiveProfessor({ children }) {
@@ -276,10 +277,22 @@ function ActiveHomePage() {
   return <DashboardPage />
 }
 
-function UserStateBadge({ state, label }) {
+function RootRoute() {
+  if (window.sessionStorage.getItem("akadion:logout-success-pending") === "1") {
+    return <Navigate to="/logout-success" replace />
+  }
+
+  return (
+    <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+      <ActiveHomePage />
+    </RequireAuthenticatedState>
+  )
+}
+
+function UserStateBadge({ state, label, className = "" }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"} ${className}`}
     >
       {label ?? stateLabels[state] ?? state}
     </span>
@@ -310,11 +323,6 @@ function CompleteProfilePage() {
   const profileSteps = [
     { id: 1, label: "Cont", stateText: "Pasul 1 finalizat", state: "completed" },
     { id: 2, label: "Profil", stateText: "Pasul 2 curent", state: "current" },
-  ]
-  const brandBenefits = [
-    "Cursuri alese de tine",
-    "Progres urmărit săptămânal",
-    "Acces pentru studenți și profesori",
   ]
 
   useEffect(() => {
@@ -384,54 +392,87 @@ function CompleteProfilePage() {
       <div className="complete-profile-layout">
         <section className="complete-profile-brand-panel">
           <div className="complete-profile-brand-content">
-            <Link
-              to="/"
-              className="inline-flex w-fit items-center gap-2 text-sm font-medium text-white/80 transition hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Înapoi
-            </Link>
-
-            <div className="complete-profile-brand-header">
-              <div className="complete-profile-brand-logo-shell">
-                <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tracking-tight">Akadion</p>
-                <p className="text-sm text-white/72">Profil academic verificat manual</p>
+            {/* Brand header — identic cu Keycloak */}
+            <div className="brand-header">
+              <div className="brand-header__left">
+                <img src={completeProfileLogo} alt="Akadion" className="brand-logo" />
+                <div className="brand-header__copy">
+                  <span className="brand-caption">Curiozitate fără limite</span>
+                </div>
               </div>
             </div>
 
-            <div className="complete-profile-brand-copy">
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            {/* Brand copy — identic cu Keycloak */}
+            <div className="brand-copy brand-copy--single">
+              <h1 className="brand-title">
                 Înveți ce iubești, în ritmul tău.
               </h1>
-              <p className="max-w-xl text-base leading-8 text-white/80 sm:text-lg sm:leading-9">
-                Aici nu ești legat de programa fixă a specializării tale. Alegi
-                cursurile care te interesează, îți vezi progresul săptămânal și
-                înveți din curiozitate.
+              <p className="brand-description">
+                Aici nu ești legat de programa fixă a specializării tale — alegi
+                cursurile care te interesează, fie din domeniul tău, fie din altele.
+                Urmărești materialele, îți vezi progresul săptămânal și înveți din
+                curiozitate și dorința de a descoperi lucruri noi.
               </p>
-            </div>
 
-            <div className="complete-profile-brand-benefits">
-              {[
-                { icon: Clock3, title: brandBenefits[0] },
-                { icon: Sparkles, title: brandBenefits[1] },
-                { icon: AlertCircle, title: brandBenefits[2] },
-              ].map(({ icon: Icon, title }) => (
-                <div key={title} className="complete-profile-brand-benefit-card">
-                  <div className="complete-profile-brand-benefit-icon">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <p className="text-base font-medium text-white/90">{title}</p>
+              {/* Beneficii — identice cu Keycloak (SVG-uri identice) */}
+              <div className="brand-benefits">
+                <div className="brand-benefit-card">
+                  <span className="brand-benefit-card__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                  </span>
+                  <span className="brand-benefit-card__copy">
+                    <span>Cursuri alese de tine</span>
+                  </span>
                 </div>
-              ))}
+                <div className="brand-benefit-card">
+                  <span className="brand-benefit-card__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                      <polyline points="16 7 22 7 22 13"/>
+                    </svg>
+                  </span>
+                  <span className="brand-benefit-card__copy">
+                    <span>Progres urmărit săptămânal</span>
+                  </span>
+                </div>
+                <div className="brand-benefit-card">
+                  <span className="brand-benefit-card__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </span>
+                  <span className="brand-benefit-card__copy">
+                    <span>Acces pentru studenți și profesori</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         <section className="complete-profile-form-panel">
           <div className="mx-auto w-full max-w-xl">
+            {/* Badge Aky RAG — aliniat la dreapta identic cu Keycloak */}
+            <div className="flex w-full justify-end">
+              <div className="auth-aky-badge" aria-label="Aky AI Assistant">
+                <div className="auth-aky-badge__logo-shell">
+                  <img src={akyRagLogo} alt="Aky AI" className="auth-aky-badge__logo" />
+                </div>
+                <div className="auth-aky-badge__copy">
+                  <span className="auth-aky-badge__eyebrow">Powered by</span>
+                  <span className="auth-aky-badge__title">Aky RAG</span>
+                  <span className="auth-aky-badge__subtitle">Asistent pentru materiale academice</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stepper original */}
             <div className="complete-profile-stepper">
               {profileSteps.map(({ id, label, stateText, state }, index) => {
                 const isCurrent = state === "current"
@@ -455,69 +496,68 @@ function CompleteProfilePage() {
             </div>
 
             <div className="complete-profile-card">
-              <div className="space-y-3 pb-6">
-                <p className="complete-profile-eyebrow">Cont AKADION</p>
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Completează profilul</h1>
-                <p className="text-base leading-7 text-slate-500">
+              <div className="space-y-2 pb-5">
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Completează profilul</h1>
+                <p className="text-sm text-slate-500">
                   Pasul final. Introdu datele necesare pentru continuare.
                 </p>
               </div>
 
-              <form className="space-y-5" onSubmit={handleSubmit}>
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 {submitError ? (
-                  <Alert variant="destructive" className="rounded-3xl">
+                  <Alert variant="destructive" className="rounded-2xl">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Nu am putut salva profilul</AlertTitle>
                     <AlertDescription>{submitError}</AlertDescription>
                   </Alert>
                 ) : null}
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="space-y-2.5">
-                    <Label htmlFor="last-name" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">
-                      NUME *
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="last-name" className="text-sm font-medium text-slate-700">
+                      Nume <span className="text-rose-500">*</span>
                     </Label>
                     <Input
                       id="last-name"
                       value={formData.nume}
                       onChange={(event) => updateField("nume", event.target.value)}
                       placeholder="Ex: Popescu"
-                      className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none placeholder:text-slate-400 focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      className="h-12 rounded-xl border-[#d8dcef] bg-[#fef9f3] px-4 text-sm shadow-none placeholder:text-slate-400 focus-visible:border-[#595f8f] focus-visible:ring-[#595f8f]/10"
                     />
                     {fieldErrors.nume ? <p className="text-sm text-rose-600">{fieldErrors.nume}</p> : null}
                   </div>
-                  <div className="space-y-2.5">
-                    <Label htmlFor="first-name" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">
-                      PRENUME *
+                  <div className="space-y-2">
+                    <Label htmlFor="first-name" className="text-sm font-medium text-slate-700">
+                      Prenume <span className="text-rose-500">*</span>
                     </Label>
                     <Input
                       id="first-name"
                       value={formData.prenume}
                       onChange={(event) => updateField("prenume", event.target.value)}
                       placeholder="Ex: Andrei"
-                      className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none placeholder:text-slate-400 focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                      className="h-12 rounded-xl border-[#d8dcef] bg-[#fef9f3] px-4 text-sm shadow-none placeholder:text-slate-400 focus-visible:border-[#595f8f] focus-visible:ring-[#595f8f]/10"
                     />
                     {fieldErrors.prenume ? <p className="text-sm text-rose-600">{fieldErrors.prenume}</p> : null}
                   </div>
                 </div>
-                <div className="space-y-2.5">
-                  <Label htmlFor="faculty" className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">
-                    FACULTATEA
+                <div className="space-y-2">
+                  <Label htmlFor="faculty" className="text-sm font-medium text-slate-700">
+                    Facultatea
                   </Label>
                   <Input
                     id="faculty"
                     value={formData.facultate}
                     onChange={(event) => updateField("facultate", event.target.value)}
                     placeholder="Ex: Facultatea de Informatică"
-                    className="h-13 rounded-2xl border-[#e4d8cd] bg-[#f7efe6] px-4 text-base shadow-none placeholder:text-slate-400 focus-visible:border-[#24385b] focus-visible:ring-[#24385b]/10"
+                    className="h-12 rounded-xl border-[#d8dcef] bg-[#fef9f3] px-4 text-sm shadow-none placeholder:text-slate-400 focus-visible:border-[#595f8f] focus-visible:ring-[#595f8f]/10"
                   />
                   {fieldErrors.facultate ? <p className="text-sm text-rose-600">{fieldErrors.facultate}</p> : null}
                 </div>
-                <fieldset className="space-y-2.5">
-                  <legend className="text-[0.8rem] font-semibold tracking-[0.16em] text-slate-600">
-                    ROL *
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium text-slate-700">
+                    Rol <span className="text-rose-500">*</span>
                   </legend>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
                       { value: "STUDENT", label: "Student" },
                       { value: "PROFESOR", label: "Profesor" },
@@ -527,9 +567,9 @@ function CompleteProfilePage() {
                       return (
                         <label
                           key={value}
-                          className={`flex h-13 cursor-pointer items-center justify-center rounded-2xl border px-4 text-base font-semibold transition focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/15 ${isSelected
-                              ? "border-[#24385b] bg-[#24385b] text-white shadow-[0_14px_30px_rgba(36,56,91,0.18)]"
-                              : "border-[#e4d8cd] bg-[#f7efe6] text-slate-600 hover:border-[#24385b]/45"
+                          className={`flex h-12 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-semibold transition focus-within:border-[#24385b] focus-within:ring-2 focus-within:ring-[#24385b]/15 ${isSelected
+                            ? "border-[#24385b] bg-[#24385b] text-white shadow-[0_8px_20px_rgba(36,56,91,0.18)]"
+                            : "border-[#d8dcef] bg-[#fef9f3] text-slate-600 hover:border-[#24385b]/45"
                             }`}
                         >
                           <input
@@ -548,19 +588,19 @@ function CompleteProfilePage() {
                   {fieldErrors.rolDorit ? <p className="text-sm text-rose-600">{fieldErrors.rolDorit}</p> : null}
                 </fieldset>
 
-                <Alert className="rounded-3xl border-[#e4d8cd] bg-[#f6efe6] px-4 py-4 text-slate-700">
+                <Alert className="rounded-2xl border-[#d8dcef] bg-[#fbf6f0] px-4 py-3 text-slate-700">
                   <AlertCircle className="mt-0.5 h-4 w-4 text-[#24385b]" />
-                  <AlertTitle className="mb-1 font-semibold text-slate-900">Aprobare manuală</AlertTitle>
-                  <AlertDescription className="text-sm leading-7 text-slate-600">
+                  <AlertTitle className="mb-0.5 text-sm font-semibold text-slate-900">Aprobare manuală</AlertTitle>
+                  <AlertDescription className="text-xs leading-5 text-slate-600">
                     Contul necesită aprobare din partea echipei Akadion.
                   </AlertDescription>
                 </Alert>
 
-                <div className="pt-2">
+                <div className="pt-1">
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="h-14 w-full rounded-2xl bg-[#d8ccbf] text-lg font-semibold text-white hover:bg-[#cdbdac]"
+                    className="btn btn-primary btn-block btn-lg text-sm font-semibold"
                   >
                     {isSubmitting ? "Se trimite..." : "Trimite cererea"}
                   </Button>
@@ -726,8 +766,8 @@ function AdminUsersPage() {
                     type="button"
                     onClick={() => handleFilterChange(state)}
                     className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition ${isSelected
-                        ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
-                        : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
+                      ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
+                      : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
                       }`}
                   >
                     {stateLabels[state] ?? state}
@@ -855,8 +895,8 @@ function AdminUsersPage() {
                         type="button"
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`flex h-9 min-w-9 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition ${isCurrent
-                            ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
-                            : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
+                          ? "border-[#24385b] bg-[#24385b] text-white shadow-sm"
+                          : "border-[#d8ccbf] bg-white text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]"
                           }`}
                         aria-current={isCurrent ? "page" : undefined}
                       >
@@ -874,17 +914,15 @@ function AdminUsersPage() {
   )
 }
 
-function StatusPage({ title, description, accentState, accentLabel, primaryAction, secondaryAction }) {
+function StatusPage({ title, description, accentState, accentLabel, accentClassName, primaryAction, secondaryAction }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Card className="w-full max-w-2xl border-border/60 bg-card/95 shadow-sm">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#f7efe6] p-1.5">
-            <img src={completeProfileLogo} alt="Akadion" className="h-full w-full rounded-xl object-cover" />
-          </div>
+          <img src={completeProfileLogo} alt="Akadion" className="mx-auto h-20 w-auto object-contain" />
           <div className="space-y-3">
             <div className="flex justify-center">
-              <UserStateBadge state={accentState} label={accentLabel} />
+              <UserStateBadge state={accentState} label={accentLabel} className={accentClassName} />
             </div>
             {title ? <CardTitle className="text-3xl tracking-tight">{title}</CardTitle> : null}
             <CardDescription className="mx-auto max-w-xl text-base leading-7">{description}</CardDescription>
@@ -939,11 +977,12 @@ function DeactivatedAccountPage() {
 
   return (
     <StatusPage
-      title="Cont dezactivat"
       description="Contul tău a fost dezactivat de un administrator. Pentru clarificări, contactează echipa Akadion."
       accentState="INACTIV"
+      accentLabel="CONT DEZACTIVAT"
+      accentClassName="border-slate-200 bg-slate-50 px-5 py-1.5 text-sm text-slate-700"
       primaryAction={
-        <Button onClick={startLogout} size="lg" className="px-8 text-base">
+        <Button onClick={startLogout} variant="outline" size="lg" className="bg-white px-8 text-base text-black hover:bg-white hover:text-black">
           Logout
         </Button>
       }
@@ -988,15 +1027,40 @@ function NotFoundPage() {
 }
 
 function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const routeTitles = {
+      "/": "Acasă",
+      "/complete-profile": "Finalizare Profil",
+      "/asteptare-aprobare": "Așteptare Aprobare",
+      "/cerere-respinsa": "Cerere Respinsă",
+      "/cont-dezactivat": "Cont Dezactivat",
+      "/logout-success": "Logout Finalizat",
+      "/courses": "Cursuri",
+      "/courses/new": "Adaugă Curs",
+      "/profile": "Profilul Meu",
+      "/discover-aky": "Descoperă Aky",
+      "/owl-hall": "Galeria Bufnițelor Legendare",
+      "/users": "Utilizatori",
+      "/admin/users": "Administrare Utilizatori",
+    }
+
+    let title = "AKADION - Platformă Academică"
+    if (routeTitles[location.pathname]) {
+      title = `${routeTitles[location.pathname]} - AKADION`
+    } else if (location.pathname.startsWith("/courses/")) {
+      title = "Detalii Curs - AKADION"
+    }
+
+    document.title = title
+  }, [location])
+
   return (
     <Routes>
       <Route
         path="/"
-        element={
-          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
-            <ActiveHomePage />
-          </RequireAuthenticatedState>
-        }
+        element={<RootRoute />}
       />
       <Route
         path="/complete-profile"
@@ -1031,6 +1095,10 @@ function App() {
         }
       />
       <Route
+        path="/logout-success"
+        element={<LogoutPage />}
+      />
+      <Route
         path="/courses"
         element={
           <RequireAuthenticatedState allowedStates={["ACTIV"]}>
@@ -1062,6 +1130,22 @@ function App() {
           </RequireAuthenticatedState>
         }
       />
+      <Route
+        path="/discover-aky"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <DiscoverAkyPage />
+          </RequireAuthenticatedState>
+        }
+      />
+      <Route
+        path="/owl-hall"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <OwlHall />
+          </RequireAuthenticatedState>
+        }
+      />
       <Route path="/users" element={<LegacyUsersRedirect />} />
       <Route
         path="/admin/users"
@@ -1077,3 +1161,7 @@ function App() {
 }
 
 export default App
+
+
+
+
