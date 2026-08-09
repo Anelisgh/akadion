@@ -1,1 +1,0 @@
-Validation gate: frontend build and lint; backend wrapper test then package with tests skipped; root and active backend compose config checks; final read-only `git status`, `git diff --stat`, and `git diff --check`. Report warnings separately from failures and include test counts.

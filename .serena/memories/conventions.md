@@ -1,1 +1,0 @@
-Frontend package scripts use Vite for build and oxlint for lint. Backend uses Maven Wrapper (`mvnw.cmd`) and Spring Boot test conventions. Root compose uses external `akadion_shared` network and named volumes; config validation is non-starting and may warn for unset environment variables.

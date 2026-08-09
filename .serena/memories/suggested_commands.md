@@ -1,1 +1,0 @@
-Windows PowerShell commands from repo root: `npm run build` and `npm run lint` in `frontend`; `./mvnw.cmd test` and `./mvnw.cmd package -DskipTests` in `akadion-backend-modificat/proiect`; `docker compose -f compose.yaml config --quiet` in root and backend directory. `rtk` may be unavailable on Windows; direct commands are fallback. Do not start compose for validation.

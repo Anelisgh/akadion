@@ -1,1 +1,0 @@
-Project root C:\Users\Radu\Desktop\akadion. Main modules: `frontend/` React/Vite client; `akadion-backend-modificat/proiect/` Spring Boot/Maven backend; root `compose.yaml` integrates infrastructure and both apps. Read `mem:tech_stack` for toolchain and `mem:suggested_commands` for Windows commands.

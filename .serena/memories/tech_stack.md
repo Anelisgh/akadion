@@ -1,1 +1,0 @@
-Frontend: React 19, Vite 8, Tailwind CSS 4, oxlint, npm lockfile. Backend: Spring Boot 4.1.0, Java 21, Maven Wrapper, JPA/Flyway/Security, H2 test scope and PostgreSQL runtime. Compose files: root `compose.yaml`; backend-local `akadion-backend-modificat/compose.yaml`.
