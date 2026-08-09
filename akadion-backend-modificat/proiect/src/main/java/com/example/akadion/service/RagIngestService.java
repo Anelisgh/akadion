@@ -1,4 +1,4 @@
-package com.example.akadion.service;
+﻿package com.example.akadion.service;
 
 import com.example.akadion.entity.Curs;
 import com.example.akadion.entity.Document;
@@ -49,7 +49,7 @@ public class RagIngestService {
                     .body(Map.of(
                             "document_id", document.getId(),
                             "course_id", curs.getId(),
-                            "week_id", saptamana.getId(),
+                            "week_id", saptamana.getNrSaptamana(),
                             "professor_id", curs.getProfesor().getId(),
                             "document_title", document.getTitlu(),
                             "path_minio", path != null ? path : ""
@@ -63,10 +63,10 @@ public class RagIngestService {
             }
             return true;
         } catch (HttpClientErrorException.Unauthorized e) {
-            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (documentId={})", document.getId());
+            log.warn("Autentificare e╚Öuat─â c─âtre serviciul RAG ΓÇö verific─â dac─â secretul e sincronizat cu echipa RAG (documentId={})", document.getId());
             return false;
         } catch (Exception e) {
-            log.error("Eroare la trimiterea documentului {} către RAG: {}", document.getId(), e.getMessage());
+            log.error("Eroare la trimiterea documentului {} c─âtre RAG: {}", document.getId(), e.getMessage());
             return false;
         }
     }
@@ -78,9 +78,9 @@ public class RagIngestService {
                     .retrieve()
                     .toBodilessEntity();
         } catch (HttpClientErrorException.Unauthorized e) {
-            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (documentId={})", documentId);
+            log.warn("Autentificare e╚Öuat─â c─âtre serviciul RAG ΓÇö verific─â dac─â secretul e sincronizat cu echipa RAG (documentId={})", documentId);
         } catch (Exception e) {
-            log.error("Eroare la ștergerea documentului {} din RAG: {}", documentId, e.getMessage());
+            log.error("Eroare la ╚Ötergerea documentului {} din RAG: {}", documentId, e.getMessage());
         }
     }
 }

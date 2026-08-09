@@ -1,5 +1,1 @@
-- Workspace split: backend module in `akadion-backend-modificat/akadion-backend-modificat/proiect`, frontend app in `frontend`, helper scripts in top-level `scripts`.
-- Local auth stack: backend `localhost:8081`, frontend `localhost:5173`, Keycloak realm `Akadion`, PostgreSQL `localhost:5432`.
-- Source-of-truth setup doc: `LOCAL_SETUP.md`.
-- Read `mem:backend/core` for Spring Boot auth/security invariants.
-- Read `mem:frontend/core` for React/Vite auth and proxy invariants.
+Project root C:\Users\Radu\Desktop\akadion. Main modules: `frontend/` React/Vite client; `akadion-backend-modificat/proiect/` Spring Boot/Maven backend; root `compose.yaml` integrates infrastructure and both apps. Read `mem:tech_stack` for toolchain and `mem:suggested_commands` for Windows commands.

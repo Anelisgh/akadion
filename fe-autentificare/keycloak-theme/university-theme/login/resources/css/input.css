@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @source "../../**/*.ftl";
 @source "../../messages/*.properties";
@@ -445,7 +445,7 @@
   }
 
   .alert-success .alert-indicator::before {
-    content: "✓";
+    content: "Γ£ô";
   }
 
   .alert-warning {
@@ -858,6 +858,87 @@
     background: #f7f0e7;
   }
 
+  .page-forgot-password .auth-card-header {
+    @apply pb-2;
+  }
+
+  .forgot-password-intro {
+    @apply -mt-2 mb-5 max-w-2xl text-sm leading-6 text-[color:var(--muted-foreground)];
+  }
+
+  .page-forgot-password .auth-form {
+    @apply gap-5;
+  }
+
+  .page-forgot-password .form-buttons {
+    @apply w-full pt-5;
+  }
+
+  .page-forgot-password .form-buttons::after {
+    @apply hidden;
+  }
+
+  .page-forgot-password .btn {
+    @apply w-full;
+  }
+
+  .page-update-password .auth-card-header {
+    @apply pb-3;
+  }
+
+  .page-update-password .auth-form {
+    @apply gap-5;
+  }
+
+  .page-update-password .alert-warning {
+    @apply rounded-2xl px-4 py-4;
+    background: #fff8e6;
+    border-color: color-mix(in srgb, #e8b949 42%, white);
+    color: #8a4b00;
+  }
+
+  .page-update-password .update-password-options {
+    @apply pt-1;
+  }
+
+  .page-update-password .checkbox-row {
+    @apply text-sm font-medium text-[#595f8f];
+  }
+
+  .page-update-password .checkbox-input {
+    @apply shrink-0;
+    border-color: color-mix(in srgb, var(--owl-indigo) 28%, white);
+  }
+
+  .page-update-password .form-buttons {
+    @apply flex w-full flex-col gap-3 pt-4;
+  }
+
+  .page-update-password .form-buttons::after {
+    @apply hidden;
+  }
+
+  .page-update-password .btn {
+    @apply h-14 w-full rounded-2xl text-base;
+  }
+
+  .page-update-password .btn-primary {
+    background-image: linear-gradient(90deg, #223349 0%, #595f8f 100%);
+    box-shadow: 0 18px 34px -18px rgba(36, 56, 91, 0.55);
+  }
+
+  .page-update-password .update-password-cancel {
+    @apply border-[#d9ccbe] bg-white text-[#24385b] hover:bg-[#f7efe6];
+  }
+
+  .forgot-password-back-link {
+    @apply pt-1 text-left text-sm;
+  }
+
+  .forgot-password-back-link a {
+    @apply rounded-md font-medium text-[color:var(--owl-indigo)] outline-none transition-colors duration-150 hover:text-[color:var(--owl-ink)] hover:underline focus-visible:ring-4 focus-visible:ring-[color:color-mix(in_oklab,var(--ring)_14%,transparent)];
+  }
+
   .page-register .auth-layout {
     @apply lg:grid-cols-[0.95fr_1.15fr];
   }
@@ -940,27 +1021,38 @@
 
   /* Custom Theme Overrides */
   .auth-aky-badge {
-    @apply inline-flex items-center gap-3 bg-white/75 backdrop-blur-md rounded-full ml-auto;
-    border: 1px solid rgba(89, 95, 143, 0.25);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    @apply inline-flex items-center ml-auto;
+    gap: 0.85rem !important;
+    width: fit-content !important;
+    cursor: default !important;
+    user-select: none !important;
+    background: rgba(255, 255, 255, 0.76) !important;
+    border: 1px solid rgba(36, 56, 91, 0.16) !important;
+    border-radius: 1.35rem !important;
+    box-shadow: 0 16px 42px rgba(32, 46, 84, 0.1) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     margin-top: 0 !important;
-    margin-bottom: 1rem !important;
-    padding: 0.35rem 1rem 0.35rem 0.5rem !important;
+    margin-bottom: 1.25rem !important;
+    padding: 0.68rem 0.9rem 0.68rem 0.7rem !important;
   }
 
-  .auth-aky-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.95);
+  .auth-aky-badge__logo-shell {
+    @apply inline-flex items-center justify-center shrink-0;
+    height: 3.65rem !important;
+    width: 3.65rem !important;
+    border-radius: 1.15rem !important;
+    border: 1px solid rgba(36, 56, 91, 0.14) !important;
+    background: linear-gradient(135deg, rgba(255,253,250,0.98), rgba(247,239,230,0.92)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9) !important;
   }
 
   .auth-aky-badge__logo {
-    height: 3.5rem !important;
-    width: 3.5rem !important;
-    min-width: 3.5rem !important;
-    max-height: 3.5rem !important;
-    max-width: 3.5rem !important;
+    height: 3.15rem !important;
+    width: 3.15rem !important;
+    min-width: 3.15rem !important;
+    max-height: 3.15rem !important;
+    max-width: 3.15rem !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
@@ -972,17 +1064,37 @@
 
   .auth-aky-badge__copy {
     @apply flex flex-col items-start;
+    gap: 0.05rem !important;
+    min-width: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .auth-aky-badge__eyebrow {
+    color: #7a819c !important;
+    font-size: 0.66rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
   }
 
   .auth-aky-badge__title {
-    @apply font-bold text-[#223349] uppercase tracking-wider leading-tight;
-    font-size: 0.75rem;
+    @apply text-[#223349] leading-tight;
+    font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif !important;
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: none;
   }
 
   .auth-aky-badge__subtitle {
-    @apply font-medium text-[#595f8f] leading-tight;
-    font-size: 0.65rem;
+    @apply font-medium leading-tight;
+    color: #4f5d83;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    white-space: nowrap;
   }
+
 
   .auth-form-stack {
     max-width: 34rem !important;

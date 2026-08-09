@@ -1,4 +1,4 @@
-package com.example.akadion.service;
+﻿package com.example.akadion.service;
 
 import com.example.akadion.dto.*;
 import com.example.akadion.entity.*;
@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -36,10 +37,10 @@ public class StudentCursService {
     @Transactional
     public void inscriereCurs(Long studentId, Long cursId) {
         Curs curs = cursRepository.findById(cursId)
-                .orElseThrow(() -> new IllegalArgumentException("Cursul cu ID-ul " + cursId + " nu a fost găsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Cursul cu ID-ul " + cursId + " nu a fost g─âsit."));
 
         if (!Boolean.TRUE.equals(curs.getActiv())) {
-            throw new AccesInterzisException("Nu vă puteți înscrie la un curs inactiv.");
+            throw new AccesInterzisException("Nu v─â pute╚¢i ├«nscrie la un curs inactiv.");
         }
 
         User student = userRepository.findById(studentId)
@@ -50,11 +51,11 @@ public class StudentCursService {
 
         if (enrollment != null) {
             if (Boolean.TRUE.equals(enrollment.getActiv())) {
-                throw new IllegalArgumentException("Sunteți deja înrolat la acest curs.");
+                throw new IllegalArgumentException("Sunte╚¢i deja ├«nrolat la acest curs.");
             }
             enrollment.setActiv(true);
             userCursRepository.save(enrollment);
-            log.info("Înrolarea studentului {} la cursul {} a fost reactivată.", studentId, cursId);
+            log.info("├Änrolarea studentului {} la cursul {} a fost reactivat─â.", studentId, cursId);
         } else {
             UserCurs newEnrollment = UserCurs.builder()
                     .student(student)
@@ -62,17 +63,17 @@ public class StudentCursService {
                     .activ(true)
                     .build();
             userCursRepository.save(newEnrollment);
-            log.info("Înrolare nouă creată pentru studentul {} la cursul {}.", studentId, cursId);
+            log.info("├Änrolare nou─â creat─â pentru studentul {} la cursul {}.", studentId, cursId);
         }
     }
 
     @Transactional
     public void retragereCurs(Long studentId, Long cursId) {
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new IllegalArgumentException("Nu sunteți înrolat la acest curs."));
+                .orElseThrow(() -> new IllegalArgumentException("Nu sunte╚¢i ├«nrolat la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new IllegalArgumentException("Sunteți deja retras din acest curs.");
+            throw new IllegalArgumentException("Sunte╚¢i deja retras din acest curs.");
         }
 
         enrollment.setActiv(false);
@@ -126,10 +127,10 @@ public class StudentCursService {
     @Transactional(readOnly = true)
     public List<SaptamanaStudentResponseDto> listaSaptamaniCurs(Long studentId, Long cursId) {
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu ave╚¢i acces la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
         List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
@@ -148,20 +149,20 @@ public class StudentCursService {
     @Transactional
     public void bifeazaSaptamana(Long studentId, Long saptamanaId) {
         Saptamana saptamana = saptamanaRepository.findWithCursAndProfesorById(saptamanaId)
-                .orElseThrow(() -> new IllegalArgumentException("Săptămâna nu a fost găsită."));
+                .orElseThrow(() -> new IllegalArgumentException("S─âpt─âm├óna nu a fost g─âsit─â."));
 
         Long cursId = saptamana.getCurs().getId();
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu sunteți înrolat la acest curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu sunte╚¢i ├«nrolat la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
         try {
             self.executeBifareTranzactionala(enrollment, saptamana);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.info("Săptămâna {} a fost deja bifată de studentul {} (Idempotent).", saptamanaId, studentId);
+            log.info("S─âpt─âm├óna {} a fost deja bifat─â de studentul {} (Idempotent).", saptamanaId, studentId);
         }
     }
 
@@ -177,14 +178,14 @@ public class StudentCursService {
     @Transactional
     public void debifeazaSaptamana(Long studentId, Long saptamanaId) {
         Saptamana saptamana = saptamanaRepository.findWithCursAndProfesorById(saptamanaId)
-                .orElseThrow(() -> new IllegalArgumentException("Săptămâna nu a fost găsită."));
+                .orElseThrow(() -> new IllegalArgumentException("S─âpt─âm├óna nu a fost g─âsit─â."));
 
         Long cursId = saptamana.getCurs().getId();
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu aveți înrolare la acest curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu ave╚¢i ├«nrolare la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
         Parcurs parcurs = parcursRepository.findByUserCursIdAndSaptamanaId(enrollment.getId(), saptamanaId)
@@ -192,21 +193,21 @@ public class StudentCursService {
 
         if (parcurs != null) {
             parcursRepository.delete(parcurs);
-            log.info("Săptămâna {} a fost debifată de studentul {}.", saptamanaId, studentId);
+            log.info("S─âpt─âm├óna {} a fost debifat─â de studentul {}.", saptamanaId, studentId);
         }
     }
 
     @Transactional(readOnly = true)
     public List<DocumentStudentResponseDto> listaDocumenteSaptamana(Long studentId, Long saptamanaId) {
         Saptamana saptamana = saptamanaRepository.findWithCursAndProfesorById(saptamanaId)
-                .orElseThrow(() -> new IllegalArgumentException("Săptămâna nu a fost găsită."));
+                .orElseThrow(() -> new IllegalArgumentException("S─âpt─âm├óna nu a fost g─âsit─â."));
 
         Long cursId = saptamana.getCurs().getId();
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la documentele acestui curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu ave╚¢i acces la documentele acestui curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
         return documentRepository.findBySaptamanaIdAndActivTrue(saptamanaId).stream()
@@ -224,20 +225,20 @@ public class StudentCursService {
     }
 
     /**
-     * Returnează detaliile profesorului unui curs.
-     * Studentul trebuie să fie înrolat activ la cursul respectiv.
+     * Returneaz─â detaliile profesorului unui curs.
+     * Studentul trebuie s─â fie ├«nrolat activ la cursul respectiv.
      * Accesibil din contextul cursului: GET /cursuri/{cursId}/profesor
      */
     @Transactional(readOnly = true)
     public ProfesorDetaliiResponseDto detaliiProfesorCurs(Long studentId, Long cursId) {
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu sunteți înrolat la acest curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu sunte╚¢i ├«nrolat la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
-        // Curs și profesor sunt lazy — funcționează corect în context @Transactional
+        // Curs ╚Öi profesor sunt lazy ΓÇö func╚¢ioneaz─â corect ├«n context @Transactional
         User profesor = enrollment.getCurs().getProfesor();
 
         return new ProfesorDetaliiResponseDto(
@@ -259,7 +260,7 @@ public class StudentCursService {
             List<Long> list = timestamps != null ? timestamps : new java.util.ArrayList<>();
             list.removeIf(ts -> ts < windowStart);
             if (list.size() >= 10) {
-                throw new com.example.akadion.exception.TooManyRequestsException("Ai depășit limita de 10 întrebări pe minut. Te rugăm să aștepți puțin.");
+                throw new com.example.akadion.exception.TooManyRequestsException("Ai dep─â╚Öit limita de 10 ├«ntreb─âri pe minut. Te rug─âm s─â a╚Ötep╚¢i pu╚¢in.");
             }
             list.add(now);
             return list;
@@ -268,19 +269,93 @@ public class StudentCursService {
 
     /**
      * Interogare Chatbot Aky pentru un curs specific.
-     * Verifică înrolarea studentului, parcursul maxim de săptămâni și aplică rate limiting.
+     * Verific─â ├«nrolarea studentului, parcursul maxim de s─âpt─âm├óni ╚Öi aplic─â rate limiting.
      */
     @Transactional(readOnly = true)
     public AkyChatResponseDto intreabaAky(Long studentId, Long cursId, AkyChatRequestDto request) {
         checkRateLimit(studentId);
 
         UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
-                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest curs."));
+                .orElseThrow(() -> new AccesInterzisException("Nu ave╚¢i acces la acest curs."));
 
         if (!Boolean.TRUE.equals(enrollment.getActiv())) {
-            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
         }
 
         return ragChatService.intreabaAky(studentId, cursId, request);
+    }
+
+    @Transactional(readOnly = true)
+    public Integer determinaSaptamanaParcursaMax(Long studentId, Long cursId) {
+        verificaStudentActivInrolat(studentId, cursId);
+
+        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
+        List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
+        return saptamani.stream()
+                .filter(saptamana -> completedIds.contains(saptamana.getId()))
+                .map(Saptamana::getNrSaptamana)
+                .filter(nrSaptamana -> nrSaptamana != null)
+                .max(Integer::compareTo)
+                .orElse(saptamani.isEmpty() ? 0 : 1);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AkySursaDocumentDto> listaDocumenteAccesibile(Long studentId, Long cursId) {
+        int maxSaptamana = determinaSaptamanaParcursaMax(studentId, cursId);
+
+        return saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId).stream()
+                .filter(saptamana -> saptamana.getNrSaptamana() != null && saptamana.getNrSaptamana() <= maxSaptamana)
+                .flatMap(saptamana -> documentRepository.findBySaptamanaIdAndActivTrue(saptamana.getId()).stream())
+                .map(document -> new AkySursaDocumentDto(document.getId(), document.getTitlu()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> genereazaQuiz(Long studentId, Long cursId, QuizGenerateRequestDto request) {
+        checkRateLimit(studentId);
+        int maxSaptamana = determinaSaptamanaParcursaMax(studentId, cursId);
+        Long documentId = request != null ? request.documentId() : null;
+        Integer nrIntrebari = request != null && request.nrIntrebari() != null ? request.nrIntrebari() : 5;
+
+        if (nrIntrebari < 1 || nrIntrebari > 20) {
+            throw new IllegalArgumentException("Num─ârul de ├«ntreb─âri trebuie s─â fie ├«ntre 1 ╚Öi 20.");
+        }
+
+        if (documentId != null) {
+            Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost g─âsit."));
+
+            if (!Boolean.TRUE.equals(document.getActiv())) {
+                throw new AccesInterzisException("Documentul nu este activ.");
+            }
+
+            Saptamana saptamana = document.getSaptamana();
+            if (saptamana == null || saptamana.getCurs() == null || !saptamana.getCurs().getId().equals(cursId)) {
+                throw new AccesInterzisException("Documentul nu apar╚¢ine acestui curs.");
+            }
+
+            Integer nrSaptamana = saptamana.getNrSaptamana();
+            if (nrSaptamana == null || nrSaptamana > maxSaptamana) {
+                throw new AccesInterzisException("Documentul nu este accesibil ├«nc─â.");
+            }
+        }
+
+        return ragChatService.genereazaQuiz(cursId, maxSaptamana, documentId, nrIntrebari);
+    }
+
+    private UserCurs verificaStudentActivInrolat(Long studentId, Long cursId) {
+        UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
+                .orElseThrow(() -> new AccesInterzisException("Nu ave╚¢i acces la acest curs."));
+
+        if (!Boolean.TRUE.equals(enrollment.getActiv())) {
+            throw new AccesInterzisException("Nu ave╚¢i o ├«nrolare activ─â la acest curs.");
+        }
+
+        User student = enrollment.getStudent();
+        if (student.getStareCont() == null || !"ACTIV".equalsIgnoreCase(student.getStareCont().getDenumire())) {
+            throw new AccesInterzisException("Contul de student nu este activ.");
+        }
+
+        return enrollment;
     }
 }

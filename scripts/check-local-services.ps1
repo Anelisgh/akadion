@@ -47,12 +47,16 @@ function Get-HttpStatus {
 
 $checks = @(
     @{ Name = "PostgreSQL"; Type = "tcp"; Host = "localhost"; Port = 5432; Hint = "baza Docker pentru backend" },
-    @{ Name = "Keycloak"; Type = "http"; Url = "http://localhost:8080/realms/Akadion/.well-known/openid-configuration"; Hint = "realm-ul Akadion din instanta ZIP" },
+    @{ Name = "Keycloak"; Type = "http"; Url = "http://localhost:8080/realms/Akadion/.well-known/openid-configuration"; Hint = "realm-ul akadion din instanta ZIP" },
     @{ Name = "Backend"; Type = "http"; Url = "http://localhost:8081/actuator/health"; Hint = "healthcheck Spring Boot" },
     @{ Name = "Backend auth"; Type = "http"; Url = "http://localhost:8081/api/auth/me"; AcceptedStatusCodes = @(200, 401, 403); Hint = "endpoint BFF /api/auth/me" },
     @{ Name = "Frontend"; Type = "http"; Url = "http://localhost:5173"; Hint = "dev server Vite" },
     @{ Name = "MinIO API"; Type = "tcp"; Host = "localhost"; Port = 9000; Hint = "S3 API" },
-    @{ Name = "MinIO Console"; Type = "tcp"; Host = "localhost"; Port = 9001; Hint = "console web" }
+    @{ Name = "MinIO Console"; Type = "tcp"; Host = "localhost"; Port = 9001; Hint = "console web" },
+    @{ Name = "RAG LLM"; Type = "http"; Url = "http://localhost:8000/health"; Hint = "llm-response FastAPI" },
+    @{ Name = "RAG Embedder"; Type = "http"; Url = "http://localhost:8001/api/health"; Hint = "embedder FastAPI" },
+    @{ Name = "RAG Reranker"; Type = "http"; Url = "http://localhost:8002/api/health"; Hint = "reranker FastAPI" },
+    @{ Name = "RAG Qdrant"; Type = "tcp"; Host = "localhost"; Port = 6333; Hint = "vector database Qdrant" }
 )
 
 foreach ($check in $checks) {

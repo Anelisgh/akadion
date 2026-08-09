@@ -1,0 +1,82 @@
+services:
+
+  # Vector DB — folosit de embedder pentru stocare/căutare
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rag_network
+
+
+
+  embedder:
+    build:
+      context: ./embedder
+      dockerfile: Dockerfile.multistage
+    ports:
+      - "8001:8001"
+    environment:
+      # Numele serviciilor țin loc de hostname în rețeaua Docker
+      QDRANT_URL: http://qdrant:6333
+      MINIO_ENDPOINT: akadion-minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-MinioParola123!}
+      MINIO_BUCKET: course-documents
+      RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+    volumes:
+      # Modelul BGE-m3 (2.3 GB) descărcat o singură dată, nu la fiecare pornire
+      - hf_cache:/root/.cache/huggingface
+    depends_on:
+      - qdrant
+    networks:
+      - rag_network
+      - akadion_shared
+
+  reranker:
+    build:
+      context: ./reranker
+      dockerfile: Dockerfile.multistage
+    ports:
+      - "8002:8002"
+    # Fără HF_HOME aici: modelul e copt în imagine la /opt/hf,
+    # iar o valoare în compose ar suprascrie ENV-ul din Dockerfile.
+    networks:
+      - rag_network
+
+  llm-response:
+    build:
+      context: ./llm-response
+      dockerfile: Dockerfile.multistage
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./llm-response/.env
+    environment:
+      # Suprascriu valorile din .env: acolo e "localhost", aici numele serviciilor
+      RERANKER_URL: http://reranker:8002/api/rerank/chunks
+      EMBEDDER_URL: http://embedder:8001/api/query/embed
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      USE_QDRANT_MOCK: "false"
+      RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+    depends_on:
+      - reranker
+      - embedder
+    networks:
+      - rag_network
+      - akadion_shared
+
+volumes:
+  qdrant_data:
+  hf_cache:
+
+networks:
+  rag_network:
+    driver: bridge
+  akadion_shared:
+    external: true

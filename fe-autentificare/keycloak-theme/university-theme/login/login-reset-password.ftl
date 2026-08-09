@@ -1,9 +1,17 @@
 <#import "template.ftl" as layout>
-<@layout.registrationLayout bodyClass="page-login page-forgot-password" displayInfo=true displayMessage=!messagesPerField.existsError('username'); section>
+<@layout.registrationLayout bodyClass="page-login page-forgot-password" displayInfo=false displayMessage=!messagesPerField.existsError('username'); section>
     <#if section = "header">
         ${msg("emailForgotTitle")}
     <#elseif section = "form">
         <form id="kc-reset-password-form" class="${properties.kcFormClass!}" action="${url.loginAction}" method="post">
+            <p class="forgot-password-intro">
+                <#if realm.duplicateEmailsAllowed>
+                    ${msg("emailInstructionUsername")}
+                <#else>
+                    ${msg("emailInstruction")}
+                </#if>
+            </p>
+
             <div class="${properties.kcFormGroupClass!}">
                 <div class="${properties.kcLabelWrapperClass!}">
                     <label for="username" class="${properties.kcLabelClass!}"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
@@ -23,23 +31,13 @@
                 </div>
             </div>
 
-            <div class="${properties.kcFormGroupClass!} ${properties.kcFormSettingClass!}">
-                <div id="kc-form-options" class="${properties.kcFormOptionsClass!}">
-                    <div class="${properties.kcFormOptionsWrapperClass!}">
-                        <a href="${url.loginUrl}">${msg("backToLogin")}</a>
-                    </div>
-                </div>
+            <div id="kc-form-buttons" class="${properties.kcFormButtonsClass!}">
+                <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}" type="submit" value="${msg('doSubmit')}"/>
+            </div>
 
-                <div id="kc-form-buttons" class="${properties.kcFormButtonsClass!}">
-                    <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}" type="submit" value="${msg('doSubmit')}"/>
-                </div>
+            <div class="forgot-password-back-link">
+                <a href="${url.loginUrl}">${msg("backToLogin")}</a>
             </div>
         </form>
-    <#elseif section = "info">
-        <#if realm.duplicateEmailsAllowed>
-            ${msg("emailInstructionUsername")}
-        <#else>
-            ${msg("emailInstruction")}
-        </#if>
     </#if>
 </@layout.registrationLayout>

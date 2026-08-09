@@ -51,7 +51,8 @@ services:
       - KC_DB_URL=jdbc:postgresql://postgres:5432/akadion
       - KC_DB_USERNAME=myuser
       - KC_DB_PASSWORD=${DB_PASSWORD:-parola123}
-    command: start-dev --import-realm
+    # --hostname-strict=false permite accesul atat din browser (localhost) cat si intern (keycloak)
+    command: start-dev --import-realm --hostname=http://localhost:8080 --hostname-strict=false
     ports:
       - "8080:8080"
     volumes:
@@ -71,6 +72,9 @@ services:
     environment:
       - APP_KEYCLOAK_BASE_URL=http://keycloak:8080
       - APP_KEYCLOAK_BROWSER_BASE_URL=http://localhost:8080
+      - APP_KEYCLOAK_REALM=akadion
+      # issuer-uri pentru containerul backend (acces intern prin hostname-ul Docker)
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/akadion
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/akadion
       - APP_FRONTEND_BASE_URL=http://localhost:5173
       - MINIO_URL=http://minio:9000
@@ -79,8 +83,17 @@ services:
       - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
       - RAG_SERVICE_USERNAME=${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
-      - RAG_BASE_URL=http://llm-response:8000
-      - RAG_EMBEDDER_URL=http://embedder:8001
+      - RAG_BASE_URL=${RAG_BASE_URL:-http://llm-response:8000}
+      - RAG_EMBEDDER_URL=${RAG_EMBEDDER_URL:-http://embedder:8001}
+      - TZ=Europe/Bucharest
+      # OpenTelemetry - tracing distribuit catre Jaeger (optional, comenteaza pentru dev local fara Jaeger)
+      - OTEL_SERVICE_NAME=akadion-backend
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_INSTRUMENTATION_LOGBACK_MDC_ENABLED=true
     networks:
       - default
       - akadion_shared
@@ -88,6 +101,19 @@ services:
       - postgres
       - keycloak
       - minio
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.66.0
+    container_name: akadion-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # UI Jaeger - http://localhost:16686
+      - "4318:4318"    # OTLP HTTP endpoint
+    networks:
+      - default
+      - akadion_shared
 
   frontend:
     build:

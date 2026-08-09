@@ -1,4 +1,1 @@
-- Preserve existing Spring Security split: `/api/**` returns JSON 401/403, browser login/logout stays OIDC redirect based.
-- Reuse repository methods that already carry `@EntityGraph`; do not replace them with lazy-loading workarounds.
-- Avoid OSIV-dependent fixes and avoid `Hibernate.initialize(...)`.
-- Account state and role decisions live in backend business/security layers, not in frontend DTO fallbacks.
+Frontend package scripts use Vite for build and oxlint for lint. Backend uses Maven Wrapper (`mvnw.cmd`) and Spring Boot test conventions. Root compose uses external `akadion_shared` network and named volumes; config validation is non-starting and may warn for unset environment variables.

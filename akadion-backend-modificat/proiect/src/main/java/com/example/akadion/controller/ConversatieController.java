@@ -1,4 +1,4 @@
-package com.example.akadion.controller;
+﻿package com.example.akadion.controller;
 
 import com.example.akadion.dto.AkyChatResponseDto;
 import com.example.akadion.dto.ConversatieDTO;

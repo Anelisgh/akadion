@@ -1,4 +1,4 @@
-<#import "footer.ftl" as loginFooter>
+﻿<#import "footer.ftl" as loginFooter>
 <#macro registrationLayout bodyClass="" displayInfo=false displayMessage=true displayRequiredFields=false>
 <!DOCTYPE html>
 <html class="${properties.kcHtmlClass!}" lang="${lang}"<#if realm.internationalizationEnabled> dir="${(locale.rtl)?then('rtl','ltr')}"</#if>>
@@ -10,7 +10,9 @@
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
         </#list>
     </#if>
-    <#if bodyClass?contains("page-forgot-password")>
+    <#if bodyClass?contains("page-update-password")>
+        <title>${msg("updatePasswordTitle", "Actualizare parol─â")} - ${(realm.displayName!msg("platformName"))}</title>
+    <#elseif bodyClass?contains("page-forgot-password")>
         <title>${msg("emailForgotTitle", "Ai uitat parola?")} - ${(realm.displayName!msg("platformName"))}</title>
     <#elseif bodyClass?contains("page-register")>
         <title>${msg("registerTitle")} - ${(realm.displayName!msg("platformName"))}</title>
@@ -87,10 +89,13 @@
         <main class="auth-form-panel">
             <div class="auth-form-stack">
                 <div class="auth-aky-badge" aria-label="Aky AI Assistant">
-                    <img src="${url.resourcesPath}/img/logo_RAG-removebg-preview.png" alt="Aky AI" class="auth-aky-badge__logo" />
+                    <div class="auth-aky-badge__logo-shell">
+                        <img src="${url.resourcesPath}/img/logo_RAG-removebg-preview.png" alt="Aky AI" class="auth-aky-badge__logo" />
+                    </div>
                     <div class="auth-aky-badge__copy">
-                        <span class="auth-aky-badge__title">Asistent AI Integrat</span>
-                        <span class="auth-aky-badge__subtitle">Învățare cu Aky RAG</span>
+                        <span class="auth-aky-badge__eyebrow">Powered by</span>
+                        <span class="auth-aky-badge__title">Aky RAG</span>
+                        <span class="auth-aky-badge__subtitle">Asistent pentru materiale academice</span>
                     </div>
                 </div>
 

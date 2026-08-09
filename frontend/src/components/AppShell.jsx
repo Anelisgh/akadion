@@ -1,12 +1,11 @@
-import { AlertCircle, BookOpenText, ChevronDown, ChevronLeft, ChevronRight, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
+﻿import { AlertCircle, BookOpenText, Bot, ChevronDown, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { Link, NavLink } from "react-router-dom"
+import { Link, NavLink, useLocation } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { startLogout } from "@/auth/logout"
 import { useAuth } from "@/auth/useAuth"
 import { getRoleLabel, getUserDisplayName, isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
-import { COURSE_THEME_KEYS, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { cn } from "@/lib/utils"
 import completeProfileLogo from "../../folder_inspiratie2/logo_bufnita_transparenta.png"
@@ -23,8 +22,9 @@ function getInitials(displayName) {
 
 function CourseTabsNav({ user, onNavClick }) {
   const [courses, setCourses] = useState([])
-  const [courseThemes, setCourseThemes] = useState({})
-  const scrollRef = useRef(null)
+  const [coursesOpen, setCoursesOpen] = useState(false)
+  const coursesMenuRef = useRef(null)
+  const location = useLocation()
   const isProf = isProfessorUser(user)
   const isAdmin = isAdminUser(user)
   const isStudent = isStudentUser(user)
@@ -32,21 +32,15 @@ function CourseTabsNav({ user, onNavClick }) {
   useEffect(() => {
     let mounted = true
     async function fetchUserCourses() {
-      if (isAdmin) return
+      if (isAdmin || (!isProf && !isStudent)) {
+        setCourses([])
+        return
+      }
+
       try {
         const data = isProf ? await listProfessorCourses() : await listStudentCourses()
         if (mounted && Array.isArray(data)) {
           setCourses(data)
-          const themes = {}
-          data.forEach((c) => {
-            try {
-              const key = window.localStorage.getItem(`akadion:course-theme:${getThemeUserKey(user)}:${c.id}`)
-              if (COURSE_THEME_KEYS.has(key)) {
-                themes[c.id] = key
-              }
-            } catch { }
-          })
-          setCourseThemes(themes)
         }
       } catch { }
     }
@@ -54,47 +48,63 @@ function CourseTabsNav({ user, onNavClick }) {
     return () => { mounted = false }
   }, [user, isProf, isAdmin, isStudent])
 
-  function scroll(offset) {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: offset, behavior: "smooth" })
+  useEffect(() => {
+    if (!coursesOpen) {
+      return undefined
     }
+
+    function handlePointerDown(event) {
+      if (!coursesMenuRef.current?.contains(event.target)) {
+        setCoursesOpen(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setCoursesOpen(false)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    document.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [coursesOpen])
+
+  const hasCoursesDropdown = !isAdmin && courses.length > 0
+  const activeCourseSelected = hasCoursesDropdown && courses.some((course) => location.pathname === `/courses/${course.id}`)
+  const showHomeLink = isAdmin || location.pathname !== "/"
+  const activeNavClass = "scale-[1.02] border-[#c8cdf0] bg-white text-[#24385b] shadow-[0_10px_28px_rgba(67,79,159,0.18)] ring-2 ring-[#5869bd]/18"
+  const inactiveNavClass = "border-[#e7d9c8] bg-white/80 text-slate-700 hover:bg-[#f4eadf]"
+
+  function handleCourseClick() {
+    setCoursesOpen(false)
+    onNavClick?.()
   }
 
   return (
-    <div className="flex items-center gap-1 min-w-0 max-w-full lg:max-w-xl xl:max-w-2xl">
-      {/* Scroll Left */}
-      {courses.length > 2 && (
-        <button
-          type="button"
-          onClick={() => scroll(-200)}
-          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#e7d9c8] bg-white text-slate-600 hover:bg-[#f4eadf] lg:flex"
-          title="Derulează la stânga"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-      )}
-
-      {/* Tabs Container */}
-      <div
-        ref={scrollRef}
-        className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-0.5 scroll-smooth"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
+    <div className="flex min-w-0 max-w-full items-center gap-1.5 lg:max-w-xl xl:max-w-2xl">
+      <div className="flex min-w-0 items-center gap-1.5 py-1 px-0.5">
         {/* Dashboard Link */}
-        <NavLink
-          to="/"
-          end
-          onClick={onNavClick}
-          className={({ isActive }) =>
-            `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-              ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-              : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
-            }`
-          }
-        >
-          <Home className="h-4 w-4" />
-          <span>Acasă</span>
-        </NavLink>
+        {showHomeLink ? (
+          <NavLink
+            to="/"
+            end
+            onClick={onNavClick}
+            className={({ isActive }) =>
+              `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                ? activeNavClass
+                : inactiveNavClass
+              }`
+            }
+          >
+            <Home className="h-4 w-4" />
+            <span>Acas─â</span>
+          </NavLink>
+        ) : null}
 
         {/* Admin Links */}
         {isAdmin && (
@@ -104,8 +114,8 @@ function CourseTabsNav({ user, onNavClick }) {
               onClick={onNavClick}
               className={({ isActive }) =>
                 `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                  ? activeNavClass
+                  : inactiveNavClass
                 }`
               }
             >
@@ -117,8 +127,8 @@ function CourseTabsNav({ user, onNavClick }) {
               onClick={onNavClick}
               className={({ isActive }) =>
                 `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
-                  ? "bg-white text-slate-900 border border-[#d9ccbe] shadow-sm"
-                  : "bg-white/80 text-slate-700 border border-[#e7d9c8] hover:bg-[#f4eadf]"
+                  ? activeNavClass
+                  : inactiveNavClass
                 }`
               }
             >
@@ -128,46 +138,53 @@ function CourseTabsNav({ user, onNavClick }) {
           </>
         )}
 
-        {/* Course Tabs with Soft Pastel Theme Background */}
-        {courses.map((course) => {
-          const themeKey = courseThemes[course.id]
-          const theme = getCourseTheme(themeKey)
-
-          return (
-            <NavLink
-              key={course.id}
-              to={`/courses/${course.id}`}
-              state={{ course }}
-              onClick={onNavClick}
-              className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${isActive
-                  ? `${theme.tabActive || "bg-[#24385b] text-white"} scale-[1.02]`
-                  : `${theme.tabInactive || "bg-white text-slate-700"} hover:scale-[1.01]`
-                }`
-              }
+        {hasCoursesDropdown ? (
+          <div ref={coursesMenuRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setCoursesOpen((open) => !open)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-sm font-semibold transition",
+                activeCourseSelected || coursesOpen
+                  ? "border-[#d9ccbe] bg-white text-slate-900 shadow-sm"
+                  : "border-[#e7d9c8] bg-white/80 text-slate-700 hover:bg-[#f4eadf]",
+              )}
+              aria-expanded={coursesOpen}
             >
-              <span className="truncate max-w-[130px] sm:max-w-[170px]">{course.denumire}</span>
-            </NavLink>
-          )
-        })}
-      </div>
+              <BookOpenText className="h-4 w-4" />
+              <span>Cursuri</span>
+              <ChevronDown className={cn("h-4 w-4 transition", coursesOpen && "rotate-180")} />
+            </button>
 
-      {/* Scroll Right */}
-      {courses.length > 2 && (
-        <button
-          type="button"
-          onClick={() => scroll(200)}
-          className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#e7d9c8] bg-white text-slate-600 hover:bg-[#f4eadf] lg:flex"
-          title="Derulează la dreapta"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      )}
+            {coursesOpen ? (
+              <div className="absolute left-0 top-full z-40 mt-2 w-72 overflow-hidden rounded-3xl border border-[#e4d8cd] bg-white p-2 shadow-[0_20px_50px_rgba(32,46,84,0.16)]">
+                <div className="max-h-80 overflow-y-auto pr-1">
+                  {courses.map((course) => (
+                    <NavLink
+                      key={course.id}
+                      to={`/courses/${course.id}`}
+                      state={{ course }}
+                      onClick={handleCourseClick}
+                      className={({ isActive }) => cn(
+                        "flex min-w-0 items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
+                        isActive ? "bg-[#eef1fb] text-[#24385b]" : "text-slate-700 hover:bg-[#f7efe6] hover:text-[#24385b]",
+                      )}
+                    >
+                      <BookOpenText className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{course.denumire}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }
 
-export default function AppShell({ title, description, eyebrow = "Akadion", actions, children, heroClassName, heroEyebrowClassName, heroTitleClassName, heroDescriptionClassName, heroContent, heroVisual, heroVisualClassName, sideContent }) {
+export default function AppShell({ title, description, eyebrow = "Akadion", actions, children, heroClassName, heroEyebrowClassName, heroTitleClassName, heroDescriptionClassName, heroContent, heroVisual, heroVisualClassName, sideContent, shellClassName, hideHeader = false, contentSectionClassName }) {
   const { user } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -207,96 +224,112 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
   }
 
   return (
-    <main className="app-shell min-h-screen text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-[#e7d9c8]/80 bg-[#fbf7f1]/92 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link to={homePath} className="-my-3 flex items-center shrink-0">
-            <img src={completeProfileLogo} alt="Akadion" className="h-16 w-auto object-contain" />
-          </Link>
+    <main className={cn("app-shell min-h-screen text-slate-900", shellClassName)}>
+      {hideHeader ? null : (
+        <header className="sticky top-0 z-30 border-b border-[#e7d9c8]/80 bg-[#fbf7f1]/92 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <Link to={homePath} className="-my-3 flex items-center shrink-0">
+              <img src={completeProfileLogo} alt="Akadion" className="h-16 w-auto object-contain" />
+            </Link>
 
-          <nav className="hidden lg:flex min-w-0 flex-1 justify-center px-4">
-            <CourseTabsNav user={user} />
-          </nav>
+            <nav className="hidden lg:flex min-w-0 flex-1 justify-center px-4">
+              <CourseTabsNav user={user} />
+            </nav>
 
-          <div ref={accountMenuRef} className="relative hidden lg:block shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAccountOpen((open) => !open)}
-              className="h-12 rounded-2xl border-[#d9ccbe] bg-white px-2.5 pr-3 text-slate-700 hover:bg-[#f8f3ed]"
-              aria-expanded={accountOpen}
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#24385b] text-xs font-semibold text-white">
-                {initials}
-              </span>
-              <span className="min-w-0 text-left">
-                <span className="block max-w-36 truncate text-sm font-semibold text-slate-800">{displayName}</span>
-                <span className="block text-xs text-slate-500">{roleLabel}</span>
-              </span>
-              <ChevronDown className={`h-4 w-4 transition ${accountOpen ? "rotate-180" : ""}`} />
-            </Button>
-
-            {accountOpen ? (
-              <div className="absolute right-0 mt-2 w-56 rounded-3xl border border-[#e4d8cd] bg-white p-2 shadow-[0_20px_50px_rgba(32,46,84,0.16)]">
-                <Link
-                  to="/profile"
-                  onClick={() => setAccountOpen(false)}
-                  className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
-                >
-                  <UserRound className="h-4 w-4" />
-                  Profilul meu
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          <Button type="button" variant="outline" onClick={() => setMobileOpen((open) => !open)} className="h-10 rounded-2xl border-[#d9ccbe] bg-white lg:hidden">
-            <Menu className="h-4 w-4" />
-            Meniu
-          </Button>
-        </div>
-
-        {mobileOpen ? (
-          <div className="border-t border-[#e7d9c8] bg-[#fbf7f1] px-4 py-3 lg:hidden">
-            <div className="mx-auto max-w-7xl space-y-3">
-              <CourseTabsNav user={user} onNavClick={() => setMobileOpen(false)} />
-            </div>
-            <div className="mx-auto mt-3 max-w-7xl rounded-2xl border border-[#e7d9c8] bg-white px-3 py-3">
-              <div className="mb-3 flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#24385b] text-sm font-semibold text-white">
+            <div ref={accountMenuRef} className="relative hidden lg:block shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAccountOpen((open) => !open)}
+                className="h-12 rounded-2xl border-[#d9ccbe] bg-white px-2.5 pr-3 text-slate-700 hover:bg-[#f8f3ed]"
+                aria-expanded={accountOpen}
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#24385b] text-xs font-semibold text-white">
                   {initials}
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-800">{displayName}</p>
-                  <p className="truncate text-xs text-slate-500">{roleLabel}</p>
-                </div>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Button asChild variant="outline" className="rounded-xl border-[#d9ccbe] bg-white">
-                  <Link to="/profile" onClick={() => setMobileOpen(false)}>
+                <span className="min-w-0 text-left">
+                  <span className="block max-w-36 truncate text-sm font-semibold text-slate-800">{displayName}</span>
+                  <span className="block text-xs text-slate-500">{roleLabel}</span>
+                </span>
+                <ChevronDown className={`h-4 w-4 transition ${accountOpen ? "rotate-180" : ""}`} />
+              </Button>
+
+              {accountOpen ? (
+                <div className="absolute right-0 mt-2 w-56 rounded-3xl border border-[#e4d8cd] bg-white p-2 shadow-[0_20px_50px_rgba(32,46,84,0.16)]">
+                  <Link
+                    to="/profile"
+                    onClick={() => setAccountOpen(false)}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
+                  >
                     <UserRound className="h-4 w-4" />
                     Profilul meu
                   </Link>
-                </Button>
-                <Button type="button" variant="outline" onClick={handleLogout} className="rounded-xl border-[#d9ccbe] bg-white">
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
+                  <Link
+                    to="/discover-aky"
+                    onClick={() => setAccountOpen(false)}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
+                  >
+                    <Bot className="h-4 w-4" />
+                    Descoper─â Aky
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <Button type="button" variant="outline" onClick={() => setMobileOpen((open) => !open)} className="h-10 rounded-2xl border-[#d9ccbe] bg-white lg:hidden">
+              <Menu className="h-4 w-4" />
+              Meniu
+            </Button>
+          </div>
+
+          {mobileOpen ? (
+            <div className="border-t border-[#e7d9c8] bg-[#fbf7f1] px-4 py-3 lg:hidden">
+              <div className="mx-auto max-w-7xl space-y-3">
+                <CourseTabsNav user={user} onNavClick={() => setMobileOpen(false)} />
+              </div>
+              <div className="mx-auto mt-3 max-w-7xl rounded-2xl border border-[#e7d9c8] bg-white px-3 py-3">
+                <div className="mb-3 flex min-w-0 items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#24385b] text-sm font-semibold text-white">
+                    {initials}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-800">{displayName}</p>
+                    <p className="truncate text-xs text-slate-500">{roleLabel}</p>
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button asChild variant="outline" className="rounded-xl border-[#d9ccbe] bg-white">
+                    <Link to="/profile" onClick={() => setMobileOpen(false)}>
+                      <UserRound className="h-4 w-4" />
+                      Profilul meu
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-xl border-[#d9ccbe] bg-white">
+                    <Link to="/discover-aky" onClick={() => setMobileOpen(false)}>
+                      <Bot className="h-4 w-4" />
+                      Descoper─â Aky
+                    </Link>
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleLogout} className="rounded-xl border-[#d9ccbe] bg-white">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
-      </header>
+          ) : null}
+        </header>
+      )}
 
-      <section className={cn("w-full py-6 lg:py-8", sideContent ? "px-0" : "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8")}>
+      <section className={cn("w-full py-6 lg:py-8", sideContent ? "px-0" : "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", contentSectionClassName)}>
         <div className={cn(sideContent && "lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-5")}>
           {sideContent ? (
             <div className="mb-6 self-start px-4 sm:px-6 lg:mb-0 lg:px-0">

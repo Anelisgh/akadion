@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useEffectEvent, useState } from "react"
+﻿import { Fragment, useEffect, useEffectEvent, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,9 @@ import CoursesPage from "@/pages/CoursesPage"
 import CourseDetailPage from "@/pages/CourseDetailPage"
 import NewCoursePage from "@/pages/NewCoursePage"
 import ProfilePage from "@/pages/ProfilePage"
+import DiscoverAkyPage from "@/pages/DiscoverAkyPage"
+import OwlHall from "@/pages/OwlHall"
+import LogoutPage from "@/pages/LogoutPage"
 import AppShell from "@/components/AppShell"
 import { getRoleLabel, getUserDisplayName, getUserInitials, isAdminUser, isProfessorUser } from "@/lib/user"
 import { startLogout } from "@/auth/logout"
@@ -19,12 +22,8 @@ import akyRagLogo from "@/assets/logo_RAG-removebg-preview.png"
 
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCheck,
-  Clock3,
-  RefreshCcw,
-  Sparkles,
   UserCog,
   UserMinus,
   UserPlus,
@@ -35,10 +34,10 @@ import { Link, Navigate, Route, Routes, useNavigate, useLocation, useSearchParam
 const USER_STATES = ["ALL", "PENDING", "ACTIV", "INACTIV", "RESPINS", "INCOMPLET"]
 
 const stateLabels = {
-  ALL: "Toți",
-  PENDING: "În așteptare",
+  ALL: "To╚¢i",
+  PENDING: "├Än a╚Öteptare",
   ACTIV: "Activi",
-  RESPINS: "Respinși",
+  RESPINS: "Respin╚Öi",
   INACTIV: "Inactivi",
   INCOMPLET: "Profil incomplet",
 }
@@ -52,8 +51,8 @@ const stateBadgeClasses = {
 }
 
 const successMessages = {
-  approve: "Cererea a fost acceptată.",
-  reject: "Cererea a fost respinsă.",
+  approve: "Cererea a fost acceptat─â.",
+  reject: "Cererea a fost respins─â.",
   deactivate: "Utilizatorul a fost dezactivat.",
   activate: "Utilizatorul a fost reactivat.",
 }
@@ -106,23 +105,23 @@ function getErrorMessage(error, fallbackMessage) {
   }
 
   if (status === 401) {
-    return "Sesiunea a expirat. Autentifică-te din nou."
+    return "Sesiunea a expirat. Autentific─â-te din nou."
   }
 
   if (status === 403) {
-    return "Nu ai permisiunea necesară pentru această acțiune."
+    return "Nu ai permisiunea necesar─â pentru aceast─â ac╚¢iune."
   }
 
   if (status === 400) {
-    return "Cererea trimisă nu este validă."
+    return "Cererea trimis─â nu este valid─â."
   }
 
   if (status === 404) {
-    return "Resursa cerută nu a fost găsită."
+    return "Resursa cerut─â nu a fost g─âsit─â."
   }
 
   if (status >= 500) {
-    return "Serverul a răspuns cu o eroare. Încearcă din nou."
+    return "Serverul a r─âspuns cu o eroare. ├Äncearc─â din nou."
   }
 
   return fallbackMessage
@@ -142,10 +141,10 @@ function LoginRedirect() {
     startLogin()
   }, [])
 
-  return <LoadingPage message="Redirecționare către autentificare..." />
+  return <LoadingPage message="Redirec╚¢ionare c─âtre autentificare..." />
 }
 
-function LoadingPage({ message = "Se verifică sesiunea curentă..." }) {
+function LoadingPage({ message = "Se verific─â sesiunea curent─â..." }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md text-center">
@@ -166,11 +165,11 @@ function AuthErrorPage() {
       <Card className="w-full max-w-lg text-center">
         <CardHeader>
           <CardTitle>Nu am putut valida sesiunea</CardTitle>
-          <CardDescription>{error || "A apărut o problemă de comunicare. Încearcă din nou."}</CardDescription>
+          <CardDescription>{error || "A ap─ârut o problem─â de comunicare. ├Äncearc─â din nou."}</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center gap-3">
           <Button type="button" onClick={() => window.location.reload()}>
-            Reîncearcă
+            Re├«ncearc─â
           </Button>
         </CardContent>
       </Card>
@@ -245,7 +244,7 @@ function LegacyUsersRedirect() {
     return <Navigate to={routeByState[user?.stareCont] ?? "/"} replace />
   }
 
-  return <Navigate to={isAdminUser(user) ? "/admin/users" : getActiveHomeRoute(user)} replace />
+  return <Navigate to={getActiveHomeRoute(user)} replace />
 }
 
 function RequireActiveProfessor({ children }) {
@@ -278,10 +277,22 @@ function ActiveHomePage() {
   return <DashboardPage />
 }
 
-function UserStateBadge({ state, label }) {
+function RootRoute() {
+  if (window.sessionStorage.getItem("akadion:logout-success-pending") === "1") {
+    return <Navigate to="/logout-success" replace />
+  }
+
+  return (
+    <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+      <ActiveHomePage />
+    </RequireAuthenticatedState>
+  )
+}
+
+function UserStateBadge({ state, label, className = "" }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"} ${className}`}
     >
       {label ?? stateLabels[state] ?? state}
     </span>
@@ -381,29 +392,29 @@ function CompleteProfilePage() {
       <div className="complete-profile-layout">
         <section className="complete-profile-brand-panel">
           <div className="complete-profile-brand-content">
-            {/* Brand header — identic cu Keycloak */}
+            {/* Brand header ΓÇö identic cu Keycloak */}
             <div className="brand-header">
               <div className="brand-header__left">
                 <img src={completeProfileLogo} alt="Akadion" className="brand-logo" />
                 <div className="brand-header__copy">
-                  <span className="brand-caption">Curiozitate fără limite</span>
+                  <span className="brand-caption">Curiozitate f─âr─â limite</span>
                 </div>
               </div>
             </div>
 
-            {/* Brand copy — identic cu Keycloak */}
+            {/* Brand copy ΓÇö identic cu Keycloak */}
             <div className="brand-copy brand-copy--single">
               <h1 className="brand-title">
-                Înveți ce iubești, în ritmul tău.
+                ├Änve╚¢i ce iube╚Öti, ├«n ritmul t─âu.
               </h1>
               <p className="brand-description">
-                Aici nu ești legat de programa fixă a specializării tale — alegi
-                cursurile care te interesează, fie din domeniul tău, fie din altele.
-                Urmărești materialele, îți vezi progresul săptămânal și înveți din
-                curiozitate și dorința de a descoperi lucruri noi.
+                Aici nu e╚Öti legat de programa fix─â a specializ─ârii tale ΓÇö alegi
+                cursurile care te intereseaz─â, fie din domeniul t─âu, fie din altele.
+                Urm─âre╚Öti materialele, ├«╚¢i vezi progresul s─âpt─âm├ónal ╚Öi ├«nve╚¢i din
+                curiozitate ╚Öi dorin╚¢a de a descoperi lucruri noi.
               </p>
 
-              {/* Beneficii — identice cu Keycloak (SVG-uri identice) */}
+              {/* Beneficii ΓÇö identice cu Keycloak (SVG-uri identice) */}
               <div className="brand-benefits">
                 <div className="brand-benefit-card">
                   <span className="brand-benefit-card__icon" aria-hidden="true">
@@ -424,7 +435,7 @@ function CompleteProfilePage() {
                     </svg>
                   </span>
                   <span className="brand-benefit-card__copy">
-                    <span>Progres urmărit săptămânal</span>
+                    <span>Progres urm─ârit s─âpt─âm├ónal</span>
                   </span>
                 </div>
                 <div className="brand-benefit-card">
@@ -437,7 +448,7 @@ function CompleteProfilePage() {
                     </svg>
                   </span>
                   <span className="brand-benefit-card__copy">
-                    <span>Acces pentru studenți și profesori</span>
+                    <span>Acces pentru studen╚¢i ╚Öi profesori</span>
                   </span>
                 </div>
               </div>
@@ -447,13 +458,16 @@ function CompleteProfilePage() {
 
         <section className="complete-profile-form-panel">
           <div className="mx-auto w-full max-w-xl">
-            {/* Badge Aky RAG — aliniat la dreapta identic cu Keycloak */}
+            {/* Badge Aky RAG ΓÇö aliniat la dreapta identic cu Keycloak */}
             <div className="flex w-full justify-end">
               <div className="auth-aky-badge" aria-label="Aky AI Assistant">
-                <img src={akyRagLogo} alt="Aky AI" className="auth-aky-badge__logo" />
+                <div className="auth-aky-badge__logo-shell">
+                  <img src={akyRagLogo} alt="Aky AI" className="auth-aky-badge__logo" />
+                </div>
                 <div className="auth-aky-badge__copy">
-                  <span className="auth-aky-badge__title">Asistent AI Integrat</span>
-                  <span className="auth-aky-badge__subtitle">Învățare cu Aky RAG</span>
+                  <span className="auth-aky-badge__eyebrow">Powered by</span>
+                  <span className="auth-aky-badge__title">Aky RAG</span>
+                  <span className="auth-aky-badge__subtitle">Asistent pentru materiale academice</span>
                 </div>
               </div>
             </div>
@@ -483,7 +497,7 @@ function CompleteProfilePage() {
 
             <div className="complete-profile-card">
               <div className="space-y-2 pb-5">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Completează profilul</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Completeaz─â profilul</h1>
                 <p className="text-sm text-slate-500">
                   Pasul final. Introdu datele necesare pentru continuare.
                 </p>
@@ -534,7 +548,7 @@ function CompleteProfilePage() {
                     id="faculty"
                     value={formData.facultate}
                     onChange={(event) => updateField("facultate", event.target.value)}
-                    placeholder="Ex: Facultatea de Informatică"
+                    placeholder="Ex: Facultatea de Informatic─â"
                     className="h-12 rounded-xl border-[#d8dcef] bg-[#fef9f3] px-4 text-sm shadow-none placeholder:text-slate-400 focus-visible:border-[#595f8f] focus-visible:ring-[#595f8f]/10"
                   />
                   {fieldErrors.facultate ? <p className="text-sm text-rose-600">{fieldErrors.facultate}</p> : null}
@@ -576,9 +590,9 @@ function CompleteProfilePage() {
 
                 <Alert className="rounded-2xl border-[#d8dcef] bg-[#fbf6f0] px-4 py-3 text-slate-700">
                   <AlertCircle className="mt-0.5 h-4 w-4 text-[#24385b]" />
-                  <AlertTitle className="mb-0.5 text-sm font-semibold text-slate-900">Aprobare manuală</AlertTitle>
+                  <AlertTitle className="mb-0.5 text-sm font-semibold text-slate-900">Aprobare manual─â</AlertTitle>
                   <AlertDescription className="text-xs leading-5 text-slate-600">
-                    Contul necesită aprobare din partea echipei Akadion.
+                    Contul necesit─â aprobare din partea echipei Akadion.
                   </AlertDescription>
                 </Alert>
 
@@ -647,7 +661,7 @@ function AdminUsersPage() {
       if (error.response?.status === 401) {
         await refreshAuth()
       }
-      setPageError(getErrorMessage(error, "Nu am putut încărca utilizatorii."))
+      setPageError(getErrorMessage(error, "Nu am putut ├«nc─ârca utilizatorii."))
     } finally {
       setUsersLoading(false)
     }
@@ -682,13 +696,13 @@ function AdminUsersPage() {
     try {
       const method = action === "approve" || action === "reject" ? "patch" : "post"
       await axiosInstance[method](`/api/admin/users/${userId}/${action}`)
-      setPageNotice(successMessages[action] ?? "Acțiunea a fost aplicată.")
+      setPageNotice(successMessages[action] ?? "Ac╚¢iunea a fost aplicat─â.")
       await loadUsers()
     } catch (error) {
       if (error.response?.status === 401) {
         await refreshAuth()
       }
-      setPageError(getErrorMessage(error, "Acțiunea nu a putut fi finalizată."))
+      setPageError(getErrorMessage(error, "Ac╚¢iunea nu a putut fi finalizat─â."))
     } finally {
       setActiveAction("")
     }
@@ -708,7 +722,7 @@ function AdminUsersPage() {
         {pageError ? (
           <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Eroare la încărcare</AlertTitle>
+            <AlertTitle>Eroare la ├«nc─ârcare</AlertTitle>
             <AlertDescription>{pageError}</AlertDescription>
           </Alert>
         ) : null}
@@ -716,7 +730,7 @@ function AdminUsersPage() {
         {pageNotice ? (
           <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
             <CheckCheck className="h-4 w-4 text-emerald-700" />
-            <AlertTitle>Actualizare reușită</AlertTitle>
+            <AlertTitle>Actualizare reu╚Öit─â</AlertTitle>
             <AlertDescription className="text-emerald-800">{pageNotice}</AlertDescription>
           </Alert>
         ) : null}
@@ -730,11 +744,11 @@ function AdminUsersPage() {
                   Lista utilizatori
                 </CardTitle>
                 <CardDescription className="mt-1 text-sm leading-6 text-slate-500">
-                  Gestionează utilizatorii și filtrează lista după stare.
+                  Gestioneaz─â utilizatorii ╚Öi filtreaz─â lista dup─â stare.
                 </CardDescription>
               </div>
               <div className="rounded-2xl border border-[#e4d8cd] bg-white px-4 py-3">
-                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Afișați</p>
+                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Afi╚Öa╚¢i</p>
                 <p className="text-2xl font-semibold text-slate-900">{usersLoading ? "..." : visibleUsers.length}</p>
               </div>
             </div>
@@ -763,11 +777,11 @@ function AdminUsersPage() {
               })}
             </div>
 
-            {usersLoading ? <p className="text-sm text-slate-500">Se încarcă utilizatorii...</p> : null}
+            {usersLoading ? <p className="text-sm text-slate-500">Se ├«ncarc─â utilizatorii...</p> : null}
 
             {!usersLoading && visibleUsers.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-[#d8ccbf] bg-[#fbf6f0] px-5 py-8 text-center text-sm text-slate-500">
-                Nu există utilizatori pentru filtrul selectat.
+                Nu exist─â utilizatori pentru filtrul selectat.
               </div>
             ) : null}
 
@@ -817,7 +831,7 @@ function AdminUsersPage() {
                             className="rounded-xl bg-[#4A5681] px-4 text-white hover:bg-[#3f4a72]"
                           >
                             <Check className="h-4 w-4" />
-                            {isAccepting ? "Se aprobă..." : "Aprobă"}
+                            {isAccepting ? "Se aprob─â..." : "Aprob─â"}
                           </Button>
                           <Button
                             type="button"
@@ -841,7 +855,7 @@ function AdminUsersPage() {
                           className="rounded-xl border-amber-200 bg-amber-50 px-4 text-amber-700 hover:bg-amber-100"
                         >
                           <UserMinus className="h-4 w-4" />
-                          {isDeactivating ? "Se dezactivează..." : "Dezactivează"}
+                          {isDeactivating ? "Se dezactiveaz─â..." : "Dezactiveaz─â"}
                         </Button>
                       ) : null}
 
@@ -853,13 +867,13 @@ function AdminUsersPage() {
                           className="rounded-xl bg-[#4A5681] px-4 text-white hover:bg-[#3f4a72]"
                         >
                           <UserPlus className="h-4 w-4" />
-                          {isActivating ? "Se reactivează..." : "Reactivează"}
+                          {isActivating ? "Se reactiveaz─â..." : "Reactiveaz─â"}
                         </Button>
                       ) : null}
 
                       {!canReview && !canActivate && !canDeactivate ? (
                         <span className="inline-flex items-center rounded-xl border border-[#ddd3c7] bg-[#f8f2eb] px-3 py-2 text-sm text-slate-500">
-                          Nicio acțiune disponibilă pentru această stare.
+                          Nicio ac╚¢iune disponibil─â pentru aceast─â stare.
                         </span>
                       ) : null}
                     </div>
@@ -900,7 +914,7 @@ function AdminUsersPage() {
   )
 }
 
-function StatusPage({ title, description, accentState, accentLabel, primaryAction, secondaryAction }) {
+function StatusPage({ title, description, accentState, accentLabel, accentClassName, primaryAction, secondaryAction }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Card className="w-full max-w-2xl border-border/60 bg-card/95 shadow-sm">
@@ -908,7 +922,7 @@ function StatusPage({ title, description, accentState, accentLabel, primaryActio
           <img src={completeProfileLogo} alt="Akadion" className="mx-auto h-20 w-auto object-contain" />
           <div className="space-y-3">
             <div className="flex justify-center">
-              <UserStateBadge state={accentState} label={accentLabel} />
+              <UserStateBadge state={accentState} label={accentLabel} className={accentClassName} />
             </div>
             {title ? <CardTitle className="text-3xl tracking-tight">{title}</CardTitle> : null}
             <CardDescription className="mx-auto max-w-xl text-base leading-7">{description}</CardDescription>
@@ -927,9 +941,9 @@ function PendingApprovalPage() {
 
   return (
     <StatusPage
-      description="Profilul a fost trimis cu succes. Un administrator va verifica datele, iar după aprobare vei putea intra în aplicație."
+      description="Profilul a fost trimis cu succes. Un administrator va verifica datele, iar dup─â aprobare vei putea intra ├«n aplica╚¢ie."
       accentState="PENDING"
-      accentLabel="Cererea este în așteptare"
+      accentLabel="Cererea este ├«n a╚Öteptare"
       primaryAction={
         <Button onClick={startLogout} variant="outline" size="lg" className="px-8 text-base">
           Logout
@@ -942,12 +956,12 @@ function PendingApprovalPage() {
 function RejectedRequestPage() {
   return (
     <StatusPage
-      description="Cererea ta a fost respinsă. Editează profilul pentru a retrimite datele corectate. Dacă te deconectezi, revino folosind opțiunea Login."
+      description="Cererea ta a fost respins─â. Editeaz─â profilul pentru a retrimite datele corectate. Dac─â te deconectezi, revino folosind op╚¢iunea Login."
       accentState="RESPINS"
-      accentLabel="Cerere respinsă"
+      accentLabel="Cerere respins─â"
       primaryAction={
         <Button asChild size="lg" className="px-8 text-base">
-          <Link to="/complete-profile">Editează profilul</Link>
+          <Link to="/complete-profile">Editeaz─â profilul</Link>
         </Button>
       }
       secondaryAction={
@@ -963,11 +977,12 @@ function DeactivatedAccountPage() {
 
   return (
     <StatusPage
-      title="Cont dezactivat"
-      description="Contul tău a fost dezactivat de un administrator. Pentru clarificări, contactează echipa Akadion."
+      description="Contul t─âu a fost dezactivat de un administrator. Pentru clarific─âri, contacteaz─â echipa Akadion."
       accentState="INACTIV"
+      accentLabel="CONT DEZACTIVAT"
+      accentClassName="border-slate-200 bg-slate-50 px-5 py-1.5 text-sm text-slate-700"
       primaryAction={
-        <Button onClick={startLogout} size="lg" className="px-8 text-base">
+        <Button onClick={startLogout} variant="outline" size="lg" className="bg-white px-8 text-base text-black hover:bg-white hover:text-black">
           Logout
         </Button>
       }
@@ -981,7 +996,7 @@ function AccessDeniedPage() {
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle>Acces interzis</CardTitle>
-          <CardDescription>Pagina de administrare este disponibilă doar utilizatorilor cu rol ADMIN.</CardDescription>
+          <CardDescription>Pagina de administrare este disponibil─â doar utilizatorilor cu rol ADMIN.</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center gap-3">
           <Button asChild>
@@ -998,8 +1013,8 @@ function NotFoundPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
-          <CardTitle>Pagină inexistentă</CardTitle>
-          <CardDescription>Pagina pe care o cauți nu există.</CardDescription>
+          <CardTitle>Pagin─â inexistent─â</CardTitle>
+          <CardDescription>Pagina pe care o cau╚¢i nu exist─â.</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild>
@@ -1016,19 +1031,22 @@ function App() {
 
   useEffect(() => {
     const routeTitles = {
-      "/": "Acasă",
+      "/": "Acas─â",
       "/complete-profile": "Finalizare Profil",
-      "/asteptare-aprobare": "Așteptare Aprobare",
-      "/cerere-respinsa": "Cerere Respinsă",
+      "/asteptare-aprobare": "A╚Öteptare Aprobare",
+      "/cerere-respinsa": "Cerere Respins─â",
       "/cont-dezactivat": "Cont Dezactivat",
+      "/logout-success": "Logout Finalizat",
       "/courses": "Cursuri",
-      "/courses/new": "Adaugă Curs",
+      "/courses/new": "Adaug─â Curs",
       "/profile": "Profilul Meu",
+      "/discover-aky": "Descoper─â Aky",
+      "/owl-hall": "Galeria Bufni╚¢elor Legendare",
       "/users": "Utilizatori",
       "/admin/users": "Administrare Utilizatori",
     }
 
-    let title = "AKADION - Platformă Academică"
+    let title = "AKADION - Platform─â Academic─â"
     if (routeTitles[location.pathname]) {
       title = `${routeTitles[location.pathname]} - AKADION`
     } else if (location.pathname.startsWith("/courses/")) {
@@ -1042,11 +1060,7 @@ function App() {
     <Routes>
       <Route
         path="/"
-        element={
-          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
-            <ActiveHomePage />
-          </RequireAuthenticatedState>
-        }
+        element={<RootRoute />}
       />
       <Route
         path="/complete-profile"
@@ -1081,6 +1095,10 @@ function App() {
         }
       />
       <Route
+        path="/logout-success"
+        element={<LogoutPage />}
+      />
+      <Route
         path="/courses"
         element={
           <RequireAuthenticatedState allowedStates={["ACTIV"]}>
@@ -1112,6 +1130,22 @@ function App() {
           </RequireAuthenticatedState>
         }
       />
+      <Route
+        path="/discover-aky"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <DiscoverAkyPage />
+          </RequireAuthenticatedState>
+        }
+      />
+      <Route
+        path="/owl-hall"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <OwlHall />
+          </RequireAuthenticatedState>
+        }
+      />
       <Route path="/users" element={<LegacyUsersRedirect />} />
       <Route
         path="/admin/users"
@@ -1127,3 +1161,6 @@ function App() {
 }
 
 export default App
+
+
+

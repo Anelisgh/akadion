@@ -1,4 +1,4 @@
-package com.example.akadion.controller;
+﻿package com.example.akadion.controller;
 
 import com.example.akadion.dto.*;
 import com.example.akadion.entity.User;
@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/student")
@@ -88,6 +89,23 @@ public class StudentController {
             @AuthenticationPrincipal OidcUser oidcUser) {
         User user = getLoggedUser(oidcUser);
         return studentCursService.intreabaAky(user.getId(), cursId, request);
+    }
+
+    @GetMapping("/cursuri/{cursId}/documente-accesibile")
+    public List<AkySursaDocumentDto> listaDocumenteAccesibile(
+            @PathVariable Long cursId,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        return studentCursService.listaDocumenteAccesibile(user.getId(), cursId);
+    }
+
+    @PostMapping("/cursuri/{cursId}/quiz/generate")
+    public List<Map<String, Object>> genereazaQuiz(
+            @PathVariable Long cursId,
+            @RequestBody QuizGenerateRequestDto request,
+            @AuthenticationPrincipal OidcUser oidcUser) {
+        User user = getLoggedUser(oidcUser);
+        return studentCursService.genereazaQuiz(user.getId(), cursId, request);
     }
 
     private User getLoggedUser(OidcUser oidcUser) {
