@@ -1,4 +1,4 @@
-﻿package com.example.akadion.service;
+package com.example.akadion.service;
 
 import com.example.akadion.dto.AkyChatRequestDto;
 import com.example.akadion.dto.AkyChatResponseDto;
@@ -57,7 +57,7 @@ public class RagChatService {
             Map<String, Object> ragPayload = Map.of(
                     "studentId", userId,
                     "cursId", cursId,
-                    "maxSaptamanaParcursa", 100, // Hardcodat la 100 p├ón─â implement─âm progresul real
+                    "maxSaptamanaParcursa", 100, // Hardcodat la 100 până implementăm progresul real
                     "intrebare", request.intrebare(),
                     "istoricConversatie", istoricMapped
             );
@@ -72,7 +72,7 @@ public class RagChatService {
                     .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
 
             if (responseMap == null) {
-                throw new RagChatException("Serviciul RAG a returnat un r─âspuns vid.");
+                throw new RagChatException("Serviciul RAG a returnat un răspuns vid.");
             }
 
             Object rawRaspuns = responseMap.get("raspuns");
@@ -100,13 +100,13 @@ public class RagChatService {
             return new AkyChatResponseDto(raspunsText, surseDtos);
 
         } catch (HttpClientErrorException.Unauthorized e) {
-            log.warn("Autentificare e╚Öuat─â c─âtre serviciul RAG ΓÇö verific─â dac─â secretul e sincronizat cu echipa RAG (cursId={})", cursId);
-            throw new RagChatException("Serviciul Aky este temporar indisponibil. ├Äncearc─â din nou ├«n c├óteva momente.", e);
+            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (cursId={})", cursId);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         } catch (RagChatException e) {
             throw e;
         } catch (Exception e) {
             log.error("Eroare la comunicarea cu RAG Chat pentru cursul {}: {}", cursId, e.getMessage(), e);
-            throw new RagChatException("Serviciul Aky este temporar indisponibil. ├Äncearc─â din nou ├«n c├óteva momente.", e);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         }
     }
 
@@ -128,18 +128,18 @@ public class RagChatService {
                     .body(new org.springframework.core.ParameterizedTypeReference<List<Map<String, Object>>>() {});
 
             if (response == null) {
-                throw new RagChatException("Serviciul RAG a returnat un r─âspuns vid.");
+                throw new RagChatException("Serviciul RAG a returnat un răspuns vid.");
             }
 
             return response;
         } catch (HttpClientErrorException.Unauthorized e) {
-            log.warn("Autentificare e╚Öuat─â c─âtre serviciul RAG ΓÇö verific─â dac─â secretul e sincronizat cu echipa RAG (cursId={})", cursId);
-            throw new RagChatException("Serviciul Aky este temporar indisponibil. ├Äncearc─â din nou ├«n c├óteva momente.", e);
+            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (cursId={})", cursId);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         } catch (RagChatException e) {
             throw e;
         } catch (Exception e) {
             log.error("Eroare la comunicarea cu RAG Quiz pentru cursul {}: {}", cursId, e.getMessage(), e);
-            throw new RagChatException("Serviciul Aky este temporar indisponibil. ├Äncearc─â din nou ├«n c├óteva momente.", e);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         }
     }
 }

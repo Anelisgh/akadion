@@ -1,4 +1,4 @@
-﻿import { ArrowRight, CalendarDays, Check, Palette, AlertCircle, Plus, ExternalLink, Gift, Star, Feather } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, Palette, AlertCircle, Plus, ExternalLink, Gift, Star, Feather } from "lucide-react"
 import { useState, useEffect, useEffectEvent, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import AppShell from "@/components/AppShell"
@@ -27,92 +27,92 @@ import { formatWeeks, formatStudents } from "@/lib/utils"
 const SECRET_LINKS = [
   {
     label: "secret #01",
-    title: "Camera Mopsului Rug─âtor",
-    description: "Un altar digital p─âzit de un pug solemn. Intr─â doar dac─â ai snacks ╚Öi respect.",
+    title: "Camera Mopsului Rugător",
+    description: "Un altar digital păzit de un pug solemn. Intră doar dacă ai snacks și respect.",
     href: "https://puginarug.com/",
   },
   {
     label: "secret #02",
-    title: "Laboratorul Pisicii-Gogoa╚Ö─â",
-    description: "O anomalie pufoas─â, rotund─â ╚Öi suspect de dulce. Bufni╚¢ele ├«nc─â investigheaz─â.",
+    title: "Laboratorul Pisicii-Gogoașă",
+    description: "O anomalie pufoasă, rotundă și suspect de dulce. Bufnițele încă investighează.",
     href: "https://doughnutkitten.com/",
   },
   {
     label: "secret #03",
-    title: "Coridorul C├óinelui Infinit",
-    description: "Un drum lung. Prea lung. Legenda spune c─â doar cei r─âbd─âtori ajung la coad─â.",
+    title: "Coridorul Câinelui Infinit",
+    description: "Un drum lung. Prea lung. Legenda spune că doar cei răbdători ajung la coadă.",
     href: "https://longdogechallenge.com/",
   },
   {
     label: "secret #04",
     title: "Turnul QR-ului Plutitor",
-    description: "Un cod misterios leviteaz─â prin aer. Scaneaz─â-l doar dac─â ai reflexe de ninja ╚Öi baterie la telefon.",
+    description: "Un cod misterios levitează prin aer. Scanează-l doar dacă ai reflexe de ninja și baterie la telefon.",
     href: "https://floatingqrcode.com/",
   },
   {
     label: "secret #05",
     title: "Dojo-ul Ninja Invizibil",
-    description: "O sal─â de antrenament pentru clickuri t─âcute, dispari╚¢ii elegante ╚Öi apari╚¢ii absolut inutile, dar spectaculoase.",
+    description: "O sală de antrenament pentru clickuri tăcute, dispariții elegante și apariții absolut inutile, dar spectaculoase.",
     href: "https://imaninja.com/",
   },
   {
     label: "secret #06",
     title: "Atelierul Cursorului Fermecat",
-    description: "Aici s─âgeata mouse-ului prime╚Öte superputeri, sc├óntei ╚Öi suficient dramatism c├ót s─â impresioneze bufni╚¢ele.",
+    description: "Aici săgeata mouse-ului primește superputeri, scântei și suficient dramatism cât să impresioneze bufnițele.",
     href: "https://cursoreffects.com/",
   },
   {
     label: "secret #07",
     title: "Terminalul Hackerului Dramatic",
-    description: "Tastezi orice, pare c─â spargi sateli╚¢i. Ideal pentru momente c├ónd vrei s─â pari periculos f─âr─â s─â strici nimic.",
+    description: "Tastezi orice, pare că spargi sateliți. Ideal pentru momente când vrei să pari periculos fără să strici nimic.",
     href: "https://hackertyper.com/",
   },
   {
     label: "secret #08",
     title: "Galeria Haosului Pollock",
-    description: "Un perete digital unde fiecare mi╚Öcare devine art─â modern─â. Bufni╚¢ele nu ├«n╚¢eleg, dar aplaud─â politicos.",
+    description: "Un perete digital unde fiecare mișcare devine artă modernă. Bufnițele nu înțeleg, dar aplaudă politicos.",
     href: "https://jacksonpollock.org/",
   },
   {
     label: "secret #09",
-    title: "Tunelul Viermi╚Öorului Dansator",
-    description: "Un loc elastic, ciudat ╚Öi complet inutil, unde totul se mi╚Öc─â exact c├ót s─â te fac─â s─â mai dai un click.",
+    title: "Tunelul Viermișorului Dansator",
+    description: "Un loc elastic, ciudat și complet inutil, unde totul se mișcă exact cât să te facă să mai dai un click.",
     href: "https://wigglyme.com/",
   },
   {
     label: "secret #10",
-    title: "Labirintul Memoriei U╚Öoare",
-    description: "Un traseu mic, dar perfid. Pare simplu p├ón─â c├ónd bufni╚¢ele ├«ncep s─â-╚¢i mute mental pere╚¢ii.",
+    title: "Labirintul Memoriei Ușoare",
+    description: "Un traseu mic, dar perfid. Pare simplu până când bufnițele încep să-ți mute mental pereții.",
     href: "https://memory.toys/maze/easy/",
   },
   {
     label: "secret #11",
     title: "Marele Muzeu al Nimicului",
-    description: "O expedi╚¢ie grandioas─â prin absolut nimic. Perfect pentru exploratori care caut─â sens ╚Öi g─âsesc spa╚¢iu gol.",
+    description: "O expediție grandioasă prin absolut nimic. Perfect pentru exploratori care caută sens și găsesc spațiu gol.",
     href: "https://greatbignothing.com/",
   },
   {
     label: "secret #12",
-    title: "Cutia Muzical─â Nebun─â",
-    description: "Sunete, juc─ârii ╚Öi haos auditiv controlat. Bufni╚¢ele recomand─â volum moderat ╚Öi curaj maxim.",
+    title: "Cutia Muzicală Nebună",
+    description: "Sunete, jucării și haos auditiv controlat. Bufnițele recomandă volum moderat și curaj maxim.",
     href: "https://musical.toys/",
   },
   {
     label: "secret #13",
-    title: "Tapiseria Infinit─â ZoomQuilt",
-    description: "Un portal care curge la nesf├ór╚Öit prin imagini imposibile. Intr─â doar dac─â ai timp s─â ui╚¢i de timp.",
+    title: "Tapiseria Infinită ZoomQuilt",
+    description: "Un portal care curge la nesfârșit prin imagini imposibile. Intră doar dacă ai timp să uiți de timp.",
     href: "https://zoomquilt.org/",
   },
   {
     label: "secret #14",
     title: "Arena Dezbaterilor Coapte",
-    description: "Un loc pentru argumente crocante, opinii picante ╚Öi concluzii care poate au stat prea mult la cuptor.",
+    description: "Un loc pentru argumente crocante, opinii picante și concluzii care poate au stat prea mult la cuptor.",
     href: "https://www.ripefordebate.com/",
   },
   {
     label: "secret #15",
     title: "Atelierul Emoji-urilor Rebelate",
-    description: "Emoji-uri sc─âpate din tastatur─â, expresii dramatice ╚Öi destul─â energie c├ót s─â ├«ncurce orice conversa╚¢ie serioas─â.",
+    description: "Emoji-uri scăpate din tastatură, expresii dramatice și destulă energie cât să încurce orice conversație serioasă.",
     href: "https://remoji.com/",
   },
 ]
@@ -172,7 +172,7 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
     <Card className={`relative overflow-visible rounded-[1.8rem] border-[#e4d8cd] bg-white/96 shadow-[0_18px_52px_rgba(32,46,84,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_rgba(32,46,84,0.12)] ${themePickerOpen ? "z-20" : "z-0"}`}>
       <div className={`relative h-44 overflow-hidden rounded-t-[1.8rem] bg-linear-to-br ${accent}`}>
         <div className={`absolute left-4 top-4 inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold shadow-xs border ${selectedTheme.badge || "bg-white/80 text-slate-800 border-white/60"}`}>
-          {isStudentMode ? (course.inscris ? "├Änscris" : "Disponibil") : course.activ ? "Activ" : "Inactiv"}
+          {isStudentMode ? (course.inscris ? "Înscris" : "Disponibil") : course.activ ? "Activ" : "Inactiv"}
         </div>
       </div>
       <CardContent className="space-y-3 px-5 py-5">
@@ -217,7 +217,7 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
         </div>
         {isProfessorMode ? (
           <Button asChild variant="outline" className="mt-2 rounded-2xl border-[#d9ccbe] bg-white text-[#3f698a]">
-            <Link to={`/courses/${course.id}`}>Administreaz─â cursul</Link>
+            <Link to={`/courses/${course.id}`}>Administrează cursul</Link>
           </Button>
         ) : null}
         {isAdminMode ? (
@@ -232,7 +232,7 @@ export function CourseCard({ course, mode, selectedThemeKey, onThemeChange, onEn
             </Button>
           ) : (
             <Button type="button" onClick={() => onEnroll(course)} disabled={actionDisabled} className="mt-2 rounded-2xl bg-[#3f698a] text-white hover:bg-[#355b79]">
-              ├Änscriere
+              Înscriere
             </Button>
           )
         ) : null}
@@ -303,7 +303,7 @@ export function AdminCourseList({ courses, currentPage, totalPages, onPageChange
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-base font-semibold text-[#24385b]">{course.denumire}</h3>
                 <p className="mt-1 text-sm text-[#5d7094]">
-                  {formatStudents(course.nrStudentiInscrisi ?? 0)} ┬╖ {formatWeeks(course.nrSaptamaniCurente ?? course.nrSaptamani ?? 0)}
+                  {formatStudents(course.nrStudentiInscrisi ?? 0)} · {formatWeeks(course.nrSaptamaniCurente ?? course.nrSaptamani ?? 0)}
                 </p>
               </div>
 
@@ -358,12 +358,12 @@ function CoursesEasterEggPage() {
 
   return (
     <AppShell
-      title="Ai g─âsit camera secret─â Akadion"
-      description="Nu toate rutele duc la cursuri. Unele duc la bufni╚¢e, indicii ╚Öi linkuri ascunse."
+      title="Ai găsit camera secretă Akadion"
+      description="Nu toate rutele duc la cursuri. Unele duc la bufnițe, indicii și linkuri ascunse."
       eyebrow="Easter egg"
       heroContent={(
         <p className="max-w-xl text-sm font-medium leading-6 text-white/86">
-          Exploreaz─â cele 15 chamber-uri principale, fiecare cu propriul link ascuns, propriul haos simpatic ╚Öi propria prob─â de curiozitate pentru exploratorii Akadion.
+          Explorează cele 15 chamber-uri principale, fiecare cu propriul link ascuns, propriul haos simpatic și propria probă de curiozitate pentru exploratorii Akadion.
         </p>
       )}
       heroClassName="relative min-h-[15rem] overflow-hidden border-0 bg-linear-to-br from-[#4A5681] via-[#5869bd] to-[#b88af2] text-white shadow-[0_28px_80px_rgba(67,79,159,0.28)] lg:items-center before:absolute before:-top-20 before:right-[-4rem] before:h-72 before:w-72 before:rounded-full before:bg-white/14 before:content-[''] after:absolute after:-bottom-24 after:left-[-5rem] after:h-72 after:w-72 after:rounded-full after:bg-white/10 after:content-['']"
@@ -372,9 +372,9 @@ function CoursesEasterEggPage() {
       heroDescriptionClassName="text-white/84"
       heroVisual={(
         <div className="relative h-full w-full">
-          <img src={ragHeroOwl} alt="Bufni╚¢─â Akadion RAG" className="absolute left-[calc(72%-10rem)] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:left-[calc(72%-13rem)] lg:h-60 lg:w-60" />
-          <img src={easterOwlTwo} alt="Bufni╚¢─â Akadion cu ghiozdan" className="absolute left-[72%] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:h-60 lg:w-60" />
-          <img src={easterOwlOne} alt="Bufni╚¢─â Akadion" className="absolute left-[calc(72%+10rem)] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:left-[calc(72%+13rem)] lg:h-60 lg:w-60" />
+          <img src={ragHeroOwl} alt="Bufniță Akadion RAG" className="absolute left-[calc(72%-10rem)] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:left-[calc(72%-13rem)] lg:h-60 lg:w-60" />
+          <img src={easterOwlTwo} alt="Bufniță Akadion cu ghiozdan" className="absolute left-[72%] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:h-60 lg:w-60" />
+          <img src={easterOwlOne} alt="Bufniță Akadion" className="absolute left-[calc(72%+10rem)] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.24)] lg:left-[calc(72%+13rem)] lg:h-60 lg:w-60" />
         </div>
       )}
       heroVisualClassName="top-0 right-auto bottom-auto left-0 h-full w-full items-center justify-center"
@@ -384,19 +384,19 @@ function CoursesEasterEggPage() {
           <section className="space-y-5 rounded-[2rem] border border-[#eadfd4] bg-white/76 p-5 shadow-[0_16px_44px_rgba(32,46,84,0.07)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#d9ccbe] bg-[#fbf7f1] px-3 py-1 text-xs font-bold tracking-[0.14em] text-[#595f8f] uppercase">
               <Gift className="h-3.5 w-3.5" />
-              Descoperire rar─â
+              Descoperire rară
             </div>
             <div className="space-y-3">
-              <h2 className="text-3xl font-semibold tracking-tight text-[#24385b] sm:text-4xl">Ai g─âsit easter egg-ul aplica╚¢iei.</h2>
+              <h2 className="text-3xl font-semibold tracking-tight text-[#24385b] sm:text-4xl">Ai găsit easter egg-ul aplicației.</h2>
               <p className="text-base leading-7 text-slate-600">
-                Cursurile tale sunt ├«n siguran╚¢─â pe pagina Acas─â. Ruta asta e pentru exploratori, bufni╚¢e curioase ╚Öi linkuri pe care le vom ascunde aici.
+                Cursurile tale sunt în siguranță pe pagina Acasă. Ruta asta e pentru exploratori, bufnițe curioase și linkuri pe care le vom ascunde aici.
               </p>
             </div>
             <div className="grid gap-3 text-sm text-[#5d7094] sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {[
                 "Ai dat click unde trebuia",
-                "Bufni╚¢ele aprob─â",
-                "Curiozitate recompensat─â",
+                "Bufnițele aprobă",
+                "Curiozitate recompensată",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-[#eadfd4] bg-[#fbf7f1]/80 px-3 py-2 font-semibold">
                   {item}
@@ -466,11 +466,11 @@ function CoursesEasterEggPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/24 bg-white/12 px-3 py-1 text-xs font-bold tracking-[0.16em] text-white/78 uppercase">
               <Feather className="h-3.5 w-3.5" />
-              Galerie legendar─â
+              Galerie legendară
             </div>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Intr─â ├«n Galeria Bufni╚¢elor Legendare.</h2>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Intră în Galeria Bufnițelor Legendare.</h2>
             <p className="mt-3 text-sm leading-7 text-white/82 sm:text-base">
-              Dincolo de chambers exist─â o pagin─â special─â dedicat─â bufni╚¢elor Akadion: un spa╚¢iu separat pentru apari╚¢ii memorabile, simboluri rare ╚Öi pove╚Öti care merit─â p─âstrate.
+              Dincolo de chambers există o pagină specială dedicată bufnițelor Akadion: un spațiu separat pentru apariții memorabile, simboluri rare și povești care merită păstrate.
             </p>
           </div>
           <Button asChild variant="outline" className="w-fit rounded-2xl border-white/28 bg-white px-5 py-2.5 text-sm font-semibold text-[#24385b] shadow-[0_14px_34px_rgba(8,18,38,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-white/90 hover:text-[#24385b] hover:shadow-[0_20px_42px_rgba(8,18,38,0.24)] active:scale-[0.98]">
@@ -515,7 +515,7 @@ export default function CoursesPage() {
       setAvailableCourses([])
     } catch (e) {
       if (e.response?.status === 401) await refreshAuth()
-      setError(getCourseErrorMessage(e, "Nu am putut ├«nc─ârca cursurile."))
+      setError(getCourseErrorMessage(e, "Nu am putut încărca cursurile."))
     } finally {
       setLoading(false)
     }
@@ -562,11 +562,11 @@ export default function CoursesPage() {
     try {
       await enrollStudentCourse(course.id)
       await loadCourses()
-      setNotice("├Änscrierea a fost finalizat─â cu succes.")
+      setNotice("Înscrierea a fost finalizată cu succes.")
       navigate(`/courses/${course.id}`, { state: { course: normalizeEnrolledCourse({ ...course, procentajProgres: 0 }) } })
     } catch (enrollError) {
       if (enrollError.response?.status === 401) await refreshAuth()
-      setError(getCourseErrorMessage(enrollError, "Nu am putut finaliza ├«nscrierea."))
+      setError(getCourseErrorMessage(enrollError, "Nu am putut finaliza înscrierea."))
     } finally {
       setActiveAction("")
     }
@@ -594,7 +594,7 @@ export default function CoursesPage() {
   return (
     <AppShell
       title={isAdmin ? "Cursuri Akadion" : isProfessor ? "Cursurile mele" : "Cursuri"}
-      description={isAdmin ? "Toate cursurile create de profesori ├«n platform─â." : isProfessor ? "Administreaz─â cursurile pe care le predai." : "Vezi cursurile tale ╚Öi descoper─â cursuri disponibile."}
+      description={isAdmin ? "Toate cursurile create de profesori în platformă." : isProfessor ? "Administrează cursurile pe care le predai." : "Vezi cursurile tale și descoperă cursuri disponibile."}
       eyebrow="Cursuri"
       heroClassName={heroClassName}
       heroEyebrowClassName="text-white/72"
@@ -617,12 +617,12 @@ export default function CoursesPage() {
         {error ? (
           <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Eroare la ├«nc─ârcare</AlertTitle>
+            <AlertTitle>Eroare la încărcare</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
 
-        {loading ? <p className="text-sm text-slate-500">Se ├«ncarc─â lista de cursuri...</p> : null}
+        {loading ? <p className="text-sm text-slate-500">Se încarcă lista de cursuri...</p> : null}
 
         {notice ? (
           <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
@@ -661,7 +661,7 @@ export default function CoursesPage() {
             <section className="space-y-4">
               <div className="flex flex-col gap-1">
                 <h2 className="text-2xl font-semibold tracking-tight text-[#24385b]">Cursurile mele</h2>
-                <p className="text-sm text-slate-500">Cursurile la care e╚Öti ├«nscris ├«n acest moment.</p>
+                <p className="text-sm text-slate-500">Cursurile la care ești înscris în acest moment.</p>
               </div>
 
               {courses.length > 0 ? (
@@ -679,14 +679,14 @@ export default function CoursesPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyCoursesState message="Nu e╚Öti ├«nscris momentan la niciun curs activ." />
+                <EmptyCoursesState message="Nu ești înscris momentan la niciun curs activ." />
               )}
             </section>
 
             <section className="space-y-4">
               <div className="flex flex-col gap-1">
                 <h2 className="text-2xl font-semibold tracking-tight text-[#24385b]">Cursuri disponibile</h2>
-                <p className="text-sm text-slate-500">Cursurile disponibile pentru ├«nscriere.</p>
+                <p className="text-sm text-slate-500">Cursurile disponibile pentru înscriere.</p>
               </div>
 
               {availableCourses.length > 0 ? (
@@ -704,23 +704,24 @@ export default function CoursesPage() {
                   ))}
                 </div>
               ) : (
-                <EmptyCoursesState message="Nu exist─â cursuri disponibile pentru ├«nscriere momentan." />
+                <EmptyCoursesState message="Nu există cursuri disponibile pentru înscriere momentan." />
               )}
             </section>
           </div>
         ) : null}
 
         {!loading && isAdmin && courses.length === 0 ? (
-          <EmptyCoursesState message="Nu exist─â ├«nc─â niciun curs creat de profesori." />
+          <EmptyCoursesState message="Nu există încă niciun curs creat de profesori." />
         ) : null}
 
         {!loading && isProfessor && courses.length === 0 ? (
-          <EmptyCoursesState message="Nu ai ad─âugat ├«nc─â niciun curs. Creeaz─â unul din butonul `Curs nou` ╚Öi va ap─ârea aici." />
+          <EmptyCoursesState message="Nu ai adăugat încă niciun curs. Creează unul din butonul `Curs nou` și va apărea aici." />
         ) : null}
       </div>
     </AppShell>
   )
 }
+
 
 
 

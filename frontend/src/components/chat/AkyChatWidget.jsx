@@ -1,4 +1,4 @@
-﻿import { AlertCircle, Check, ChevronLeft, ChevronRight, FileText, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Trash2, RotateCcw } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, ChevronRight, FileText, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Trash2, RotateCcw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils"
 
 const QUICK_QUESTIONS = [
   "Ce materiale sunt disponibile la acest curs?",
-  "Cum sunt structurate s─âpt─âm├ónile de curs?",
-  "Care este tematica principal─â a cursului?",
+  "Cum sunt structurate săptămânile de curs?",
+  "Care este tematica principală a cursului?",
 ]
 
 const AKY_THEME_STORAGE_PREFIX = "akadion:aky-theme"
@@ -200,8 +200,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         const documents = await getDocumenteAccesibile(selectedCourseId)
         setQuizDocuments(Array.isArray(documents) ? documents : [])
       } catch (err) {
-        console.error("Nu s-au putut ├«nc─ârca documentele pentru quiz", err)
-        setQuizError("Nu s-au putut ├«nc─ârca documentele accesibile pentru quiz.")
+        console.error("Nu s-au putut încărca documentele pentru quiz", err)
+        setQuizError("Nu s-au putut încărca documentele accesibile pentru quiz.")
       } finally {
         setIsLoadingQuizDocuments(false)
       }
@@ -226,8 +226,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       let items = Array.isArray(res) ? res : (res?.continut || [])
       let hasMore = res?.areUrmatoarea ?? false
 
-      // dac─â suntem pe un curs nou f─âr─â conversa╚¢ii proprii, dar utilizatorul are conversa╚¢ii ├«n cont,
-      // comut─âm automat pe tab-ul "Toate" pentru ca utilizatorul s─â ├«╚Öi vad─â istoricul general
+      // dacă suntem pe un curs nou fără conversații proprii, dar utilizatorul are conversații în cont,
+      // comutăm automat pe tab-ul "Toate" pentru ca utilizatorul să își vadă istoricul general
       if (!append && pageToLoad === 0 && courseId && activeFilter === "course" && items.length === 0) {
         const globalRes = await getConversatiiGlobale(0)
         const globalItems = Array.isArray(globalRes) ? globalRes : (globalRes?.continut || [])
@@ -429,7 +429,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setHasMoreMessages(res?.areMaiMulte ?? false)
       setOldestLoadedMessageId(res?.celMaiVechiIdIncarcat ?? null)
     } catch {
-      setError("Nu s-a putut ├«nc─ârca istoricul conversa╚¢iei.")
+      setError("Nu s-a putut încărca istoricul conversației.")
     } finally {
       setIsLoadingMessages(false)
     }
@@ -446,7 +446,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setHasMoreMessages(res?.areMaiMulte ?? false)
       setOldestLoadedMessageId(res?.celMaiVechiIdIncarcat ?? null)
     } catch (err) {
-      console.error("Nu s-au putut ├«nc─ârca mesajele anterioare", err)
+      console.error("Nu s-au putut încărca mesajele anterioare", err)
     } finally {
       setIsLoadingOlderMessages(false)
     }
@@ -558,13 +558,13 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       }
 
       if (err.response?.status === 429) {
-        setError("Ai dep─â╚Öit limita de ├«ntreb─âri pe minut. Te rug─âm s─â a╚Ötep╚¢i pu╚¢in ├«nainte de a ├«ncerca din nou.")
+        setError("Ai depășit limita de întrebări pe minut. Te rugăm să aștepți puțin înainte de a încerca din nou.")
       } else if (err.response?.status === 502 || err.response?.status === 503) {
-        setError("Serviciul Aky este temporar indisponibil. Te rug─âm s─â ├«ncerci din nou mai t├órziu.")
+        setError("Serviciul Aky este temporar indisponibil. Te rugăm să încerci din nou mai târziu.")
       } else if (err.response?.status === 404) {
-        setError("Modulul Aky de chat pentru acest curs este ├«n preg─âtire (API 404). R─âspunsul va fi disponibil c├ónd backend-ul RAG este activat.")
+        setError("Modulul Aky de chat pentru acest curs este în pregătire (API 404). Răspunsul va fi disponibil când backend-ul RAG este activat.")
       } else {
-        setError(err.response?.data?.eroare || "Nu am putut primi un r─âspuns de la Aky. Te rug─âm s─â re├«ncerci.")
+        setError(err.response?.data?.eroare || "Nu am putut primi un răspuns de la Aky. Te rugăm să reîncerci.")
       }
 
       if (selectedConversationId) {
@@ -587,7 +587,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       await fetchLatestMessages(selectedConversationId)
     } catch (err) {
       console.error("Eroare la retry:", err)
-      setError("Aky nu a putut r─âspunde nici de aceast─â dat─â. Te rog ├«ncearc─â mai t├órziu.")
+      setError("Aky nu a putut răspunde nici de această dată. Te rog încearcă mai târziu.")
     } finally {
       setIsSending(false)
     }
@@ -609,7 +609,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       })
       const questions = Array.isArray(response) ? response : (response?.intrebari || [])
       if (questions.length === 0) {
-        setQuizError("Aky nu a putut genera ├«ntreb─âri din materialele accesibile.")
+        setQuizError("Aky nu a putut genera întrebări din materialele accesibile.")
         return
       }
 
@@ -628,7 +628,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setQuizOpen(false)
     } catch (err) {
       console.error("Nu s-a putut genera quiz-ul", err)
-      setQuizError(err.response?.data?.eroare || "Nu s-a putut genera quiz-ul. ├Äncearc─â din nou.")
+      setQuizError(err.response?.data?.eroare || "Nu s-a putut genera quiz-ul. Încearcă din nou.")
     } finally {
       setIsGeneratingQuiz(false)
     }
@@ -693,7 +693,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           <div
             role="separator"
             aria-orientation="vertical"
-            aria-label="Redimensioneaz─â Aky"
+            aria-label="Redimensionează Aky"
             onPointerDown={handlePanelResizePointerDown}
             className="absolute left-[-0.15rem] top-0 z-50 hidden h-full w-3 cursor-ew-resize items-center justify-center lg:flex"
           >
@@ -731,7 +731,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
               ) : null}
               <button
                 type="button"
-                aria-label="Schimb─â tema Aky"
+                aria-label="Schimbă tema Aky"
                 onClick={() => setThemePickerOpen((currentValue) => !currentValue)}
                 className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/32 bg-white/16 text-white shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition hover:bg-white/24"
               >
@@ -790,7 +790,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 <div
                   role="separator"
                   aria-orientation="vertical"
-                  aria-label="Redimensioneaz─â istoricul conversa╚¢iilor"
+                  aria-label="Redimensionează istoricul conversațiilor"
                   onPointerDown={handleHistoryResizePointerDown}
                   className="absolute right-[-0.35rem] top-0 z-30 hidden h-full w-3 cursor-ew-resize items-center justify-center lg:flex"
                 >
@@ -800,8 +800,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   <div className="mb-3 hidden items-center justify-end lg:flex">
                     <button
                       type="button"
-                      aria-label="├Änchide istoricul conversa╚¢iilor"
-                      title="├Änchide istoricul"
+                      aria-label="Închide istoricul conversațiilor"
+                      title="Închide istoricul"
                       onClick={() => setHistoryVisible(false)}
                       className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/60 bg-white/70 text-slate-400 transition hover:border-slate-300 hover:bg-white hover:text-[#24385b]"
                     >
@@ -813,13 +813,13 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     className={`w-full h-12 rounded-2xl bg-linear-to-r ${selectedTheme.accent} text-white shadow-md flex items-center justify-center gap-2`}
                   >
                     <Plus className="h-5 w-5" />
-                    <span>├Äncepe o conversa╚¢ie nou─â</span>
+                    <span>Începe o conversație nouă</span>
                   </Button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3" onScroll={handleScrollConversations}>
                   <div className="flex items-center justify-between px-1 pb-1">
-                    <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Istoric Conversa╚¢ii</h3>
+                    <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Istoric Conversații</h3>
                     {courseId ? (
                       <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200/60">
                         <button
@@ -863,12 +863,12 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       <MessageCircle className="h-9 w-9 text-slate-300 mx-auto" />
                       <p className="text-sm font-semibold text-slate-700">
                         {courseId && filterMode === "course"
-                          ? "Nu ai conversa╚¢ii anterioare la acest curs."
-                          : "Nu ai nicio conversa╚¢ie anterioar─â."}
+                          ? "Nu ai conversații anterioare la acest curs."
+                          : "Nu ai nicio conversație anterioară."}
                       </p>
                       {courseId && filterMode === "course" ? (
                         <p className="text-xs text-slate-400 pb-1">
-                          Po╚¢i adresa prima ├«ntrebare la butonul de mai sus sau po╚¢i comuta pe separatoarea "Toate" pentru a vedea conversa╚¢iile de la celelalte cursuri.
+                          Poți adresa prima întrebare la butonul de mai sus sau poți comuta pe separatoarea "Toate" pentru a vedea conversațiile de la celelalte cursuri.
                         </p>
                       ) : null}
                     </div>
@@ -888,7 +888,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-[#1e3a5f] truncate pr-8">{conv.titlu || "Conversa╚¢ie nou─â"}</p>
+                            <p className="text-sm font-semibold text-[#1e3a5f] truncate pr-8">{conv.titlu || "Conversație nouă"}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-xs text-slate-400">{formatDate(conv.createdAt)}</p>
                               {!courseId && cursNume && (
@@ -903,7 +903,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                           <button
                             onClick={(e) => handleDeleteConversation(conv.id, e)}
                             className="absolute right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                            title="╚ÿterge conversa╚¢ia"
+                            title="Șterge conversația"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -925,16 +925,16 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         {isLoadingMoreConversations ? (
                           <>
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Se ├«ncarc─â mai multe conversa╚¢ii...
+                            Se încarcă mai multe conversații...
                           </>
                         ) : (
-                          "├Äncarc─â mai multe conversa╚¢ii"
+                          "Încarcă mai multe conversații"
                         )}
                       </Button>
                     </div>
                   ) : conversatii.length > 0 ? (
                     <p className="pt-3 pb-2 text-center text-xs font-medium text-slate-400">
-                      ΓÇö Toate cele {conversatii.length} conversa╚¢ii sunt afi╚Öate ΓÇö
+                      — Toate cele {conversatii.length} conversații sunt afișate —
                     </p>
                   ) : null}
                 </div>
@@ -965,7 +965,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         <div>
                           <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
                           <p className="mt-1 text-sm leading-6 text-slate-600">
-                            Te pot ajuta cu informa╚¢ii din cursurile tale. Te rog s─â selectezi un curs pentru a ├«ncepe conversa╚¢ia.
+                            Te pot ajuta cu informații din cursurile tale. Te rog să selectezi un curs pentru a începe conversația.
                           </p>
                         </div>
                       </div>
@@ -978,14 +978,14 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             value={selectedCourseId || ""}
                             onChange={(event) => setSelectedCourseId(event.target.value)}
                           >
-                            <option value="" disabled>Selecteaz─â un curs...</option>
+                            <option value="" disabled>Selectează un curs...</option>
                             {courses.map((course) => (
                               <option key={course.id} value={course.id}>{course.denumire}</option>
                             ))}
                           </select>
                         </div>
                       ) : (
-                        <p className="text-xs italic text-slate-500">Nu e╚Öti ├«nrolat la niciun curs momentan.</p>
+                        <p className="text-xs italic text-slate-500">Nu ești înrolat la niciun curs momentan.</p>
                       )}
                     </CardContent>
                   </Card>
@@ -1007,7 +1007,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
                               <p className="mt-1 text-sm leading-6 text-slate-600">
-                                Sunt preg─âtit s─â-╚¢i r─âspund la ├«ntreb─âri pe baza materialelor de la <span className="font-semibold text-slate-800">{activeCourseTitle}</span>. Adreseaz─â-mi o ├«ntrebare mai jos!
+                                Sunt pregătit să-ți răspund la întrebări pe baza materialelor de la <span className="font-semibold text-slate-800">{activeCourseTitle}</span>. Adresează-mi o întrebare mai jos!
                               </p>
                             </div>
                           </div>
@@ -1015,7 +1015,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       </Card>
 
                       <div className="space-y-3">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">├Äntreb─âri rapide</p>
+                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Întrebări rapide</p>
                         <div className="flex flex-wrap gap-2">
                           {QUICK_QUESTIONS.map((question) => (
                             <button
@@ -1051,16 +1051,16 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             {isLoadingOlderMessages ? (
                               <>
                                 <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                Se ├«ncarc─â mesajele mai vechi...
+                                Se încarcă mesajele mai vechi...
                               </>
                             ) : (
-                              "├Änc─ârcare mesaje mai vechi"
+                              "Încărcare mesaje mai vechi"
                             )}
                           </Button>
                         </div>
                       ) : messages.length > 0 ? (
                         <p className="pb-2 text-center text-[11px] font-medium text-slate-400">
-                          ΓÇö ├Änceputul conversa╚¢iei ΓÇö
+                          — Începutul conversației —
                         </p>
                       ) : null}
                       {timelineItems.map((timelineItem) => {
@@ -1071,7 +1071,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 <div>
                                   <p className="font-semibold text-[#24385b]">Quiz Aky</p>
                                   <p className="mt-1 text-xs font-medium text-slate-400">
-                                    {timelineItem.documentLabel} ΓÇó {timelineItem.nrIntrebari} ├«ntreb─âri ΓÇó {formatTime(timelineItem.createdAt)}
+                                    {timelineItem.documentLabel} • {timelineItem.nrIntrebari} întrebări • {formatTime(timelineItem.createdAt)}
                                   </p>
                                 </div>
 
@@ -1108,8 +1108,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                         </div>
                                         {selectedAnswer ? (
                                           <p className="mt-3 text-xs leading-5 text-slate-600">
-                                            <span className="font-semibold text-[#24385b]">Explica╚¢ie: </span>
-                                            {question.explicatie || "R─âspunsul corect este eviden╚¢iat mai sus."}
+                                            <span className="font-semibold text-[#24385b]">Explicație: </span>
+                                            {question.explicatie || "Răspunsul corect este evidențiat mai sus."}
                                           </p>
                                         ) : null}
                                       </div>
@@ -1163,7 +1163,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                               {isUser && message.areRaspuns === false && (
                                 <div className="flex items-center gap-1.5">
                                   <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
-                                  <span className="text-[10px] font-medium text-rose-500">Nu s-a putut r─âspunde</span>
+                                  <span className="text-[10px] font-medium text-rose-500">Nu s-a putut răspunde</span>
                                   <button
                                     onClick={() => handleRetry(message.id)}
                                     className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 transition-colors"
@@ -1182,7 +1182,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         <div className="flex flex-col items-start gap-1.5">
                           <div className="flex items-center gap-2 rounded-[1.35rem] rounded-bl-xs border border-[#e4d8cd] bg-white px-4 py-3 text-xs text-slate-600 shadow-xs">
                             <Loader2 className="h-4 w-4 animate-spin text-[#24385b]" />
-                            <span>Aky analizeaz─â materialele cursului...</span>
+                            <span>Aky analizează materialele cursului...</span>
                           </div>
                         </div>
                       ) : null}
@@ -1200,7 +1200,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                <p className="mt-1 text-sm leading-6 text-slate-600">Genereaz─â ├«ntreb─âri din materialele accesibile pentru acest curs.</p>
+                                <p className="mt-1 text-sm leading-6 text-slate-600">Generează întrebări din materialele accesibile pentru acest curs.</p>
                               </div>
                               <Button
                                 type="button"
@@ -1209,7 +1209,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 onClick={() => setQuizOpen(false)}
                                 className="rounded-xl text-xs font-semibold text-slate-500 hover:bg-[#f4f8fd]"
                               >
-                                ├Änchide
+                                Închide
                               </Button>
                             </div>
 
@@ -1232,7 +1232,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
                               >
                                 {[3, 5, 7, 10].map((count) => (
-                                  <option key={count} value={count}>{count} ├«ntreb─âri</option>
+                                  <option key={count} value={count}>{count} întrebări</option>
                                 ))}
                               </select>
                               <Button
@@ -1242,7 +1242,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 className={`h-11 rounded-xl bg-linear-to-r ${selectedTheme.accent} px-4 text-white shadow-md disabled:opacity-50`}
                               >
                                 {isGeneratingQuiz ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Genereaz─â
+                                Generează
                               </Button>
                             </div>
 
@@ -1270,7 +1270,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                           disabled={!enabled || !selectedCourseId || isSending}
                           value={draft}
                           onChange={(event) => setDraft(event.target.value)}
-                          placeholder="Scrie ├«ntrebarea ta pentru Aky..."
+                          placeholder="Scrie întrebarea ta pentru Aky..."
                           className="h-12 flex-1 rounded-2xl border-0 bg-transparent px-4 text-slate-700 shadow-none focus-visible:ring-0 disabled:opacity-60 placeholder:text-slate-400"
                         />
                         <Button

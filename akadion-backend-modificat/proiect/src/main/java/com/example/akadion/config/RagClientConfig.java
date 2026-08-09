@@ -1,4 +1,4 @@
-﻿package com.example.akadion.config;
+package com.example.akadion.config;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;

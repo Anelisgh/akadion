@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 @source "../../**/*.ftl";
 @source "../../messages/*.properties";
@@ -445,7 +445,7 @@
   }
 
   .alert-success .alert-indicator::before {
-    content: "Γ£ô";
+    content: "✓";
   }
 
   .alert-warning {

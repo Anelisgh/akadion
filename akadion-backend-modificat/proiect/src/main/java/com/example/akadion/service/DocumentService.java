@@ -1,4 +1,4 @@
-﻿package com.example.akadion.service;
+package com.example.akadion.service;
 
 import com.example.akadion.dto.DocumentResponseDto;
 import com.example.akadion.entity.Curs;
@@ -30,11 +30,11 @@ public class DocumentService {
 
     public List<DocumentResponseDto> listaDocumente(Long saptamanaId, Long callerId, String callerRole) {
         Saptamana saptamana = saptamanaRepository.findWithCursAndProfesorById(saptamanaId)
-                .orElseThrow(() -> new IllegalArgumentException("S─âpt─âm├óna nu a fost g─âsit─â."));
+                .orElseThrow(() -> new IllegalArgumentException("Săptămâna nu a fost găsită."));
 
         if (!"ADMIN".equals(callerRole)) {
             if (!saptamana.getCurs().getProfesor().getId().equals(callerId)) {
-                throw new AccesInterzisException("Nu ave╚¢i acces la documentele acestei s─âpt─âm├óni.");
+                throw new AccesInterzisException("Nu aveți acces la documentele acestei săptămâni.");
             }
         }
 
@@ -45,11 +45,11 @@ public class DocumentService {
 
     public DocumentResponseDto adaugaDocument(Long saptamanaId, Long profesorId, MultipartFile file, String titlu) {
         Saptamana saptamana = saptamanaRepository.findWithCursAndProfesorById(saptamanaId)
-                .orElseThrow(() -> new IllegalArgumentException("S─âpt─âm├óna nu a fost g─âsit─â."));
+                .orElseThrow(() -> new IllegalArgumentException("Săptămâna nu a fost găsită."));
 
         Curs curs = saptamana.getCurs();
         if (!curs.getProfesor().getId().equals(profesorId)) {
-            throw new AccesInterzisException("Nu ave╚¢i permisiunea de a ad─âuga un document ├«n aceast─â s─âpt─âm├ón─â.");
+            throw new AccesInterzisException("Nu aveți permisiunea de a adăuga un document în această săptămână.");
         }
 
         validateFile(file);
@@ -67,7 +67,7 @@ public class DocumentService {
         try {
             document = documentRepository.save(document);
         } catch (Exception e) {
-            log.error("Eroare la salvarea documentului ├«n DB local. ╚ÿtergem fi╚Öierul orfan din MinIO.", e);
+            log.error("Eroare la salvarea documentului în DB local. Ștergem fișierul orfan din MinIO.", e);
             minioStorageService.deleteFile(path);
             throw e;
         }
@@ -77,18 +77,18 @@ public class DocumentService {
         document.setStatusIndex(succes ? DocumentStatusIndex.TRIMIS : DocumentStatusIndex.ERONAT);
         Document savedDocument = documentRepository.save(document);
 
-        log.info("Document ad─âugat cu succes: docId={}, statusIndex={}", savedDocument.getId(), savedDocument.getStatusIndex());
+        log.info("Document adăugat cu succes: docId={}, statusIndex={}", savedDocument.getId(), savedDocument.getStatusIndex());
         return toResponseDto(savedDocument);
     }
 
     public DocumentResponseDto modificaDocument(Long documentId, Long profesorId, String titlu, MultipartFile fisierNou) {
         Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost g─âsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
 
         Saptamana saptamana = document.getSaptamana();
         Curs curs = saptamana.getCurs();
         if (!curs.getProfesor().getId().equals(profesorId)) {
-            throw new AccesInterzisException("Nu ave╚¢i permisiunea de a modifica acest document.");
+            throw new AccesInterzisException("Nu aveți permisiunea de a modifica acest document.");
         }
 
         if (fisierNou != null) {
@@ -125,10 +125,10 @@ public class DocumentService {
 
     public void stergeDocument(Long documentId, Long profesorId) {
         Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost g─âsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
 
         if (!document.getSaptamana().getCurs().getProfesor().getId().equals(profesorId)) {
-            throw new AccesInterzisException("Nu ave╚¢i permisiunea de a ╚Öterge acest document.");
+            throw new AccesInterzisException("Nu aveți permisiunea de a șterge acest document.");
         }
 
         document.setActiv(false);
@@ -139,15 +139,15 @@ public class DocumentService {
         }
 
         ragIngestService.stergeDinIngest(documentId);
-        log.info("Document ╚Öters cu succes: docId={}", documentId);
+        log.info("Document șters cu succes: docId={}", documentId);
     }
 
     public DocumentResponseDto reincearcaIngest(Long documentId, Long profesorId) {
         Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost g─âsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
 
         if (!document.getSaptamana().getCurs().getProfesor().getId().equals(profesorId)) {
-            throw new AccesInterzisException("Nu ave╚¢i permisiunea de a re├«ncerca indexarea pentru acest document.");
+            throw new AccesInterzisException("Nu aveți permisiunea de a reîncerca indexarea pentru acest document.");
         }
 
         if (document.getStatusIndex() == DocumentStatusIndex.TRIMIS) {
@@ -158,20 +158,20 @@ public class DocumentService {
         document.setStatusIndex(succes ? DocumentStatusIndex.TRIMIS : DocumentStatusIndex.ERONAT);
         Document savedDocument = documentRepository.save(document);
 
-        log.info("Re├«ncercare indexare finalizat─â: docId={}, statusIndex={}", savedDocument.getId(), savedDocument.getStatusIndex());
+        log.info("Reîncercare indexare finalizată: docId={}, statusIndex={}", savedDocument.getId(), savedDocument.getStatusIndex());
         return toResponseDto(savedDocument);
     }
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Fi╚Öierul ├«nc─ârcat este gol.");
+            throw new IllegalArgumentException("Fișierul încărcat este gol.");
         }
         String originalName = file.getOriginalFilename();
         String ext = (originalName != null && originalName.contains(".")) 
                 ? originalName.substring(originalName.lastIndexOf(".") + 1).toLowerCase() 
                 : "";
         if (!PERMITTED_EXTENSIONS.contains(ext)) {
-            throw new IllegalArgumentException("Tip de fi╚Öier nepermis. Sunt permise doar: pdf, docx, pptx, zip.");
+            throw new IllegalArgumentException("Tip de fișier nepermis. Sunt permise doar: pdf, docx, pptx, zip.");
         }
     }
 

@@ -1,4 +1,4 @@
-﻿package com.example.akadion.service;
+package com.example.akadion.service;
 
 import com.example.akadion.dto.AkyChatRequestDto;
 import com.example.akadion.dto.AkyChatResponseDto;
@@ -88,10 +88,10 @@ public class ConversatieService {
                     .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
             
             if (!conversatie.getUser().getId().equals(userId)) {
-                throw new AccesInterzisException("Nu sunte╚¢i proprietarul acestei conversa╚¢ii.");
+                throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
             }
             if (!conversatie.getActiv()) {
-                throw new IllegalArgumentException("Conversa╚¢ia a fost ╚Ötears─â.");
+                throw new IllegalArgumentException("Conversația a fost ștearsă.");
             }
             
             curs = conversatie.getCurs();
@@ -160,7 +160,7 @@ public class ConversatieService {
         mesaj.setRol(RolMesaj.ASISTENT);
         mesaj.setContinut(raspuns.raspuns());
         mesaj.setSurseFolosite(surseCsv);
-        mesaj.setAreRaspuns(true); // Mesajul asistentului este automat "r─âspuns" implicit
+        mesaj.setAreRaspuns(true); // Mesajul asistentului este automat "răspuns" implicit
 
         return mesajChatRepository.save(mesaj);
     }
@@ -172,7 +172,7 @@ public class ConversatieService {
         Conversatie conversatie = mesaj.getConversatie();
 
         if (!conversatie.getUser().getId().equals(userId)) {
-            throw new AccesInterzisException("Nu sunte╚¢i proprietarul acestei conversa╚¢ii.");
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
         }
 
         User user = userRepository.findById(userId)
@@ -197,7 +197,7 @@ public class ConversatieService {
                 : userCursRepository.existsByStudentIdAndCursId(user.getId(), curs.getId());
             default -> false;
         };
-        if (!acces) throw new AccesInterzisException("Nu ave╚¢i acces la acest curs.");
+        if (!acces) throw new AccesInterzisException("Nu aveți acces la acest curs.");
     }
 
     private void verificaRateLimit(Long userId) {
@@ -213,7 +213,7 @@ public class ConversatieService {
                 timestamps.pollFirst();
             }
             if (timestamps.size() >= MAX_MESSAGES_PER_MINUTE) {
-                throw new TooManyRequestsException("A╚¢i dep─â╚Öit limita de mesaje (10/minut). V─â rug─âm s─â a╚Ötepta╚¢i.");
+                throw new TooManyRequestsException("Ați depășit limita de mesaje (10/minut). Vă rugăm să așteptați.");
             }
             timestamps.addLast(now);
             return timestamps;
@@ -252,7 +252,7 @@ public class ConversatieService {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
         if (!conversatie.getUser().getId().equals(userId)) {
-            throw new AccesInterzisException("Nu sunte╚¢i proprietarul acestei conversa╚¢ii.");
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
         }
 
         Long cursor = (inainteDe != null) ? inainteDe : Long.MAX_VALUE;
@@ -278,7 +278,7 @@ public class ConversatieService {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
         if (!conversatie.getUser().getId().equals(userId)) {
-            throw new AccesInterzisException("Nu sunte╚¢i proprietarul acestei conversa╚¢ii.");
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
         }
         return mesajChatRepository.findByConversatieIdOrderByCreatedAtAsc(conversatieId);
     }
@@ -307,9 +307,10 @@ public class ConversatieService {
         Conversatie conversatie = conversatieRepository.findById(conversatieId)
                 .orElseThrow(() -> new ResursaNegasitaException("Conversatia nu exista"));
         if (!conversatie.getUser().getId().equals(userId)) {
-            throw new AccesInterzisException("Nu sunte╚¢i proprietarul acestei conversa╚¢ii.");
+            throw new AccesInterzisException("Nu sunteți proprietarul acestei conversații.");
         }
         conversatie.setActiv(false);
         conversatieRepository.save(conversatie);
     }
 }
+

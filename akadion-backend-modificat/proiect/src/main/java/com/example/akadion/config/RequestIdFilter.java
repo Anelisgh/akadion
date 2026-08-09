@@ -1,4 +1,4 @@
-﻿package com.example.akadion.config;
+package com.example.akadion.config;
 
 import java.io.IOException;
 import java.util.UUID;

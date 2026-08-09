@@ -1,4 +1,4 @@
-﻿package com.example.akadion.config;
+package com.example.akadion.config;
 
 import com.example.akadion.repository.UserRepository;
 import com.example.akadion.security.CsrfCookieFilter;

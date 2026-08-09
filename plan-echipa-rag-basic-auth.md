@@ -1,14 +1,14 @@
-﻿# Plan pentru echipa RAG/FastAPI: Autentificare Basic Auth
+# Plan pentru echipa RAG/FastAPI: Autentificare Basic Auth
 
 ## Context (scurt)
 
-Backend-ul Spring Boot apeleaz─â serviciul vostru FastAPI pe 3 rute: `POST /ingest`, `DELETE /ingest/{id}`, `POST /chat`. **Acum, backend-ul Java a fost deja configurat s─â trimit─â un header de Basic Auth la fiecare cerere.** Pentru a ├«nchide circuitul de securitate, FastAPI trebuie s─â confirme c─â acele creden╚¢iale sunt corecte ├«nainte s─â proceseze cererea.
+Backend-ul Spring Boot apelează serviciul vostru FastAPI pe 3 rute: `POST /ingest`, `DELETE /ingest/{id}`, `POST /chat`. **Acum, backend-ul Java a fost deja configurat să trimită un header de Basic Auth la fiecare cerere.** Pentru a închide circuitul de securitate, FastAPI trebuie să confirme că acele credențiale sunt corecte înainte să proceseze cererea.
 
-**Ce NU e asta:** nu e autentificare de utilizator individual (student/profesor). Cine are voie s─â pun─â ├«ntreb─âri pe ce curs e deja verificat complet de Spring Boot, ├«nainte ca request-ul s─â ajung─â la voi. Voi nu trebuie s─â ╚Öti╚¢i nimic despre roluri, studen╚¢i sau cursuri ΓÇö doar s─â confirma╚¢i "acest request vine chiar de la backend-ul nostru Java", nu altceva.
+**Ce NU e asta:** nu e autentificare de utilizator individual (student/profesor). Cine are voie să pună întrebări pe ce curs e deja verificat complet de Spring Boot, înainte ca request-ul să ajungă la voi. Voi nu trebuie să știți nimic despre roluri, studenți sau cursuri — doar să confirmați "acest request vine chiar de la backend-ul nostru Java", nu altceva.
 
-## Ce trebuie s─â face╚¢i
+## Ce trebuie să faceți
 
-### 1. Ad─âuga╚¢i o dependency de verificare, aplicat─â pe toate cele 3 rute existente
+### 1. Adăugați o dependency de verificare, aplicată pe toate cele 3 rute existente
 
 ```python
 from fastapi import Depends, HTTPException
@@ -28,27 +28,27 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 ```
 
-Aplica╚¢i-o pe toate 3 rutele:
+Aplicați-o pe toate 3 rutele:
 ```python
 @app.post("/ingest", dependencies=[Depends(verify_credentials)])
 @app.delete("/ingest/{document_id}", dependencies=[Depends(verify_credentials)])
 @app.post("/chat", dependencies=[Depends(verify_credentials)])
 ```
 
-**De ce `secrets.compare_digest` ╚Öi nu `==`:** o compara╚¢ie obi╚Önuit─â de string-uri (`==`) se opre╚Öte la primul caracter diferit, ceea ce face teoretic posibil un timing attack (cineva poate ghici parola caracter cu caracter m─âsur├ónd c├ót dureaz─â r─âspunsul). `compare_digest` compar─â ├«n timp constant. E un singur cuv├ónt ├«n plus de scris, nu cost─â nimic s─â-l folosi╚¢i corect.
+**De ce `secrets.compare_digest` și nu `==`:** o comparație obișnuită de string-uri (`==`) se oprește la primul caracter diferit, ceea ce face teoretic posibil un timing attack (cineva poate ghici parola caracter cu caracter măsurând cât durează răspunsul). `compare_digest` compară în timp constant. E un singur cuvânt în plus de scris, nu costă nimic să-l folosiți corect.
 
-### 2. Configura╚¢i mediul local (╚Öi produc╚¢ia)
+### 2. Configurați mediul local (și producția)
 
-Pentru dezvoltarea local─â, backend-ul a fost configurat s─â trimit─â automat urm─âtoarele date (fallback implicit):
-- `RAG_SERVICE_USERNAME=<setat ├«n mediul local sau de deploy>`
-- `RAG_SERVICE_PASSWORD=<setat ├«n mediul local sau de deploy>`
+Pentru dezvoltarea locală, backend-ul a fost configurat să trimită automat următoarele date (fallback implicit):
+- `RAG_SERVICE_USERNAME=<setat în mediul local sau de deploy>`
+- `RAG_SERVICE_PASSWORD=<setat în mediul local sau de deploy>`
 
-V─â pute╚¢i configura mediul local s─â foloseasc─â direct aceste creden╚¢iale ├«n `.env`. Pentru produc╚¢ie, Anelis v─â va furniza un secret real pe care ├«l ve╚¢i pune ├«n variabilele de mediu, care va suprascrie aceste valori locale.
+Vă puteți configura mediul local să folosească direct aceste credențiale în `.env`. Pentru producție, Anelis vă va furniza un secret real pe care îl veți pune în variabilele de mediu, care va suprascrie aceste valori locale.
 
-### 3. Testa╚¢i manual cu `curl` ├«nainte s─â confirma╚¢i c─â e gata
+### 3. Testați manual cu `curl` înainte să confirmați că e gata
 
 ```bash
-# F─âr─â header de autentificare -> trebuie sa primiti 401
+# Fără header de autentificare -> trebuie sa primiti 401
 curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{}'
 
 # Cu credentiale gresite -> trebuie sa primiti tot 401
@@ -58,21 +58,21 @@ curl -X POST http://localhost:8000/chat -u utilizator_gresit:parola_gresita -H "
 curl -X POST http://localhost:8000/chat -u USERNAME_REAL:PAROLA_REALA -H "Content-Type: application/json" -d '{}'
 ```
 
-## Ce NU trebuie s─â face╚¢i
+## Ce NU trebuie să faceți
 
-- Nu integra╚¢i nimic cu Keycloak ΓÇö Basic Auth-ul ─âsta e complet independent de sistemul de autentificare al utilizatorilor.
-- Nu valida╚¢i roluri (student/profesor/admin) ΓÇö asta r─âm├óne exclusiv responsabilitatea backend-ului Spring.
-- Nu stoca╚¢i parole de utilizatori sau vreun alt secret ΓÇö doar acest username+parol─â unic, de serviciu, partajat cu backend-ul.
-- Nu schimba╚¢i nimic din logica de ingestie, embeddings, sau formatul r─âspunsurilor pe care le trimite╚¢i acum ΓÇö se adaug─â strict un pas de verificare la intrarea ├«n fiecare rut─â, nimic altceva.
+- Nu integrați nimic cu Keycloak — Basic Auth-ul ăsta e complet independent de sistemul de autentificare al utilizatorilor.
+- Nu validați roluri (student/profesor/admin) — asta rămâne exclusiv responsabilitatea backend-ului Spring.
+- Nu stocați parole de utilizatori sau vreun alt secret — doar acest username+parolă unic, de serviciu, partajat cu backend-ul.
+- Nu schimbați nimic din logica de ingestie, embeddings, sau formatul răspunsurilor pe care le trimiteți acum — se adaugă strict un pas de verificare la intrarea în fiecare rută, nimic altceva.
 
-## O not─â despre securitate ├«n re╚¢ea (informativ, nu neap─ârat de ac╚¢ionat acum)
+## O notă despre securitate în rețea (informativ, nu neapărat de acționat acum)
 
-Basic Auth trimite creden╚¢ialele codate base64 (nu criptate) ΓÇö e sigur doar dac─â traficul dintre Spring Boot ╚Öi FastAPI r─âm├óne intern (aceea╚Öi re╚¢ea Docker, nu expus public). Dac─â la un moment dat serviciul vostru devine accesibil direct din exterior, va trebui pus ├«n spatele unui proxy HTTPS ΓÇö dar asta nu e o grij─â a voastr─â acum, c├ót timp comunica╚¢i doar intern cu backend-ul.
+Basic Auth trimite credențialele codate base64 (nu criptate) — e sigur doar dacă traficul dintre Spring Boot și FastAPI rămâne intern (aceeași rețea Docker, nu expus public). Dacă la un moment dat serviciul vostru devine accesibil direct din exterior, va trebui pus în spatele unui proxy HTTPS — dar asta nu e o grijă a voastră acum, cât timp comunicați doar intern cu backend-ul.
 
 ## Checklist rapid
 
 - [ ] Implementat `verify_credentials` (cu `secrets.compare_digest`, nu `==`)
 - [ ] Aplicat pe toate 3 rutele: `/ingest` (POST), `/ingest/{id}` (DELETE), `/chat` (POST)
-- [ ] Seta╚¢i variabilele de mediu pentru testare local─â f─âr─â a le p─âstra ├«n fi╚Öiere urm─ârite de Git
-- [ ] Testat cu `curl`: f─âr─â auth ΓåÆ 401, auth gre╚Öit ΓåÆ 401, auth corect ΓåÆ trece
-- [ ] Confirmat c─âtre Anelis c─â e gata (Not─â: Partea de Spring Boot a fost deja implementat─â ╚Öi trimite header-ul)
+- [ ] Setați variabilele de mediu pentru testare locală fără a le păstra în fișiere urmărite de Git
+- [ ] Testat cu `curl`: fără auth → 401, auth greșit → 401, auth corect → trece
+- [ ] Confirmat către Anelis că e gata (Notă: Partea de Spring Boot a fost deja implementată și trimite header-ul)

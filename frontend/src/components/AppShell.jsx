@@ -1,4 +1,4 @@
-﻿import { AlertCircle, BookOpenText, Bot, ChevronDown, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
+import { AlertCircle, BookOpenText, Bot, ChevronDown, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -102,7 +102,7 @@ function CourseTabsNav({ user, onNavClick }) {
             }
           >
             <Home className="h-4 w-4" />
-            <span>Acas─â</span>
+            <span>Acasă</span>
           </NavLink>
         ) : null}
 
@@ -270,7 +270,7 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
                     className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#f7efe6] hover:text-[#24385b]"
                   >
                     <Bot className="h-4 w-4" />
-                    Descoper─â Aky
+                    Descoperă Aky
                   </Link>
                   <button
                     type="button"
@@ -315,7 +315,7 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
                   <Button asChild variant="outline" className="rounded-xl border-[#d9ccbe] bg-white">
                     <Link to="/discover-aky" onClick={() => setMobileOpen(false)}>
                       <Bot className="h-4 w-4" />
-                      Descoper─â Aky
+                      Descoperă Aky
                     </Link>
                   </Button>
                   <Button type="button" variant="outline" onClick={handleLogout} className="rounded-xl border-[#d9ccbe] bg-white">
@@ -372,3 +372,4 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
     </main>
   )
 }
+

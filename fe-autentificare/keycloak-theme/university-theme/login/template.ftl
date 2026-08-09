@@ -1,4 +1,4 @@
-﻿<#import "footer.ftl" as loginFooter>
+<#import "footer.ftl" as loginFooter>
 <#macro registrationLayout bodyClass="" displayInfo=false displayMessage=true displayRequiredFields=false>
 <!DOCTYPE html>
 <html class="${properties.kcHtmlClass!}" lang="${lang}"<#if realm.internationalizationEnabled> dir="${(locale.rtl)?then('rtl','ltr')}"</#if>>
@@ -11,7 +11,7 @@
         </#list>
     </#if>
     <#if bodyClass?contains("page-update-password")>
-        <title>${msg("updatePasswordTitle", "Actualizare parol─â")} - ${(realm.displayName!msg("platformName"))}</title>
+        <title>${msg("updatePasswordTitle", "Actualizare parolă")} - ${(realm.displayName!msg("platformName"))}</title>
     <#elseif bodyClass?contains("page-forgot-password")>
         <title>${msg("emailForgotTitle", "Ai uitat parola?")} - ${(realm.displayName!msg("platformName"))}</title>
     <#elseif bodyClass?contains("page-register")>

@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
@@ -324,7 +324,7 @@
     }
   }
 
-  /* ΓöÇΓöÇ Clase identice cu tema Keycloak (overrides pe `complete-profile-brand-content`) ΓöÇΓöÇΓöÇ */
+  /* ── Clase identice cu tema Keycloak (overrides pe `complete-profile-brand-content`) ─── */
 
   .complete-profile-brand-content .brand-header {
     width: 100%;
@@ -456,7 +456,7 @@
     min-width: 0;
   }
 
-  /* ΓöÇΓöÇ Badge Aky RAG ΓÇö info-card static, identic cu Keycloak ΓöÇΓöÇΓöÇ */
+  /* ── Badge Aky RAG — info-card static, identic cu Keycloak ─── */
 
   .auth-aky-badge {
     display: inline-flex !important;
@@ -541,7 +541,7 @@
   }
 
 
-  /* ΓöÇΓöÇ Buton stilizat identic cu Keycloak (.btn .btn-primary .btn-block .btn-lg) ΓöÇΓöÇΓöÇ */
+  /* ── Buton stilizat identic cu Keycloak (.btn .btn-primary .btn-block .btn-lg) ─── */
 
   .btn {
     height: 3rem !important;

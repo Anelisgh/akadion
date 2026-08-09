@@ -1,4 +1,4 @@
-﻿package com.example.akadion.config;
+package com.example.akadion.config;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
