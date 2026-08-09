@@ -1,6 +1,6 @@
 {
   "id" : "bf781c99-7eee-46cc-bd64-25412513281c",
-  "realm" : "Akadion",
+  "realm" : "akadion",
   "notBefore" : 0,
   "defaultSignatureAlgorithm" : "RS256",
   "revokeRefreshToken" : false,

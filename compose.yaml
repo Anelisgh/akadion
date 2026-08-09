@@ -60,16 +60,10 @@ services:
       - ./keycloak-import:/opt/keycloak/data/import
     depends_on:
       - postgres
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/akadion"]
-      interval: 5s
-      timeout: 5s
-      retries: 15
-      start_period: 10s
 
   backend:
     build:
-      context: ./akadion-backend-modificat/proiect
+      context: ./backend/proiect
       dockerfile: Dockerfile
     container_name: akadion-backend
     restart: unless-stopped
@@ -107,7 +101,7 @@ services:
       postgres:
         condition: service_started
       keycloak:
-        condition: service_healthy
+        condition: service_started
       minio:
         condition: service_started
     healthcheck:

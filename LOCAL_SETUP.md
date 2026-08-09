@@ -95,7 +95,7 @@ Oprire cu stergerea volumelor locale:
 Backend tests:
 
 ```powershell
-cd .\akadion-backend-modificat\proiect
+cd .\backend\proiect
 .\mvnw.cmd test
 .\mvnw.cmd package -DskipTests
 ```
