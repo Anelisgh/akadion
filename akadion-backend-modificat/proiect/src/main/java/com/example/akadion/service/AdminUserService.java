@@ -215,6 +215,9 @@ public class AdminUserService {
         User savedUser = userRepository.save(user);
 
         // Regulă de simetrie: Cursurile profesorului reactivat RĂMÂN inactive (nu se reactivează automat).
+        if (savedUser.getRol() != null && "STUDENT".equals(savedUser.getRol().getDenumire())) {
+            userCursRepository.reactiveazaInrolariStudent(userId);
+        }
         
         return savedUser;
     }

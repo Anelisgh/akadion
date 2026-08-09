@@ -13,14 +13,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.util.UriComponentsBuilder;
 
 // Această clasă reprezintă "portarul" principal al aplicației. Ea definește cine are voie să intre, 
 // pe ce căi, ce filtre de securitate se aplică și cum se face logarea/delogarea.
@@ -28,6 +30,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableWebSecurity // Activăm securitatea web în Spring.
 @EnableMethodSecurity // Permite securizarea metodelor individuale folosind adnotații (de ex: @PreAuthorize("hasRole('ADMIN')")).
 public class SecurityConfig {
+
+    private static final String LOGOUT_SUCCESS_PATH = "/logout-success";
 
     // Injectăm toate componentele noastre personalizate de securitate.
     private final CustomAuthoritiesMapper customAuthoritiesMapper;
@@ -38,6 +42,12 @@ public class SecurityConfig {
 
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
+
+    @Value("${app.keycloak.browser-base-url:http://localhost:8080}")
+    private String keycloakBrowserBaseUrl;
+
+    @Value("${app.keycloak.realm}")
+    private String keycloakRealm;
 
     public SecurityConfig(CustomAuthoritiesMapper customAuthoritiesMapper,
                           CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
@@ -53,12 +63,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        // Handler pentru delogare automată și din Keycloak.
-        // După ce utilizatorul se deloghează, Keycloak îl va trimite înapoi pe adresa de frontend (ex: http://localhost:5173).
-        OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler =
-                new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
-        logoutSuccessHandler.setPostLogoutRedirectUri(frontendBaseUrl);
 
         http
             // 1. Configurăm regulile CORS stabilite în CorsConfig.
@@ -115,10 +119,31 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .deleteCookies("JSESSIONID", "XSRF-TOKEN")
-                .logoutSuccessHandler(logoutSuccessHandler)
+                .logoutSuccessHandler(keycloakLogoutSuccessHandler())
             );
 
         return http.build();
+    }
+
+    private LogoutSuccessHandler keycloakLogoutSuccessHandler() {
+        return (request, response, authentication) -> {
+            String logoutSuccessUrl = frontendBaseUrl + LOGOUT_SUCCESS_PATH;
+
+            if (!(authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser)) {
+                response.sendRedirect(logoutSuccessUrl);
+                return;
+            }
+
+            String logoutUrl = UriComponentsBuilder.fromUriString(keycloakBrowserBaseUrl)
+                    .pathSegment("realms", keycloakRealm, "protocol", "openid-connect", "logout")
+                    .queryParam("id_token_hint", oidcUser.getIdToken().getTokenValue())
+                    .queryParam("post_logout_redirect_uri", frontendBaseUrl)
+                    .build()
+                    .encode()
+                    .toUriString();
+
+            response.sendRedirect(logoutUrl);
+        };
     }
 
     @Bean

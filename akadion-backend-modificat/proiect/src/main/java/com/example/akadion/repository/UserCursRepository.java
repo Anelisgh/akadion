@@ -47,4 +47,8 @@ public interface UserCursRepository extends JpaRepository<UserCurs, Long> {
     @Modifying
     @Query("UPDATE UserCurs uc SET uc.activ = false WHERE uc.student.id = :studentId")
     void dezactiveazaInrolariStudent(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("UPDATE UserCurs uc SET uc.activ = true WHERE uc.student.id = :studentId")
+    void reactiveazaInrolariStudent(@Param("studentId") Long studentId);
 }

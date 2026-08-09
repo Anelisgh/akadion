@@ -1,0 +1,49 @@
+# Validare Sigură a Conținutului Fișierelor cu Apache Tika (Final)
+
+Acest plan include toate rafinamentele discutate cu Claude, adăugând siguranță maximă prin teste automate și ordonarea corectă a operațiilor.
+
+## User Review Required
+
+> [!IMPORTANT]
+> Vă rog să aprobați planul finalizat de mai jos. Acesta include acum și adăugarea de **teste unitare** (care lipseau complet pentru `DocumentService`), precum și confirmările tehnice solicitate (ordinea operațiilor și citirea dublă).
+
+## Open Questions
+
+Nu există întrebări deschise. Toate punctele au fost investigate și confirmate.
+
+## Răspunsuri la verificările ridicate de Claude:
+
+1. **Ordinea operațiilor la înlocuire (PUT):** Am verificat codul din `DocumentService.java`. Linia `validateFile(fisierNou)` este **prima** linie în interiorul blocului `if (fisierNou != null)`, deci fișierul este validat *înainte* ca MinIO să steargă vechiul fișier sau să îl uploadeze pe cel nou. Nu există riscul de a ajunge într-o stare coruptă.
+2. **Citirea dublă (getBytes vs getInputStream):** `DocumentService` va apela `file.getBytes()` pentru validare. Apoi, `MinioStorageService` va apela `file.getInputStream()`. Pentru implementarea standard Spring (`StandardMultipartFile`), acest lucru este perfect sigur; fiecare apel creează o nouă citire din sursa temporară de pe disc/memorie.
+3. **Utilizarea `getContentType()`:** Am verificat întreg proiectul. Singurul loc unde se folosește `getContentType()` este în `MinioStorageService` pentru a seta header-ul în S3. Deoarece noi validăm riguros tipul MIME real *înainte* de a apela S3, chiar dacă clientul trimite un header falsificat, nu va trece de bariera Tika (dacă extensia și conținutul nu bat).
+
+## Proposed Changes
+
+### Proiect Backend (Maven)
+
+#### [MODIFY] [pom.xml](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/pom.xml)
+- Adăugăm dependența `tika-core`, versiunea **3.3.0**.
+- Adăugăm dependența `spring-boot-starter-test` / `mockito` (dacă nu există deja, deși e prezentă by default).
+
+### Service Documente
+
+#### [MODIFY] [DocumentService.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/main/java/com/example/akadion/service/DocumentService.java)
+- Vom instanția Tika o singură dată ca o constantă statică: `private static final Tika TIKA = new Tika();`.
+- Vom adăuga `MIME_PERMISE`.
+- Modificăm `validateFile` pentru a utiliza `TIKA.detect(file.getBytes())`.
+- Vom adăuga un mic comentariu în cod deasupra metodei pentru a fi clar viitorilor developeri: *"Validarea cu Tika se asigură că extensia fișierului corespunde formatului real (previne mascarea executabilelor în .pdf). NU scanează de malware/viruși (ex: macro-uri în .docx)."*
+
+### Teste (NOU)
+
+#### [NEW] [DocumentServiceTest.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/test/java/com/example/akadion/service/DocumentServiceTest.java)
+- Creăm o clasă nouă de teste unitare pentru `DocumentService` cu Mockito.
+- Adăugăm un test în care dăm un `MockMultipartFile` valid, conținând magic bytes de PDF (`%PDF-1.4...`), care ar trebui să treacă de `validateFile`.
+- Adăugăm un test în care dăm un `MockMultipartFile` denumit `test.pdf` dar al cărui conținut sunt bytes de text obișnuit (`"Un text fals"`). Ne vom asigura că aruncă `IllegalArgumentException`.
+
+## Verification Plan
+
+### Automated Tests
+- `mvn test -Dtest=DocumentServiceTest` se va rula pentru a valida comportamentul corect. 
+
+### Manual Verification
+1. Încărcare de fișiere legitime și fișiere alterate via Postman sau direct în UI pentru testare end-to-end.

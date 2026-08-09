@@ -70,6 +70,7 @@ services:
       - "8081:8081"
     environment:
       - APP_KEYCLOAK_BASE_URL=http://keycloak:8080
+      - APP_KEYCLOAK_BROWSER_BASE_URL=http://localhost:8080
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/akadion
       - APP_FRONTEND_BASE_URL=http://localhost:5173
       - MINIO_URL=http://minio:9000
