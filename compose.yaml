@@ -52,7 +52,7 @@ services:
       - KC_DB_USERNAME=myuser
       - KC_DB_PASSWORD=${DB_PASSWORD:-parola123}
     # --hostname-strict=false permite accesul atat din browser (localhost) cat si intern (keycloak)
-    command: start-dev --import-realm --hostname=http://localhost:8080 --hostname-strict=false
+    command: start-dev --import-realm --hostname-strict=false
     ports:
       - "8080:8080"
     volumes:
@@ -60,6 +60,12 @@ services:
       - ./keycloak-import:/opt/keycloak/data/import
     depends_on:
       - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/akadion"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
 
   backend:
     build:
@@ -98,9 +104,18 @@ services:
       - default
       - akadion_shared
     depends_on:
-      - postgres
-      - keycloak
-      - minio
+      postgres:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
 
   jaeger:
     image: jaegertracing/all-in-one:1.66.0
@@ -124,7 +139,8 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   minio_data:
