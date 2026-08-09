@@ -580,12 +580,10 @@ export default function CourseDetailPage() {
 
     setUploadErrors((current) => ({ ...current, [week.id]: "" }))
     setActiveAction(`upload-document-${week.id}`)
+    setPageError("")
 
     try {
-      await runCourseRequest(
-        () => uploadWeekDocument(week.id, { titlu: draft.titlu, file: draft.file }),
-        "Nu am putut încărca documentul.",
-      )
+      await uploadWeekDocument(week.id, { titlu: draft.titlu, file: draft.file })
       const refreshedDocuments = await listWeekDocuments(week.id)
       setUploadDrafts((current) => ({ ...current, [week.id]: { titlu: "", file: null } }))
       setUploadErrors((current) => ({ ...current, [week.id]: "" }))
@@ -594,8 +592,14 @@ export default function CourseDetailPage() {
       }
       setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
       setPageNotice("Documentul a fost încărcat.")
-    } catch {
-      // Error message is already mapped by runCourseRequest.
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await refreshAuth()
+      }
+      setUploadErrors((current) => ({
+        ...current,
+        [week.id]: getCourseErrorMessage(error, "Nu am putut încărca documentul."),
+      }))
     } finally {
       setActiveAction("")
     }
@@ -606,17 +610,19 @@ export default function CourseDetailPage() {
     const titlu = draft.titlu ?? document.titlu ?? ""
 
     if (!titlu.trim() && !draft.file) {
-      setPageError("Adaugă un titlu sau alege un fișier nou pentru document.")
-      return
+      setUploadErrors((current) => ({
+        ...current,
+        [`doc-${document.id}`]: "Adaugă un titlu sau alege un fișier nou pentru document.",
+      }))
+      return false
     }
 
+    setUploadErrors((current) => ({ ...current, [`doc-${document.id}`]: "" }))
     setActiveAction(`update-document-${document.id}`)
+    setPageError("")
 
     try {
-      await runCourseRequest(
-        () => updateWeekDocument(document.id, { titlu, file: draft.file }),
-        "Nu am putut actualiza documentul.",
-      )
+      await updateWeekDocument(document.id, { titlu, file: draft.file })
       const refreshedDocuments = await listWeekDocuments(week.id)
       setDocumentDrafts((current) => ({ ...current, [document.id]: { titlu, file: null } }))
       if (documentFileInputRefs.current[document.id]) {
@@ -624,8 +630,16 @@ export default function CourseDetailPage() {
       }
       setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
       setPageNotice("Documentul a fost actualizat.")
-    } catch {
-      // Error message is already mapped by runCourseRequest.
+      return true
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await refreshAuth()
+      }
+      setUploadErrors((current) => ({
+        ...current,
+        [`doc-${document.id}`]: getCourseErrorMessage(error, "Nu am putut actualiza documentul."),
+      }))
+      return false
     } finally {
       setActiveAction("")
     }
@@ -906,21 +920,7 @@ export default function CourseDetailPage() {
           </>
         ) : null}
 
-        {pageError ? (
-          <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Eroare</AlertTitle>
-            <AlertDescription>{pageError}</AlertDescription>
-          </Alert>
-        ) : null}
 
-        {pageNotice ? (
-          <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
-            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-            <AlertTitle>Actualizare reușită</AlertTitle>
-            <AlertDescription className="text-emerald-800">{pageNotice}</AlertDescription>
-          </Alert>
-        ) : null}
 
         {pageLoading ? (
           <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white/92 shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
@@ -1004,6 +1004,14 @@ export default function CourseDetailPage() {
                   </CardContent>
                 ) : null}
               </Card>
+            ) : null}
+
+            {pageNotice ? (
+              <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                <AlertTitle>Actualizare reușită</AlertTitle>
+                <AlertDescription className="text-emerald-800">{pageNotice}</AlertDescription>
+              </Alert>
             ) : null}
 
             <div className="flex w-fit max-w-full flex-wrap gap-2 rounded-[1.6rem] border border-[#e4d8cd] bg-white/74 p-2 shadow-[0_14px_34px_rgba(32,46,84,0.06)]">
@@ -1159,6 +1167,13 @@ export default function CourseDetailPage() {
                                   <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Document nou</p>
                                   <p className="mt-1 text-sm text-slate-500">Încarcă materiale pentru această săptămână.</p>
                                 </div>
+                                {uploadErrors[week.id] ? (
+                                  <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Eroare încărcare document</AlertTitle>
+                                    <AlertDescription>{uploadErrors[week.id]}</AlertDescription>
+                                  </Alert>
+                                ) : null}
                                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start">
                                   <div className="space-y-2">
                                     <Label htmlFor={`upload-title-${week.id}`} className="text-xs font-semibold tracking-[0.16em] text-slate-600">TITLU DOCUMENT</Label>
@@ -1201,16 +1216,7 @@ export default function CourseDetailPage() {
                                     {activeAction === `upload-document-${week.id}` ? "Se încarcă..." : "Încarcă documentul"}
                                   </Button>
                                 </div>
-                                {uploadErrors[week.id] ? (
-                                  <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-rose-700 shadow-[0_12px_30px_rgba(225,29,72,0.08)]">
-                                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
-                                    <div>
-                                      <p className="text-sm font-bold text-rose-700">Nu putem încărca documentul încă</p>
-                                      <p className="mt-1 text-sm font-semibold leading-6 text-rose-600">{uploadErrors[week.id]}</p>
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </form>
+                                </form>
                             ) : null}
 
                             <div className="space-y-3">
@@ -1314,6 +1320,13 @@ export default function CourseDetailPage() {
                                       {/* Edit form — revealed only when editing */}
                                       {canEdit && isEditing ? (
                                         <div className="border-t border-[#e4d8cd] bg-[#faf6f1] p-4">
+                                          {uploadErrors[`doc-${document.id}`] ? (
+                                            <Alert variant="destructive" className="mb-4 rounded-3xl border-rose-200 bg-rose-50/50">
+                                              <AlertCircle className="h-4 w-4" />
+                                              <AlertTitle>Eroare</AlertTitle>
+                                              <AlertDescription>{uploadErrors[`doc-${document.id}`]}</AlertDescription>
+                                            </Alert>
+                                          ) : null}
                                           <p className="mb-3 text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">Editare document</p>
                                           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
                                             <div className="space-y-1.5">
@@ -1340,8 +1353,10 @@ export default function CourseDetailPage() {
                                             <Button
                                               type="button"
                                               onClick={async () => {
-                                                await handleUpdateDocument(document, week)
-                                                setEditingDocumentIds((c) => ({ ...c, [document.id]: false }))
+                                                const success = await handleUpdateDocument(document, week)
+                                                if (success) {
+                                                  setEditingDocumentIds((c) => ({ ...c, [document.id]: false }))
+                                                }
                                               }}
                                               disabled={Boolean(activeAction)}
                                               className={cn("rounded-2xl text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}
