@@ -6,16 +6,15 @@ import com.example.akadion.entity.Document;
 import com.example.akadion.entity.DocumentStatusIndex;
 import com.example.akadion.entity.Saptamana;
 import com.example.akadion.exception.AccesInterzisException;
+import com.example.akadion.exception.DocumentDuplicatException;
 import com.example.akadion.repository.DocumentRepository;
 import com.example.akadion.repository.SaptamanaRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.tika.Tika;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.akadion.exception.DocumentDuplicatException;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -139,13 +138,11 @@ public class DocumentService {
         if (!curs.getProfesor().getId().equals(profesorId)) {
             throw new AccesInterzisException("Nu aveți permisiunea de a modifica acest document.");
         }
-
         String vechiulTitlu = document.getTitlu();
 
         if (fisierNou != null) {
             byte[] fileBytes = validateFile(fisierNou);
             String hashNou = calculeazaHash(fileBytes);
-
             if (documentRepository.existsBySaptamanaIdAndHashContinutAndIdNotAndActivTrue(saptamana.getId(), hashNou, documentId)) {
                 throw new DocumentDuplicatException("Acest fișier a fost deja încărcat în această săptămână.");
             }
@@ -274,10 +271,10 @@ public class DocumentService {
             throw new IllegalArgumentException("Fișierul încărcat este gol.");
         }
         String originalName = file.getOriginalFilename();
-        String ext = (originalName != null && originalName.contains(".")) 
-                ? originalName.substring(originalName.lastIndexOf(".") + 1).toLowerCase() 
+        String ext = (originalName != null && originalName.contains("."))
+                ? originalName.substring(originalName.lastIndexOf(".") + 1).toLowerCase()
                 : "";
-                
+
         Set<String> validMimes = EXPECTED_MIME_TYPES.get(ext);
         if (validMimes == null) {
             throw new IllegalArgumentException("Tip de fișier nepermis. Sunt permise doar: pdf, docx, pptx, zip.");
@@ -306,12 +303,12 @@ public class DocumentService {
             throw new RuntimeException("Eroare la calcularea hash-ului", e);
         }
     }
-    
+
     private String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (int i = 0; i < hash.length; i++) {
-            String hex = Integer.toHexString(0xff & hash[i]);
-            if(hex.length() == 1) {
+        for (byte currentByte : hash) {
+            String hex = Integer.toHexString(0xff & currentByte);
+            if (hex.length() == 1) {
                 hexString.append('0');
             }
             hexString.append(hex);
