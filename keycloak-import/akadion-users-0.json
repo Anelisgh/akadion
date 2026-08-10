@@ -1,5 +1,5 @@
 {
-  "realm" : "akadion",
+  "realm" : "Akadion",
   "users" : [ {
     "id" : "5186b9ef-a846-45b6-b640-6ab114fb8dfa",
     "username" : "admin@akadion.com",
@@ -18,7 +18,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-akadion" ],
+    "realmRoles" : [ "default-roles-Akadion" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -32,10 +32,7 @@
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-akadion" ],
-    "clientRoles" : {
-      "realm-management" : [ "manage-users", "view-users" ]
-    },
+    "realmRoles" : [ "default-roles-Akadion" ],
     "notBefore" : 0,
     "groups" : [ ]
   } ]

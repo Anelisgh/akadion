@@ -11,6 +11,9 @@ import CoursesPage from "@/pages/CoursesPage"
 import CourseDetailPage from "@/pages/CourseDetailPage"
 import NewCoursePage from "@/pages/NewCoursePage"
 import ProfilePage from "@/pages/ProfilePage"
+import DiscoverAkyPage from "@/pages/DiscoverAkyPage"
+import OwlHall from "@/pages/OwlHall"
+import LogoutPage from "@/pages/LogoutPage"
 import AppShell from "@/components/AppShell"
 import { getRoleLabel, getUserDisplayName, getUserInitials, isAdminUser, isProfessorUser } from "@/lib/user"
 import { startLogout } from "@/auth/logout"
@@ -19,12 +22,8 @@ import akyRagLogo from "@/assets/logo_RAG-removebg-preview.png"
 
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCheck,
-  Clock3,
-  RefreshCcw,
-  Sparkles,
   UserCog,
   UserMinus,
   UserPlus,
@@ -245,7 +244,7 @@ function LegacyUsersRedirect() {
     return <Navigate to={routeByState[user?.stareCont] ?? "/"} replace />
   }
 
-  return <Navigate to={isAdminUser(user) ? "/admin/users" : getActiveHomeRoute(user)} replace />
+  return <Navigate to={getActiveHomeRoute(user)} replace />
 }
 
 function RequireActiveProfessor({ children }) {
@@ -278,10 +277,22 @@ function ActiveHomePage() {
   return <DashboardPage />
 }
 
-function UserStateBadge({ state, label }) {
+function RootRoute() {
+  if (window.sessionStorage.getItem("akadion:logout-success-pending") === "1") {
+    return <Navigate to="/logout-success" replace />
+  }
+
+  return (
+    <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+      <ActiveHomePage />
+    </RequireAuthenticatedState>
+  )
+}
+
+function UserStateBadge({ state, label, className = "" }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${stateBadgeClasses[state] ?? "border-slate-200 bg-slate-50 text-slate-600"} ${className}`}
     >
       {label ?? stateLabels[state] ?? state}
     </span>
@@ -450,10 +461,13 @@ function CompleteProfilePage() {
             {/* Badge Aky RAG — aliniat la dreapta identic cu Keycloak */}
             <div className="flex w-full justify-end">
               <div className="auth-aky-badge" aria-label="Aky AI Assistant">
-                <img src={akyRagLogo} alt="Aky AI" className="auth-aky-badge__logo" />
+                <div className="auth-aky-badge__logo-shell">
+                  <img src={akyRagLogo} alt="Aky AI" className="auth-aky-badge__logo" />
+                </div>
                 <div className="auth-aky-badge__copy">
-                  <span className="auth-aky-badge__title">Asistent AI Integrat</span>
-                  <span className="auth-aky-badge__subtitle">Învățare cu Aky RAG</span>
+                  <span className="auth-aky-badge__eyebrow">Powered by</span>
+                  <span className="auth-aky-badge__title">Aky RAG</span>
+                  <span className="auth-aky-badge__subtitle">Asistent pentru materiale academice</span>
                 </div>
               </div>
             </div>
@@ -900,7 +914,7 @@ function AdminUsersPage() {
   )
 }
 
-function StatusPage({ title, description, accentState, accentLabel, primaryAction, secondaryAction }) {
+function StatusPage({ title, description, accentState, accentLabel, accentClassName, primaryAction, secondaryAction }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Card className="w-full max-w-2xl border-border/60 bg-card/95 shadow-sm">
@@ -908,7 +922,7 @@ function StatusPage({ title, description, accentState, accentLabel, primaryActio
           <img src={completeProfileLogo} alt="Akadion" className="mx-auto h-20 w-auto object-contain" />
           <div className="space-y-3">
             <div className="flex justify-center">
-              <UserStateBadge state={accentState} label={accentLabel} />
+              <UserStateBadge state={accentState} label={accentLabel} className={accentClassName} />
             </div>
             {title ? <CardTitle className="text-3xl tracking-tight">{title}</CardTitle> : null}
             <CardDescription className="mx-auto max-w-xl text-base leading-7">{description}</CardDescription>
@@ -963,11 +977,12 @@ function DeactivatedAccountPage() {
 
   return (
     <StatusPage
-      title="Cont dezactivat"
       description="Contul tău a fost dezactivat de un administrator. Pentru clarificări, contactează echipa Akadion."
       accentState="INACTIV"
+      accentLabel="CONT DEZACTIVAT"
+      accentClassName="border-slate-200 bg-slate-50 px-5 py-1.5 text-sm text-slate-700"
       primaryAction={
-        <Button onClick={startLogout} size="lg" className="px-8 text-base">
+        <Button onClick={startLogout} variant="outline" size="lg" className="bg-white px-8 text-base text-black hover:bg-white hover:text-black">
           Logout
         </Button>
       }
@@ -1021,9 +1036,12 @@ function App() {
       "/asteptare-aprobare": "Așteptare Aprobare",
       "/cerere-respinsa": "Cerere Respinsă",
       "/cont-dezactivat": "Cont Dezactivat",
+      "/logout-success": "Logout Finalizat",
       "/courses": "Cursuri",
       "/courses/new": "Adaugă Curs",
       "/profile": "Profilul Meu",
+      "/discover-aky": "Descoperă Aky",
+      "/owl-hall": "Galeria Bufnițelor Legendare",
       "/users": "Utilizatori",
       "/admin/users": "Administrare Utilizatori",
     }
@@ -1042,11 +1060,7 @@ function App() {
     <Routes>
       <Route
         path="/"
-        element={
-          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
-            <ActiveHomePage />
-          </RequireAuthenticatedState>
-        }
+        element={<RootRoute />}
       />
       <Route
         path="/complete-profile"
@@ -1081,6 +1095,10 @@ function App() {
         }
       />
       <Route
+        path="/logout-success"
+        element={<LogoutPage />}
+      />
+      <Route
         path="/courses"
         element={
           <RequireAuthenticatedState allowedStates={["ACTIV"]}>
@@ -1112,6 +1130,22 @@ function App() {
           </RequireAuthenticatedState>
         }
       />
+      <Route
+        path="/discover-aky"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <DiscoverAkyPage />
+          </RequireAuthenticatedState>
+        }
+      />
+      <Route
+        path="/owl-hall"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <OwlHall />
+          </RequireAuthenticatedState>
+        }
+      />
       <Route path="/users" element={<LegacyUsersRedirect />} />
       <Route
         path="/admin/users"
@@ -1127,3 +1161,7 @@ function App() {
 }
 
 export default App
+
+
+
+

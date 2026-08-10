@@ -37,6 +37,10 @@ export function getCourseErrorMessage(error, fallbackMessage) {
     return "Resursa cerută nu a fost găsită."
   }
 
+  if (status === 409) {
+    return "Datele trimise sunt în conflict cu informațiile existente (de exemplu, un fișier duplicat)."
+  }
+
   if (status >= 500) {
     return "Serverul a răspuns cu o eroare. Încearcă din nou."
   }

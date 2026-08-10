@@ -38,6 +38,7 @@ services:
       /bin/sh -c "
       until (/usr/bin/mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-MinioParola123!}) do echo '...waiting...' && sleep 1; done;
       /usr/bin/mc mb myminio/course-documents --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/course-documents;
       "
 
   keycloak:
@@ -51,7 +52,8 @@ services:
       - KC_DB_URL=jdbc:postgresql://postgres:5432/akadion
       - KC_DB_USERNAME=myuser
       - KC_DB_PASSWORD=${DB_PASSWORD:-parola123}
-    command: start-dev --import-realm
+    # --hostname-strict=false permite accesul atat din browser (localhost) cat si intern (keycloak)
+    command: start-dev --import-realm --hostname-strict=false
     ports:
       - "8080:8080"
     volumes:
@@ -62,7 +64,7 @@ services:
 
   backend:
     build:
-      context: ./akadion-backend-modificat/proiect
+      context: ./backend/proiect
       dockerfile: Dockerfile
     container_name: akadion-backend
     restart: unless-stopped
@@ -70,6 +72,10 @@ services:
       - "8081:8081"
     environment:
       - APP_KEYCLOAK_BASE_URL=http://keycloak:8080
+      - APP_KEYCLOAK_BROWSER_BASE_URL=http://localhost:8080
+      - APP_KEYCLOAK_REALM=akadion
+      # issuer-uri pentru containerul backend (acces intern prin hostname-ul Docker)
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/akadion
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/akadion
       - APP_FRONTEND_BASE_URL=http://localhost:5173
       - MINIO_URL=http://minio:9000
@@ -78,9 +84,10 @@ services:
       - KEYCLOAK_ADMIN_API_SECRET=${KEYCLOAK_ADMIN_API_SECRET:-R1THD9jAWSl0lEkvHUlziuWSe0RaukxX}
       - RAG_SERVICE_USERNAME=${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
-      - RAG_BASE_URL=http://llm-response:8000
-      - RAG_EMBEDDER_URL=http://embedder:8001
+      - RAG_BASE_URL=${RAG_BASE_URL:-http://llm-response:8000}
+      - RAG_EMBEDDER_URL=${RAG_EMBEDDER_URL:-http://embedder:8001}
       - TZ=Europe/Bucharest
+      # OpenTelemetry - tracing distribuit catre Jaeger (optional, comenteaza pentru dev local fara Jaeger)
       - OTEL_SERVICE_NAME=akadion-backend
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
@@ -92,9 +99,31 @@ services:
       - default
       - akadion_shared
     depends_on:
-      - postgres
-      - keycloak
-      - minio
+      postgres:
+        condition: service_started
+      keycloak:
+        condition: service_started
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.66.0
+    container_name: akadion-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # UI Jaeger - http://localhost:16686
+      - "4318:4318"    # OTLP HTTP endpoint
+    networks:
+      - default
+      - akadion_shared
 
   frontend:
     build:
@@ -105,7 +134,8 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   minio_data:

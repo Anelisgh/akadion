@@ -1,0 +1,84 @@
+# Validare Sigură și Prevenire Dubluri la Documente (Final)
+
+Acest plan include validarea fișierelor prin Apache Tika (versiunea 3.3.0, cu teste automate) și mecanismul de prevenire a dublurilor (via SHA-256 hash), limitat la nivel de Săptămână, folosind un index parțial în baza de date.
+
+## User Review Required
+
+> [!IMPORTANT]
+> Vă rog să aprobați planul finalizat. Acesta conține modificările agreate pentru ambele feature-uri: Validarea Tika și Prevenirea dublurilor la nivel de săptămână (inclusiv tratarea soft-delete și o nouă migrare Flyway).
+
+## Open Questions
+
+Nu există întrebări deschise. Toate punctele au fost investigate și confirmate direct în cod.
+
+## Proposed Changes
+
+### 1. Migrare Bază de Date (Flyway)
+
+#### [NEW] [V7__add_document_hash_continut.sql](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/main/resources/db/migration/V7__add_document_hash_continut.sql)
+- Adăugăm coloana `hash_continut VARCHAR(64)` (nullable) în tabela `documente`. Preferăm `VARCHAR` față de `CHAR` pentru consistență cu restul schemei — SHA-256 hex este oricum mereu 64 de caractere.
+- Creăm indexul unic parțial: `CREATE UNIQUE INDEX uq_documente_hash_saptamana ON documente (id_saptamana, hash_continut) WHERE activ = true;`
+
+> [!NOTE]
+> Numărul versiunii V7 este corect — cel mai recent script Flyway existent este V6__add_chat_pagination_indexes.sql.
+
+### 2. Entități și Repository
+
+#### [MODIFY] [Document.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/main/java/com/example/akadion/entity/Document.java)
+- Adăugăm câmpul `@Column(name = "hash_continut", length = 64) private String hashContinut;`
+
+#### [MODIFY] [DocumentRepository.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/main/java/com/example/akadion/repository/DocumentRepository.java)
+- Adăugăm două metode ajutătoare pentru a verifica înainte de salvare:
+  - `boolean existsBySaptamanaIdAndHashContinutAndActivTrue(Long saptamanaId, String hashContinut);` (pentru upload nou)
+  - `boolean existsBySaptamanaIdAndHashContinutAndIdNotAndActivTrue(Long saptamanaId, String hashContinut, Long documentId);` (pentru înlocuire)
+
+### 3. Logica de Business (DocumentService)
+
+#### [MODIFY] [pom.xml](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/pom.xml)
+- Adăugăm dependența `tika-core`, versiunea **3.3.0**.
+
+#### [MODIFY] [DocumentService.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/main/java/com/example/akadion/service/DocumentService.java)
+- Instanțiem `private static final Tika TIKA = new Tika();`.
+- Refactorizăm `validateFile` să returneze `byte[]` (conținutul fișierului citit o singură dată), pentru a-l reutiliza atât la validarea Tika cât și la calculul de hash.
+- Adăugăm `calculeazaHash(byte[] continut)` folosind `MessageDigest` SHA-256 din JDK standard (fără dependință nouă).
+
+**În `adaugaDocument` — ordinea strictă a operațiilor (confirmată în cod):**
+1. `validateFile(file)` → returnează `byte[]`, validează Tika, calculează hash.
+2. Verificare duplicat prin `existsBySaptamanaIdAndHashContinutAndActivTrue()` → `IllegalArgumentException` prietenos dacă există.
+3. **Abia apoi** `minioStorageService.uploadFile(...)` → hash-ul e verificat înainte de orice bytes trimiși la MinIO.
+4. Salvare în DB cu `saveAndFlush` (nu `save`) + `catch(DataIntegrityViolationException)` → tradus în același `IllegalArgumentException("Acest fișier a fost deja încărcat în această săptămână.")` pentru scenariul de race condition (dublu-click simultan). Aceasta este plasa de siguranță reală, urmând exact tiparul din `SaptamanaService` (verificat în cod).
+5. Dacă `save` pică cu alt tip de excepție (eroare DB generică), cleanup-ul pe MinIO existent (`deleteFile(path)`) rămâne intact.
+
+> [!IMPORTANT]
+> **Motivul pentru `saveAndFlush` în loc de `save`:** `save` amână commit-ul; `DataIntegrityViolationException` ar putea fi aruncată abia mai târziu (la finalul tranzacției), după ce codul a continuat deja cu `ragIngestService`. `saveAndFlush` forțează SQL imediat și face catch-ul predictibil — exact cum face și `SaptamanaService`.
+
+**În `modificaDocument` — atenții suplimentare:**
+- Toată logica de validare + hash rămâne **în interiorul blocului `if (fisierNou != null)`** (blocul există deja în cod, linia 94). Dacă vine doar `titlu` nou, nu se rulează nimic din Tika/hash.
+- Verificare duplicat cu `existsBySaptamanaIdAndHashContinutAndIdNotAndActivTrue()` (exclude ID-ul documentului curent).
+- **Obligatoriu:** `document.setHashContinut(hashNou)` după calculul noului hash — altfel DB rămâne cu hash-ul fișierului vechi și protecția anti-duplicat se stinge silențios pentru acel document.
+
+### 4. Teste Unitare
+
+#### [NEW] [DocumentServiceTest.java](file:///C:/Users/Anelis/Desktop/akadion/akadion/akadion-backend-modificat/proiect/src/test/java/com/example/akadion/service/DocumentServiceTest.java)
+- Test: fișier PDF valid (magic bytes `%PDF-1.4`) cu extensie `.pdf` → trece.
+- Test: fișier text redenumit `.pdf` → `IllegalArgumentException`.
+- Test: upload document cu hash nou → se salvează corect.
+- Test: upload document cu hash deja existent în aceeași săptămână (repository mock returnează `true`) → `IllegalArgumentException`.
+
+> [!NOTE]
+> **Limitare cunoscută:** Testele unitare cu repository mock-uit acoperă logica Java (calea normală: `existsBy...` → excepție). Scenariul de race condition (dublu-click simultan → `DataIntegrityViolationException` de la DB) nu poate fi acoperit de teste unitare — necesită un test de integrare cu DB reală (Testcontainers/`@DataJpaTest`), pe care nu îl scriem acum. Acoperirea lui rămâne la verificarea manuală.
+
+## Verification Plan
+
+### Automated Tests
+- `mvn test -Dtest=DocumentServiceTest` pentru a valida verificările de duplicate și validarea Tika.
+
+### Manual Verification
+1. Încărcare de fișiere legitime (PDF, DOCX, PPTX real) → acceptate.
+2. Fișier cu extensie falsă (ex: `.exe` redenumit `.pdf`) → respins cu 400.
+3. Reîncărcarea **aceluiași fișier PDF** în aceeași săptămână → respins cu `"Acest fișier a fost deja încărcat în această săptămână."`
+4. Ștergerea (soft-delete) a unui document, urmată de reîncărcarea aceluiași fișier → trebuie să funcționeze (indexul parțial `WHERE activ = true`).
+5. Simulare concurență (2 request-uri rapide cu același fișier) → al doilea trebuie să primească `400` cu mesaj prietenos, nu `500`.
+
+> [!NOTE]
+> **Checkpoint Flyway înainte de merge:** Verificați că nimeni altcineva nu a creat un `V7__....sql` pe un alt branch. Flyway nu tolerează două migrări cu același număr de versiune.

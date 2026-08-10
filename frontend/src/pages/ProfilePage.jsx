@@ -40,8 +40,11 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("")
   const [profileErrors, setProfileErrors] = useState({})
   const [emailErrors, setEmailErrors] = useState({})
+  const [emailError, setEmailError] = useState("")
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
+  const [passwordResetNotice, setPasswordResetNotice] = useState("")
+  const [passwordResetError, setPasswordResetError] = useState("")
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingEmail, setSavingEmail] = useState(false)
   const [sendingPasswordReset, setSendingPasswordReset] = useState(false)
@@ -65,6 +68,8 @@ export default function ProfilePage() {
     setSavingProfile(true)
     setNotice("")
     setError("")
+    setPasswordResetNotice("")
+    setPasswordResetError("")
     setProfileErrors({})
 
     try {
@@ -88,7 +93,10 @@ export default function ProfilePage() {
     setSavingEmail(true)
     setNotice("")
     setError("")
+    setPasswordResetNotice("")
+setPasswordResetError("")
     setEmailErrors({})
+    setEmailError("")
 
     try {
       const updatedUser = await updateMyEmail(email.trim())
@@ -100,7 +108,7 @@ export default function ProfilePage() {
       setNotice("Adresa de email a fost actualizată cu succes.")
     } catch (submitError) {
       setEmailErrors(getFieldErrors(submitError))
-      setError(getErrorMessage(submitError, "Nu am putut schimba adresa de email."))
+      setEmailError(getErrorMessage(submitError, "Nu am putut schimba adresa de email."))
     } finally {
       setSavingEmail(false)
     }
@@ -108,14 +116,14 @@ export default function ProfilePage() {
 
   async function handlePasswordReset() {
     setSendingPasswordReset(true)
-    setNotice("")
-    setError("")
+    setPasswordResetNotice("")
+    setPasswordResetError("")
 
     try {
       await requestMyPasswordReset()
-      setNotice("Un link pentru resetarea parolei a fost trimis pe adresa ta de email.")
+      setPasswordResetNotice("Un link pentru resetarea parolei a fost trimis pe adresa ta de email.")
     } catch (resetError) {
-      setError(getErrorMessage(resetError, "Nu am putut trimite linkul pentru resetarea parolei."))
+      setPasswordResetError(getErrorMessage(resetError, "Nu am putut trimite linkul pentru resetarea parolei."))
     } finally {
       setSendingPasswordReset(false)
     }
@@ -193,7 +201,7 @@ export default function ProfilePage() {
               <img
                 src={profileLogo}
                 alt="Profil Akadion"
-                className="mx-auto max-h-[26rem] w-full object-contain drop-shadow-[0_14px_10px_rgba(32,46,84,0.09)]"
+                className="mx-auto max-h-[26rem] w-full origin-bottom cursor-pointer object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]"
               />
             </div>
           </div>
@@ -293,6 +301,12 @@ export default function ProfilePage() {
                     </div>
                     {emailErrors.email ? <p className="text-sm text-rose-600">{emailErrors.email}</p> : null}
                   </div>
+                  {emailError ? (
+                    <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
+                      <AlertTitle>Eroare</AlertTitle>
+                      <AlertDescription>{emailError}</AlertDescription>
+                    </Alert>
+                  ) : null}
                 </form>
 
                 <hr className="border-[#e4d8cd]/60" />
@@ -314,6 +328,19 @@ export default function ProfilePage() {
                     {sendingPasswordReset ? "Se trimite..." : "Schimbă parola"}
                   </Button>
                 </div>
+                {passwordResetNotice ? (
+                  <Alert className="rounded-3xl border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                    <AlertTitle>Succes</AlertTitle>
+                    <AlertDescription className="text-emerald-800">{passwordResetNotice}</AlertDescription>
+                  </Alert>
+                ) : null}
+                {passwordResetError ? (
+                  <Alert variant="destructive" className="rounded-3xl border-rose-200 bg-white/90 px-5 py-4">
+                    <AlertTitle>Eroare</AlertTitle>
+                    <AlertDescription>{passwordResetError}</AlertDescription>
+                  </Alert>
+                ) : null}
               </CardContent>
             </Card>
           </div>

@@ -37,3 +37,27 @@ export async function retryMesaj(mesajId) {
 export async function stergeConversatie(conversatieId) {
   await axiosInstance.delete(`/api/conversatii/${conversatieId}`)
 }
+
+export async function getDocumenteAccesibile(cursId) {
+  const response = await axiosInstance.get(`/api/student/cursuri/${cursId}/documente-accesibile`)
+  return response.data
+}
+
+export async function genereazaQuiz(cursId, docIdOrOpts = null, nrIntrebari = 5) {
+  let documentId = null
+  let numIntrebari = 5
+
+  if (docIdOrOpts && typeof docIdOrOpts === 'object') {
+    documentId = docIdOrOpts.documentId ?? null
+    numIntrebari = docIdOrOpts.nrIntrebari ?? 5
+  } else {
+    documentId = docIdOrOpts
+    numIntrebari = nrIntrebari
+  }
+
+  const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/quiz/generate`, {
+    documentId,
+    nrIntrebari: numIntrebari
+  })
+  return response.data
+}

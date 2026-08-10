@@ -1,0 +1,10 @@
+myenv/
+venv/
+.venv/
+.vscode/
+.env
+__pycache__/
+*.pyc
+.git
+reranker-service/
+embedder_service/

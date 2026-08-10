@@ -40,8 +40,8 @@ Aplicați-o pe toate 3 rutele:
 ### 2. Configurați mediul local (și producția)
 
 Pentru dezvoltarea locală, backend-ul a fost configurat să trimită automat următoarele date (fallback implicit):
-- `RAG_SERVICE_USERNAME=akadion-spring-backend`
-- `RAG_SERVICE_PASSWORD=parola_spring_rag`
+- `RAG_SERVICE_USERNAME=<setat în mediul local sau de deploy>`
+- `RAG_SERVICE_PASSWORD=<setat în mediul local sau de deploy>`
 
 Vă puteți configura mediul local să folosească direct aceste credențiale în `.env`. Pentru producție, Anelis vă va furniza un secret real pe care îl veți pune în variabilele de mediu, care va suprascrie aceste valori locale.
 
@@ -73,6 +73,6 @@ Basic Auth trimite credențialele codate base64 (nu criptate) — e sigur doar d
 
 - [ ] Implementat `verify_credentials` (cu `secrets.compare_digest`, nu `==`)
 - [ ] Aplicat pe toate 3 rutele: `/ingest` (POST), `/ingest/{id}` (DELETE), `/chat` (POST)
-- [ ] Setați variabilele de mediu pentru testare locală (`akadion-spring-backend` / `parola_spring_rag`)
+- [ ] Setați variabilele de mediu pentru testare locală fără a le păstra în fișiere urmărite de Git
 - [ ] Testat cu `curl`: fără auth → 401, auth greșit → 401, auth corect → trece
 - [ ] Confirmat către Anelis că e gata (Notă: Partea de Spring Boot a fost deja implementată și trimite header-ul)

@@ -1,4 +1,0 @@
-- Preserve existing Spring Security split: `/api/**` returns JSON 401/403, browser login/logout stays OIDC redirect based.
-- Reuse repository methods that already carry `@EntityGraph`; do not replace them with lazy-loading workarounds.
-- Avoid OSIV-dependent fixes and avoid `Hibernate.initialize(...)`.
-- Account state and role decisions live in backend business/security layers, not in frontend DTO fallbacks.

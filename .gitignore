@@ -1,4 +1,14 @@
 scripts/set-local-secrets.ps1
-akadion-backend/proiect/src/main/resources/application-local.properties
+backend/proiect/src/main/resources/application-local.properties
 
+# Ignoră toate fișierele .env din orice folder
+**/.env
+**/.env.*
 .env
+
+# Ignoră folderele temporare/IDE/Asistenți
+.playwright-mcp/
+.serena/
+.claude/
+logs.txt
+scripts/

@@ -54,9 +54,9 @@ Elimină injectarea separată de `baseUrl` din servicii și transformă rutele d
 Adaugă variabilele în `application.properties` cu valori default pentru dezvoltarea locală:
 ```properties
 app.rag.auth.username=${RAG_SERVICE_USERNAME:akadion-spring-backend}
-app.rag.auth.password=${RAG_SERVICE_PASSWORD:parola_spring_rag}
+app.rag.auth.password=${RAG_SERVICE_PASSWORD}
 ```
-Nu mai este nevoie de adăugare manuală în `application-local.properties` pentru rularea locală, aplicația va folosi fallback-urile în lipsa variabilelor de mediu explicite. Pentru mediile de producție, se vor seta variabilele de mediu `RAG_SERVICE_USERNAME` și `RAG_SERVICE_PASSWORD` (de ex. un secret generat cu `openssl rand -base64 24`).
+Setează variabilele de mediu `RAG_SERVICE_USERNAME` și `RAG_SERVICE_PASSWORD` în mediul local sau de producție; nu păstra parola în fișiere urmărite de Git.
 
 ### 3. Docker Compose și Teste
 

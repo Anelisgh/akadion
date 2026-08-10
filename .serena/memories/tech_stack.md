@@ -1,4 +1,0 @@
-- Backend: Java 21, Spring Boot 4.1, Spring MVC, Spring Security OAuth2 client/OIDC, Spring Data JPA, Flyway, PostgreSQL.
-- Frontend: React 19, Vite 8, React Router 7, Tailwind 4, axios.
-- Backend build/test: Maven Wrapper (`mvnw.cmd`).
-- Frontend package manager/scripts: npm (`npm.cmd`).
