@@ -423,11 +423,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setSelectedCourseId(courseId)
   }, [open, courseId])
 
-  // Load conversations when selected course or filter changes
+  // Load conversations when selected course changes
   useEffect(() => {
     if (!open) return
     fetchConversations(0, false)
-  }, [open, selectedCourseId, filterMode, fetchConversations])
+  }, [open, selectedCourseId, fetchConversations])
 
   // Load courses if none are passed
   useEffect(() => {
