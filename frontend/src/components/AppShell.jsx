@@ -1,4 +1,4 @@
-import { AlertCircle, BookOpenText, Bot, ChevronDown, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
+import { AlertCircle, BookOpenText, Bot, ChevronDown, History, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -134,6 +134,19 @@ function CourseTabsNav({ user, onNavClick }) {
             >
               <BookOpenText className="h-4 w-4" />
               <span>Cursuri</span>
+            </NavLink>
+            <NavLink
+              to="/admin/audit-log"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? activeNavClass
+                  : inactiveNavClass
+                }`
+              }
+            >
+              <History className="h-4 w-4" />
+              <span>Audit Log</span>
             </NavLink>
           </>
         )}
