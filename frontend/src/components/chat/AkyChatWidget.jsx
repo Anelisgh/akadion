@@ -134,6 +134,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [flashcardNumQuestions, setFlashcardNumQuestions] = useState(5)
   const [selectedFlashcardDocId, setSelectedFlashcardDocId] = useState("")
   const [flashcardError, setFlashcardError] = useState(null)
+  const [isResizing, setIsResizing] = useState(false)
 
   const clampPanelWidth = useCallback((nextWidth) => {
     const maxWidth = Math.min(AKY_PANEL_MAX_WIDTH, window.innerWidth - AKY_PANEL_VIEWPORT_GAP)
@@ -484,6 +485,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   function handlePanelResizePointerDown(event) {
     event.preventDefault()
     isResizingPanelRef.current = true
+    setIsResizing(true)
 
     const previousCursor = document.body.style.cursor
     const previousUserSelect = document.body.style.userSelect
@@ -497,6 +499,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
     function handlePointerUp() {
       isResizingPanelRef.current = false
+      setIsResizing(false)
       document.body.style.cursor = previousCursor
       document.body.style.userSelect = previousUserSelect
       window.removeEventListener("pointermove", handlePointerMove)
@@ -513,6 +516,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     event.preventDefault()
     event.stopPropagation()
     isResizingHistoryRef.current = true
+    setIsResizing(true)
 
     const startX = event.clientX
     const startWidth = historyWidth
@@ -528,6 +532,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
     function handlePointerUp() {
       isResizingHistoryRef.current = false
+      setIsResizing(false)
       document.body.style.cursor = previousCursor
       document.body.style.userSelect = previousUserSelect
       window.removeEventListener("pointermove", handlePointerMove)
@@ -832,7 +837,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           onOpenChange={handleOpenChange}
           style={{ "--aky-panel-width": `${panelWidth}px`, "--aky-history-width": `${historyWidth}px` }}
           className={cn(
-            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:w-[var(--aky-panel-width)] lg:max-w-[min(84rem,calc(100vw-2rem))] transition-all duration-300",
+            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:w-[var(--aky-panel-width)] lg:max-w-[min(84rem,calc(100vw-2rem))]",
+            !isResizing && "transition-all duration-300",
             rightPanelMode ? "lg:w-[min(96rem,calc(100vw-2rem))] flex-row" : "flex-col"
           )}
         >
