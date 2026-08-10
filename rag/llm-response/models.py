@@ -31,3 +31,15 @@ class QuizQuestion(BaseModel):
     optiuni: dict[str, str]
     raspuns_corect: str
     explicatie: str
+
+class FlashcardGenerateRequest(BaseModel):
+    cursId: int
+    maxSaptamanaParcursa: Optional[int] = None
+    maxSaptamana: Optional[int] = None
+    documentId: Optional[int] = None
+    nrFlashcards: Optional[int] = 5
+
+class FlashcardItem(BaseModel):
+    fata: str
+    verso: str
+

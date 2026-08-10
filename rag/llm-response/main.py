@@ -2,9 +2,9 @@ import json
 import re
 
 from fastapi import FastAPI, HTTPException, Depends
-from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizRequest, QuizQuestion
+from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizRequest, QuizQuestion, FlashcardGenerateRequest, FlashcardItem
 from llm_service import genereaza_raspuns, verifica_conexiune, genereaza_quiz as genereaza_quiz_llm
-from prompt_builder import construieste_prompt, construieste_prompt_quiz
+from prompt_builder import construieste_prompt, construieste_prompt_quiz, construieste_prompt_flashcards
 from retrieval_service import cauta_context, cauta_contexte_scroll
 from reranker_service import reordoneaza_contexte
 from security_guard import valideaza_intrebare
@@ -133,4 +133,56 @@ def genereaza_quiz(request: QuizGenerateRequest):
         raise HTTPException(
             status_code=503,
             detail="Serviciul de inteligenta artificiala este indisponibil pentru generarea quiz-ului."
+        )
+
+
+def _normalizeaza_flashcards(raw) -> list[FlashcardItem]:
+    items = raw.get("flashcards") if isinstance(raw, dict) else raw
+    if not isinstance(items, list):
+        return []
+
+    flashcards = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+
+        fata = item.get("fata") or item.get("front") or item.get("question") or item.get("concept")
+        verso = item.get("verso") or item.get("back") or item.get("answer") or item.get("definition")
+
+        if not fata or not verso:
+            continue
+
+        flashcards.append(FlashcardItem(
+            fata=str(fata),
+            verso=str(verso)
+        ))
+
+    return flashcards
+
+
+@app.post("/flashcards/generate", response_model=list[FlashcardItem], dependencies=[Depends(verify_credentials)])
+def genereaza_flashcards(request: FlashcardGenerateRequest):
+    nr_flashcards = max(1, min(request.nrFlashcards or 5, 20))
+    max_saptamana = request.maxSaptamanaParcursa
+    if max_saptamana is None:
+        max_saptamana = request.maxSaptamana if request.maxSaptamana is not None else 999
+
+    context_chunks = cauta_contexte_scroll(
+        request.cursId,
+        max_saptamana,
+        request.documentId,
+    )
+    if not context_chunks:
+        return []
+
+    prompt = construieste_prompt_flashcards(context_chunks, nr_flashcards)
+
+    try:
+        raspuns_text = genereaza_quiz_llm(prompt)
+        return _normalizeaza_flashcards(_extrage_json(raspuns_text))
+    except Exception as e:
+        print(f"[FLASHCARDS GENERATION ERROR] {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Serviciul de inteligenta artificiala este indisponibil pentru generarea flashcard-urilor."
         )

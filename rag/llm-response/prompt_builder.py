@@ -79,3 +79,33 @@ Formatul JSON cerut:
         
     parti.append(f"\nGenereaza quiz-ul acum in format JSON format din exact {nr_intrebari} intrebari:")
     return "\n".join(parti)
+
+def construieste_prompt_flashcards(context_chunks: list, nr_flashcards: int) -> str:
+    flashcard_system_prompt = f"""Esti un profesor universitar asistent. Sarcina ta este sa generezi EXACT {nr_flashcards} flashcard-uri (fise de memorare) bazate EXCLUSIV pe textele oferite in contextul de mai jos.
+
+Reguli de generare:
+1. Fiecare flashcard trebuie sa aiba o fata ("fata" - intrebarea sau conceptul cheie) si un verso ("verso" - raspunsul, definitia sau explicatia pe scurt).
+2. Informatiile trebuie sa fie 100% conforme cu contextul de mai jos. Nu adauga cunostinte din afara contextului.
+3. Raspunsul tau trebuie sa fie STRICT un tablou JSON (list) valid cu exact {nr_flashcards} elemente, fara alte texte, markdown sau introduceri.
+
+Formatul JSON cerut:
+[
+  {{
+    "fata": "Textul intrebarii sau al conceptului...",
+    "verso": "Textul raspunsului sau al explicatiei..."
+  }}
+]
+"""
+    parti = [flashcard_system_prompt]
+    
+    if context_chunks:
+        parti.append("\n--- CONTEXT START ---")
+        for chunk in context_chunks:
+            parti.append(f"[Document ID: {chunk['document_id']}]\n{chunk['text']}")
+        parti.append("--- CONTEXT END ---")
+    else:
+        parti.append("\n(Atentie: Nu exista context disponibil pentru generare.)")
+        
+    parti.append(f"\nGenereaza cele {nr_flashcards} flashcard-uri acum in format JSON:")
+    return "\n".join(parti)
+
