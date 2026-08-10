@@ -1726,7 +1726,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       >
                         <option value="">Toate documentele accesibile</option>
                         {accessibleDocuments.map((doc) => (
-                          <option key={doc.id} value={doc.id}>{doc.titlu}</option>
+                          <option key={doc.documentId} value={doc.documentId}>{doc.numeFisier}</option>
                         ))}
                       </select>
                     </div>
