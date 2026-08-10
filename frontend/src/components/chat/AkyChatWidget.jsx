@@ -375,8 +375,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         setIsLoadingConversations(true)
       }
 
-      let res = (courseId && activeFilter === "course")
-        ? await getConversatii(courseId, pageToLoad)
+      let res = (selectedCourseId && activeFilter === "course")
+        ? await getConversatii(selectedCourseId, pageToLoad)
         : await getConversatiiGlobale(pageToLoad)
 
       let items = Array.isArray(res) ? res : (res?.continut || [])
@@ -384,7 +384,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
       // dacă suntem pe un curs nou fără conversații proprii, dar utilizatorul are conversații în cont,
       // comutăm automat pe tab-ul "Toate" pentru ca utilizatorul să își vadă istoricul general
-      if (!append && pageToLoad === 0 && courseId && activeFilter === "course" && items.length === 0) {
+      if (!append && pageToLoad === 0 && selectedCourseId && activeFilter === "course" && items.length === 0) {
         const globalRes = await getConversatiiGlobale(0)
         const globalItems = Array.isArray(globalRes) ? globalRes : (globalRes?.continut || [])
         if (globalItems.length > 0) {
@@ -403,9 +403,9 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setIsLoadingConversations(false)
       setIsLoadingMoreConversations(false)
     }
-  }, [courseId])
+  }, [selectedCourseId])
 
-  // Load conversations
+  // Reset states on open/courseId change
   useEffect(() => {
     if (!open) return
 
@@ -419,16 +419,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setHasMoreConversations(false)
     setHasMoreMessages(false)
     setOldestLoadedMessageId(null)
+    setFilterMode(courseId ? "course" : "all")
+    setSelectedCourseId(courseId)
+  }, [open, courseId])
 
-    // Reset course selection if it's the global widget
-    if (!courseId) {
-      setSelectedCourseId(null)
-    } else {
-      setSelectedCourseId(courseId)
-    }
-
+  // Load conversations when selected course or filter changes
+  useEffect(() => {
+    if (!open) return
     fetchConversations(0, false)
-  }, [open, courseId, fetchConversations])
+  }, [open, selectedCourseId, filterMode, fetchConversations])
 
   // Load courses if none are passed
   useEffect(() => {
@@ -1180,7 +1179,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                           <select
                             className="h-11 w-full rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20"
                             value={selectedCourseId || ""}
-                            onChange={(event) => setSelectedCourseId(event.target.value)}
+                            onChange={(event) => setSelectedCourseId(event.target.value ? Number(event.target.value) : null)}
                           >
                             <option value="" disabled>Selectează un curs...</option>
                             {courses.map((course) => (
