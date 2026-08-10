@@ -173,6 +173,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setRightPanelMode(nextMode)
     if (nextMode) {
       loadAccessibleDocuments()
+      setQuizOpen(false)
     }
   }
 
@@ -899,10 +900,13 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 <button
                   type="button"
                   aria-label="Generare Quiz"
-                  onClick={toggleQuizMode}
+                  onClick={() => {
+                    setQuizOpen((currentValue) => !currentValue)
+                    setRightPanelMode(null)
+                  }}
                   className={cn(
                     "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
-                    quizMode
+                    quizOpen
                       ? "border-amber-300 bg-amber-400/20 text-amber-200 hover:bg-amber-400/30"
                       : "border-white/32 bg-white/16 text-white hover:bg-white/24"
                   )}
