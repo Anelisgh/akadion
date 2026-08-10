@@ -877,121 +877,121 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
           {/* LEFT PANEL: Chat panel */}
           <div className={cn("flex flex-col flex-1 h-full min-w-[350px]", rightPanelMode && "lg:max-w-[50%] border-r border-slate-200/80")}>
-          <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
-            <div className="absolute -top-10 right-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-sm" />
-            <div className="absolute -bottom-12 left-[-1.5rem] h-28 w-28 rounded-full bg-[#8bc8f1]/14 blur-sm" />
+            <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
+              <div className="absolute -top-10 right-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-sm" />
+              <div className="absolute -bottom-12 left-[-1.5rem] h-28 w-28 rounded-full bg-[#8bc8f1]/14 blur-sm" />
 
-<div ref={themePickerRef} className="absolute right-16 top-4 z-20">
-              {themePickerOpen ? (
-                <div className="absolute right-0 top-12 w-56 rounded-[1.35rem] border border-[#d9c9ff] bg-[#fbf8ff]/98 p-2.5 text-[#3a2e66] shadow-[0_18px_48px_rgba(62,42,120,0.2)] backdrop-blur-md">
-                  <p className="px-2 pb-2 text-[0.68rem] font-semibold tracking-[0.14em] text-[#6c5c9a] uppercase">Tema</p>
-                  <div className="space-y-1">
-                    {COURSE_THEMES.map((theme) => {
-                      const isSelected = theme.key === selectedTheme.key
+              <div ref={themePickerRef} className="absolute right-16 top-4 z-20">
+                {themePickerOpen ? (
+                  <div className="absolute right-0 top-12 w-56 rounded-[1.35rem] border border-[#d9c9ff] bg-[#fbf8ff]/98 p-2.5 text-[#3a2e66] shadow-[0_18px_48px_rgba(62,42,120,0.2)] backdrop-blur-md">
+                    <p className="px-2 pb-2 text-[0.68rem] font-semibold tracking-[0.14em] text-[#6c5c9a] uppercase">Tema</p>
+                    <div className="space-y-1">
+                      {COURSE_THEMES.map((theme) => {
+                        const isSelected = theme.key === selectedTheme.key
 
-                      return (
-                        <button
-                          key={theme.key}
-                          type="button"
-                          onClick={() => handleThemeChange(theme.key)}
-                          className={`flex w-full items-center justify-between gap-2 rounded-2xl border px-2 py-2 text-left text-sm font-medium transition ${isSelected ? "border-[#7650d8] bg-[#f3edff] text-[#6840c5]" : "border-transparent hover:bg-white/80"}`}
-                        >
-                          <span className="flex min-w-0 items-center gap-2">
-                            <span className={`h-5 w-5 shrink-0 rounded-full ${theme.swatch}`} />
-                            <span className="whitespace-nowrap">{theme.label}</span>
-                          </span>
-                          {isSelected ? <Check className="h-4 w-4 shrink-0" /> : null}
-                        </button>
-                      )
-                    })}
+                        return (
+                          <button
+                            key={theme.key}
+                            type="button"
+                            onClick={() => handleThemeChange(theme.key)}
+                            className={`flex w-full items-center justify-between gap-2 rounded-2xl border px-2 py-2 text-left text-sm font-medium transition ${isSelected ? "border-[#7650d8] bg-[#f3edff] text-[#6840c5]" : "border-transparent hover:bg-white/80"}`}
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <span className={`h-5 w-5 shrink-0 rounded-full ${theme.swatch}`} />
+                              <span className="whitespace-nowrap">{theme.label}</span>
+                            </span>
+                            {isSelected ? <Check className="h-4 w-4 shrink-0" /> : null}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
+                ) : null}
+                <button
+                  type="button"
+                  aria-label="Schimbă tema Aky"
+                  onClick={() => setThemePickerOpen((currentValue) => !currentValue)}
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/32 bg-white/16 text-white shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition hover:bg-white/24"
+                >
+                  <Palette className="h-4 w-4" />
+                </button>
+              </div>
+
+              {!isProfessor && selectedCourseId ? (
+                <div className="absolute right-28 top-4 z-20 flex gap-2">
+                  <button
+                    type="button"
+                    aria-label="Generare Quiz"
+                    onClick={() => {
+                      setQuizOpen((currentValue) => !currentValue)
+                      setRightPanelMode(null)
+                    }}
+                    className={cn(
+                      "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
+                      quizOpen
+                        ? "border-amber-300 bg-amber-400/20 text-amber-200 hover:bg-amber-400/30"
+                        : "border-white/32 bg-white/16 text-white hover:bg-white/24"
+                    )}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Quiz-uri</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Flashcards"
+                    onClick={toggleFlashcardMode}
+                    className={cn(
+                      "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
+                      flashcardMode
+                        ? "border-emerald-300 bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30"
+                        : "border-white/32 bg-white/16 text-white hover:bg-white/24"
+                    )}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Flashcards</span>
+                  </button>
                 </div>
               ) : null}
-              <button
-                type="button"
-                aria-label="Schimbă tema Aky"
-                onClick={() => setThemePickerOpen((currentValue) => !currentValue)}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/32 bg-white/16 text-white shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition hover:bg-white/24"
-              >
-                <Palette className="h-4 w-4" />
-              </button>
-            </div>
 
-            {!isProfessor && selectedCourseId ? (
-              <div className="absolute right-28 top-4 z-20 flex gap-2">
-                <button
-                  type="button"
-                  aria-label="Generare Quiz"
-                  onClick={() => {
-                    setQuizOpen((currentValue) => !currentValue)
-                    setRightPanelMode(null)
-                  }}
-                  className={cn(
-                    "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
-                    quizOpen
-                      ? "border-amber-300 bg-amber-400/20 text-amber-200 hover:bg-amber-400/30"
-                      : "border-white/32 bg-white/16 text-white hover:bg-white/24"
-                  )}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span>Quiz-uri</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Flashcards"
-                  onClick={toggleFlashcardMode}
-                  className={cn(
-                    "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
-                    flashcardMode
-                      ? "border-emerald-300 bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30"
-                      : "border-white/32 bg-white/16 text-white hover:bg-white/24"
-                  )}
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Flashcards</span>
-                </button>
-              </div>
-            ) : null}
+              <div className="flex items-center gap-3 pr-12 relative z-10 pt-2 pb-1">
+                {view === "chat" && (
+                  <button
+                    onClick={() => {
+                      if (!courseId) setSelectedCourseId(null)
+                      setView("list")
+                      fetchConversations(0, false)
+                    }}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl hover:bg-white/20 transition-colors"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                )}
 
-            <div className="flex items-center gap-3 pr-12 relative z-10 pt-2 pb-1">
-              {view === "chat" && (
-                <button
-                  onClick={() => {
-                    if (!courseId) setSelectedCourseId(null)
-                    setView("list")
-                    fetchConversations(0, false)
-                  }}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl hover:bg-white/20 transition-colors"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-              )}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/12 backdrop-blur-sm">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-[0_10px_22px_rgba(15,23,42,0.16)]">
+                    <img src={ragHeadLogo} alt="Aky" className="h-7 w-7 object-contain" />
+                  </div>
+                </div>
 
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/12 backdrop-blur-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-[0_10px_22px_rgba(15,23,42,0.16)]">
-                  <img src={ragHeadLogo} alt="Aky" className="h-7 w-7 object-contain" />
+                <div className="min-w-0">
+                  <SheetTitle className="text-white text-lg">Aky</SheetTitle>
+                  <SheetDescription className="mt-0.5 truncate text-white/80 text-sm">
+                    {activeCourseTitle ? `Asistent: ${activeCourseTitle}` : "Chatbot Akadion"}
+                  </SheetDescription>
                 </div>
               </div>
+            </SheetHeader>
 
-              <div className="min-w-0">
-                <SheetTitle className="text-white text-lg">Aky</SheetTitle>
-                <SheetDescription className="mt-0.5 truncate text-white/80 text-sm">
-                  {activeCourseTitle ? `Asistent: ${activeCourseTitle}` : "Chatbot Akadion"}
-                </SheetDescription>
-              </div>
-            </div>
-          </SheetHeader>
-
-          <div
-            style={{
-              gridTemplateColumns: (historyVisible && typeof window !== "undefined" && window.innerWidth >= 1024)
-                ? `${historyWidth}px minmax(0, 1fr)`
-                : undefined
-            }}
-            className={cn("grid min-h-0 flex-1 bg-slate-50/50", !historyVisible && "lg:grid-cols-[minmax(0,1fr)]")}
-          >
-            {/* CONVERSATION LIST VIEW */}
-            <div className={cn("relative min-h-0 flex-col border-r border-slate-100 bg-white/42", view === "chat" ? "hidden lg:flex" : "flex", !historyVisible && "lg:hidden")}>
+            <div
+              style={{
+                gridTemplateColumns: (historyVisible && typeof window !== "undefined" && window.innerWidth >= 1024)
+                  ? `${historyWidth}px minmax(0, 1fr)`
+                  : undefined
+              }}
+              className={cn("grid min-h-0 flex-1 bg-slate-50/50", !historyVisible && "lg:grid-cols-[minmax(0,1fr)]")}
+            >
+              {/* CONVERSATION LIST VIEW */}
+              <div className={cn("relative min-h-0 flex-col border-r border-slate-100 bg-white/42", view === "chat" ? "hidden lg:flex" : "flex", !historyVisible && "lg:hidden")}>
                 <div
                   role="separator"
                   aria-orientation="vertical"
@@ -1033,11 +1033,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             setFilterMode("course")
                             fetchConversations(0, false, "course")
                           }}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            filterMode === "course"
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${filterMode === "course"
                               ? "bg-white text-[#1e3a5f] shadow-xs"
                               : "text-slate-500 hover:text-slate-800"
-                          }`}
+                            }`}
                         >
                           Acest curs
                         </button>
@@ -1047,11 +1046,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             setFilterMode("all")
                             fetchConversations(0, false, "all")
                           }}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            filterMode === "all"
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${filterMode === "all"
                               ? "bg-white text-[#1e3a5f] shadow-xs"
                               : "text-slate-500 hover:text-slate-800"
-                          }`}
+                            }`}
                         >
                           Toate
                         </button>
@@ -1082,38 +1080,39 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       {conversatii.map(conv => {
                         const cursNume = courses.find(c => String(c.id) === String(conv.cursId))?.denumire
                         return (
-                        <div
-                          key={conv.id}
-                          onClick={() => handleOpenConversation(conv.id, conv.cursId)}
-                          className="group relative flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 shadow-xs hover:border-[#bfd5eb] hover:shadow-md transition-all cursor-pointer overflow-hidden"
-                        >
-                          <div className={`h-10 w-10 shrink-0 rounded-full flex items-center justify-center bg-linear-to-br ${selectedTheme.accent} opacity-10`} />
-                          <div className={`absolute left-4 h-10 w-10 shrink-0 flex items-center justify-center ${selectedTheme.heroStatText}`}>
-                            <MessageCircle className="h-5 w-5" />
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-[#1e3a5f] truncate pr-8">{conv.titlu || "Conversație nouă"}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <p className="text-xs text-slate-400">{formatDate(conv.createdAt)}</p>
-                              {!courseId && cursNume && (
-                                <>
-                                  <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                  <p className="text-[11px] font-medium text-[#3b6ea8] truncate">{cursNume}</p>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={(e) => handleDeleteConversation(conv.id, e)}
-                            className="absolute right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                            title="Șterge conversația"
+                          <div
+                            key={conv.id}
+                            onClick={() => handleOpenConversation(conv.id, conv.cursId)}
+                            className="group relative flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 shadow-xs hover:border-[#bfd5eb] hover:shadow-md transition-all cursor-pointer overflow-hidden"
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )})}
+                            <div className={`h-10 w-10 shrink-0 rounded-full flex items-center justify-center bg-linear-to-br ${selectedTheme.accent} opacity-10`} />
+                            <div className={`absolute left-4 h-10 w-10 shrink-0 flex items-center justify-center ${selectedTheme.heroStatText}`}>
+                              <MessageCircle className="h-5 w-5" />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-[#1e3a5f] truncate pr-8">{conv.titlu || "Conversație nouă"}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <p className="text-xs text-slate-400">{formatDate(conv.createdAt)}</p>
+                                {!courseId && cursNume && (
+                                  <>
+                                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                    <p className="text-[11px] font-medium text-[#3b6ea8] truncate">{cursNume}</p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={(e) => handleDeleteConversation(conv.id, e)}
+                              className="absolute right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                              title="Șterge conversația"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
@@ -1143,432 +1142,432 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </p>
                   ) : null}
                 </div>
-            </div>
+              </div>
 
-            <div className={cn("min-h-0 flex-col bg-slate-50/50", view === "list" ? "hidden lg:flex" : "flex")}>
-              {!historyVisible ? (
-                <div className="hidden items-center border-b border-slate-100 bg-white/45 px-5 py-3 lg:flex">
-                  <button
-                    type="button"
-                    onClick={() => setHistoryVisible(true)}
-                    className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-[#bfd5eb] hover:bg-white hover:text-[#24385b]"
-                  >
-                    <PanelLeftOpen className="h-4 w-4" />
-                    Istoric
-                  </button>
-                </div>
-              ) : null}
-              {/* NO COURSE SELECTED (SELECT COURSE VIEW) */}
-              {!selectedCourseId ? (
-                <div className="p-6">
-                  <Card className="border-[#d9e4f4] bg-linear-to-br from-[#edf7ff] via-[#f8fbff] to-white shadow-[0_18px_40px_rgba(32,46,84,0.08)]">
-                    <CardContent className="space-y-4 px-5 py-5">
-                      <div className="flex items-start gap-3">
-                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border bg-linear-to-br ${selectedTheme.accent} ${selectedTheme.heroBorder} ${selectedTheme.heroStatText} shadow-[0_12px_24px_rgba(24,49,83,0.14)]`}>
-                          <Sparkles className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
-                          <p className="mt-1 text-sm leading-6 text-slate-600">
-                            Te pot ajuta cu informații din cursurile tale. Te rog să selectezi un curs pentru a începe conversația.
-                          </p>
-                        </div>
-                      </div>
-
-                      {courses.length > 0 ? (
-                        <div className="pt-2">
-                          <label className="mb-2 block text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Alege cursul:</label>
-                          <select
-                            className="h-11 w-full rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20"
-                            value={selectedCourseId || ""}
-                            onChange={(event) => setSelectedCourseId(event.target.value ? Number(event.target.value) : null)}
-                          >
-                            <option value="" disabled>Selectează un curs...</option>
-                            {courses.map((course) => (
-                              <option key={course.id} value={course.id}>{course.denumire}</option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <p className="text-xs italic text-slate-500">Nu ești înrolat la niciun curs momentan.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : null}
-
-              {/* CHAT VIEW */}
-              {selectedCourseId ? (
-              <>
-                <div className="flex flex-1 flex-col overflow-y-auto px-6 py-5" onScroll={handleScrollMessages}>
-                  {messages.length === 0 && !isLoadingMessages ? (
-                    <>
-                      <Card className="border-[#d9e4f4] bg-linear-to-br from-[#edf7ff] via-[#f8fbff] to-white shadow-[0_18px_40px_rgba(32,46,84,0.08)] mb-6">
-                        <CardContent className="space-y-4 px-5 py-5">
-                          <div className="flex items-start gap-3">
-                            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border bg-linear-to-br ${selectedTheme.accent} ${selectedTheme.heroBorder} ${selectedTheme.heroStatText} shadow-[0_12px_24px_rgba(24,49,83,0.14)]`}>
-                              <Sparkles className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
-                              <p className="mt-1 text-sm leading-6 text-slate-600">
-                                Sunt pregătit să-ți răspund la întrebări pe baza materialelor de la <span className="font-semibold text-slate-800">{activeCourseTitle}</span>. Adresează-mi o întrebare mai jos!
-                              </p>
-                            </div>
+              <div className={cn("min-h-0 flex-col bg-slate-50/50", view === "list" ? "hidden lg:flex" : "flex")}>
+                {!historyVisible ? (
+                  <div className="hidden items-center border-b border-slate-100 bg-white/45 px-5 py-3 lg:flex">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryVisible(true)}
+                      className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-[#bfd5eb] hover:bg-white hover:text-[#24385b]"
+                    >
+                      <PanelLeftOpen className="h-4 w-4" />
+                      Istoric
+                    </button>
+                  </div>
+                ) : null}
+                {/* NO COURSE SELECTED (SELECT COURSE VIEW) */}
+                {!selectedCourseId ? (
+                  <div className="p-6">
+                    <Card className="border-[#d9e4f4] bg-linear-to-br from-[#edf7ff] via-[#f8fbff] to-white shadow-[0_18px_40px_rgba(32,46,84,0.08)]">
+                      <CardContent className="space-y-4 px-5 py-5">
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border bg-linear-to-br ${selectedTheme.accent} ${selectedTheme.heroBorder} ${selectedTheme.heroStatText} shadow-[0_12px_24px_rgba(24,49,83,0.14)]`}>
+                            <Sparkles className="h-5 w-5" />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-600">
+                              Te pot ajuta cu informații din cursurile tale. Te rog să selectezi un curs pentru a începe conversația.
+                            </p>
+                          </div>
+                        </div>
 
-                      <div className="space-y-3">
-                        <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Întrebări rapide</p>
-                        <div className="flex flex-wrap gap-2">
-                          {QUICK_QUESTIONS.map((question) => (
-                            <button
-                              key={question}
-                              type="button"
-                              onClick={() => handleQuickQuestionClick(question)}
-                              className="rounded-2xl border border-[#d9e4f4] bg-white px-3.5 py-2.5 text-left text-sm text-[#3f698a] shadow-xs transition hover:border-[#bfd5eb] hover:bg-[#f4f8fd]"
+                        {courses.length > 0 ? (
+                          <div className="pt-2">
+                            <label className="mb-2 block text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Alege cursul:</label>
+                            <select
+                              className="h-11 w-full rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20"
+                              value={selectedCourseId || ""}
+                              onChange={(event) => setSelectedCourseId(event.target.value ? Number(event.target.value) : null)}
                             >
-                              {question}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  ) : null}
+                              <option value="" disabled>Selectează un curs...</option>
+                              {courses.map((course) => (
+                                <option key={course.id} value={course.id}>{course.denumire}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : (
+                          <p className="text-xs italic text-slate-500">Nu ești înrolat la niciun curs momentan.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : null}
 
-                  {isLoadingMessages ? (
-                    <div className="flex flex-1 items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
-                    </div>
-                  ) : (
-                    <div className="flex-1 space-y-4">
-                      {hasMoreMessages ? (
-                        <div className="pb-2 text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={loadOlderMessages}
-                            disabled={isLoadingOlderMessages}
-                            className="rounded-xl text-xs font-semibold text-[#3b6ea8] hover:bg-[#f4f8fd]"
-                          >
-                            {isLoadingOlderMessages ? (
-                              <>
-                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                Se încarcă mesajele mai vechi...
-                              </>
-                            ) : (
-                              "Încărcare mesaje mai vechi"
-                            )}
-                          </Button>
-                        </div>
-                      ) : messages.length > 0 ? (
-                        <p className="pb-2 text-center text-[11px] font-medium text-slate-400">
-                          — Începutul conversației —
-                        </p>
-                      ) : null}
-                      {timelineItems.map((timelineItem) => {
-                        if (timelineItem.type === "quiz") {
-                          const totalQuestions = timelineItem.questions.length
-                          const answeredCount = Object.keys(timelineItem.answers || {}).length
-                          const isCompleted = answeredCount === totalQuestions
-                          let correctCount = 0
-                          if (isCompleted) {
-                            timelineItem.questions.forEach((question, questionIndex) => {
-                              const selectedAnswer = timelineItem.answers?.[questionIndex]
-                              if (selectedAnswer) {
-                                const optionEntries = getQuizOptionEntries(question.optiuni)
-                                const matchedEntry = optionEntries.find(([key]) => key === selectedAnswer)
-                                const val = matchedEntry ? matchedEntry[1] : ""
-                                if (isQuizCorrectAnswer(question, selectedAnswer, val)) {
-                                  correctCount++
-                                }
-                              }
-                            })
-                          }
-                          return (
-                            <Card key={timelineItem.id} className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
-                              <CardContent className="space-y-4 px-5 py-5">
-                                <div>
-                                  <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                  <p className="mt-1 text-xs font-medium text-slate-400">
-                                    {timelineItem.documentLabel} • {timelineItem.nrIntrebari} întrebări • {formatTime(timelineItem.createdAt)}
+                {/* CHAT VIEW */}
+                {selectedCourseId ? (
+                  <>
+                    <div className="flex flex-1 flex-col overflow-y-auto px-6 py-5" onScroll={handleScrollMessages}>
+                      {messages.length === 0 && !isLoadingMessages ? (
+                        <>
+                          <Card className="border-[#d9e4f4] bg-linear-to-br from-[#edf7ff] via-[#f8fbff] to-white shadow-[0_18px_40px_rgba(32,46,84,0.08)] mb-6">
+                            <CardContent className="space-y-4 px-5 py-5">
+                              <div className="flex items-start gap-3">
+                                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border bg-linear-to-br ${selectedTheme.accent} ${selectedTheme.heroBorder} ${selectedTheme.heroStatText} shadow-[0_12px_24px_rgba(24,49,83,0.14)]`}>
+                                  <Sparkles className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-[#24385b]">Salut! Sunt Aky.</p>
+                                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                                    Sunt pregătit să-ți răspund la întrebări pe baza materialelor de la <span className="font-semibold text-slate-800">{activeCourseTitle}</span>. Adresează-mi o întrebare mai jos!
                                   </p>
                                 </div>
-
-                                <div className="space-y-4">
-                                  {timelineItem.questions.map((question, questionIndex) => {
-                                    const selectedAnswer = timelineItem.answers?.[questionIndex]
-                                    const optionEntries = getQuizOptionEntries(question.optiuni)
-
-                                    return (
-                                      <div key={`${timelineItem.id}-${question.intrebare}-${questionIndex}`} className="rounded-2xl border border-[#edf2f8] bg-[#fbfdff] p-4">
-                                        <p className="text-sm font-semibold leading-6 text-[#24385b]">{questionIndex + 1}. {question.intrebare}</p>
-                                        <div className="mt-3 space-y-2">
-                                          {optionEntries.map(([key, value]) => {
-                                            const isSelected = selectedAnswer === key
-                                            const isCorrect = isQuizCorrectAnswer(question, key, value)
-                                            const showResult = Boolean(selectedAnswer)
-
-                                            return (
-                                              <button
-                                                key={key}
-                                                type="button"
-                                                onClick={() => handleQuizAnswer(timelineItem.id, questionIndex, key)}
-                                                className={cn(
-                                                  "flex w-full items-start gap-2 rounded-xl border bg-white px-3 py-2 text-left text-sm transition",
-                                                  showResult && isCorrect ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#d9e4f4] text-slate-700 hover:border-[#bfd5eb] hover:bg-[#f4f8fd]",
-                                                  showResult && isSelected && !isCorrect ? "border-rose-200 bg-rose-50 text-rose-800" : null
-                                                )}
-                                              >
-                                                <span className="font-semibold">{key}.</span>
-                                                <span>{value}</span>
-                                              </button>
-                                            )
-                                          })}
-                                        </div>
-                                        {selectedAnswer ? (
-                                          <p className="mt-3 text-xs leading-5 text-slate-600">
-                                            <span className="font-semibold text-[#24385b]">Explicație: </span>
-                                            {question.explicatie || "Răspunsul corect este evidențiat mai sus."}
-                                          </p>
-                                        ) : null}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-
-                                {isCompleted && (
-                                  <div className="mt-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 backdrop-blur-sm space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rezultate Quiz</p>
-                                      <span className={cn(
-                                        "px-2.5 py-0.5 rounded-full text-xs font-bold",
-                                        correctCount / totalQuestions >= 0.8
-                                          ? "bg-emerald-100 text-emerald-800"
-                                          : correctCount / totalQuestions >= 0.5
-                                          ? "bg-amber-100 text-amber-800"
-                                          : "bg-rose-100 text-rose-800"
-                                      )}>
-                                        {correctCount / totalQuestions >= 0.8
-                                          ? "Excelent!"
-                                          : correctCount / totalQuestions >= 0.5
-                                          ? "Bine!"
-                                          : "Mai studiază!"}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-end justify-between">
-                                      <div>
-                                        <p className="text-2xl font-bold text-[#24385b]">
-                                          {correctCount} <span className="text-sm font-medium text-slate-400">/ {totalQuestions} corecte</span>
-                                        </p>
-                                      </div>
-                                      <p className="text-3xl font-extrabold text-[#24385b]">
-                                        {Math.round((correctCount / totalQuestions) * 100)}%
-                                      </p>
-                                    </div>
-                                    {/* Progress Bar */}
-                                    <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-                                      <div
-                                        className={cn(
-                                          "h-full rounded-full transition-all duration-500",
-                                          correctCount / totalQuestions >= 0.8
-                                            ? "bg-emerald-500"
-                                            : correctCount / totalQuestions >= 0.5
-                                            ? "bg-amber-500"
-                                            : "bg-rose-500"
-                                        )}
-                                        style={{ width: `${(correctCount / totalQuestions) * 100}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="flex justify-end pt-3 border-t border-slate-100">
-                                  <Button
-                                    type="button"
-                                    onClick={handleOpenQuizNew}
-                                    className={cn(
-                                      "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
-                                      selectedTheme.accent
-                                    )}
-                                  >
-                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                    Generează quiz nou
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )
-                        }
-
-                        const message = timelineItem.message
-                        const isUser = message.rol === "UTILIZATOR"
-
-                        return (
-                          <div key={timelineItem.id} className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
-                            <div
-                              className={cn(
-                                "max-w-[85%] rounded-[1.35rem] px-4 py-3 text-sm leading-relaxed shadow-xs",
-                                isUser
-                                  ? `rounded-br-xs bg-linear-to-r ${selectedTheme.accent} text-white`
-                                  : "rounded-bl-xs border border-[#e4d8cd] bg-white text-slate-800"
-                              )}
-                            >
-                              <div className="whitespace-pre-wrap font-sans text-sm markdown-body">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {message.continut}
-                                </ReactMarkdown>
                               </div>
+                            </CardContent>
+                          </Card>
 
-                              {!isUser && message.surseFolosite ? (
-                                <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
-                                  <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Surse folosite:</p>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {message.surseFolosite.split(",").filter(Boolean).map((sourceItem, index) => {
-                                      const parts = sourceItem.split("|");
-                                      const sourceId = parts[0];
-                                      const sourceName = parts.length > 1 ? parts[1] : `Document ${sourceId}`;
-                                      return (
-                                        <span key={index} className="inline-flex items-center gap-1 rounded-xl border border-[#d9e4f4] bg-[#f4f8fd] px-2.5 py-1 text-[11px] font-semibold text-[#24385b]">
-                                          <FileText className="h-3 w-3 text-[#3b6ea8]" />
-                                          <span className="max-w-[140px] truncate">{sourceName}</span>
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="flex items-center gap-2 px-1">
-                              {isUser && message.areRaspuns === false && (
-                                <div className="flex items-center gap-1.5">
-                                  <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
-                                  <span className="text-[10px] font-medium text-rose-500">Nu s-a putut răspunde</span>
-                                  <button
-                                    onClick={() => handleRetry(message.id)}
-                                    className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 transition-colors"
-                                  >
-                                    <RotateCcw className="h-3 w-3" /> Retry
-                                  </button>
-                                </div>
-                              )}
-                              <span className="text-[10px] font-medium text-slate-400">{formatTime(message.createdAt)}</span>
+                          <div className="space-y-3">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Întrebări rapide</p>
+                            <div className="flex flex-wrap gap-2">
+                              {QUICK_QUESTIONS.map((question) => (
+                                <button
+                                  key={question}
+                                  type="button"
+                                  onClick={() => handleQuickQuestionClick(question)}
+                                  className="rounded-2xl border border-[#d9e4f4] bg-white px-3.5 py-2.5 text-left text-sm text-[#3f698a] shadow-xs transition hover:border-[#bfd5eb] hover:bg-[#f4f8fd]"
+                                >
+                                  {question}
+                                </button>
+                              ))}
                             </div>
                           </div>
-                        )
-                      })}
+                        </>
+                      ) : null}
 
-                      {isSending ? (
-                        <div className="flex flex-col items-start gap-1.5">
-                          <div className="flex items-center gap-2 rounded-[1.35rem] rounded-bl-xs border border-[#e4d8cd] bg-white px-4 py-3 text-xs text-slate-600 shadow-xs">
-                            <Loader2 className="h-4 w-4 animate-spin text-[#24385b]" />
-                            <span>Aky analizează materialele cursului...</span>
-                          </div>
+                      {isLoadingMessages ? (
+                        <div className="flex flex-1 items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
                         </div>
-                      ) : null}
-
-                      {error ? (
-                        <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90 px-4 py-3">
-                          <AlertCircle className="h-4 w-4 text-rose-600" />
-                          <AlertDescription className="text-xs font-medium text-rose-800">{error}</AlertDescription>
-                        </Alert>
-                      ) : null}
-
-                      {quizOpen ? (
-                        <Card className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
-                          <CardContent className="space-y-4 px-5 py-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                <p className="mt-1 text-sm leading-6 text-slate-600">Generează întrebări din materialele accesibile pentru acest curs.</p>
-                              </div>
+                      ) : (
+                        <div className="flex-1 space-y-4">
+                          {hasMoreMessages ? (
+                            <div className="pb-2 text-center">
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setQuizOpen(false)}
-                                className="rounded-xl text-xs font-semibold text-slate-500 hover:bg-[#f4f8fd]"
+                                onClick={loadOlderMessages}
+                                disabled={isLoadingOlderMessages}
+                                className="rounded-xl text-xs font-semibold text-[#3b6ea8] hover:bg-[#f4f8fd]"
                               >
-                                Închide
+                                {isLoadingOlderMessages ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                    Se încarcă mesajele mai vechi...
+                                  </>
+                                ) : (
+                                  "Încărcare mesaje mai vechi"
+                                )}
                               </Button>
                             </div>
+                          ) : messages.length > 0 ? (
+                            <p className="pb-2 text-center text-[11px] font-medium text-slate-400">
+                              — Începutul conversației —
+                            </p>
+                          ) : null}
+                          {timelineItems.map((timelineItem) => {
+                            if (timelineItem.type === "quiz") {
+                              const totalQuestions = timelineItem.questions.length
+                              const answeredCount = Object.keys(timelineItem.answers || {}).length
+                              const isCompleted = answeredCount === totalQuestions
+                              let correctCount = 0
+                              if (isCompleted) {
+                                timelineItem.questions.forEach((question, questionIndex) => {
+                                  const selectedAnswer = timelineItem.answers?.[questionIndex]
+                                  if (selectedAnswer) {
+                                    const optionEntries = getQuizOptionEntries(question.optiuni)
+                                    const matchedEntry = optionEntries.find(([key]) => key === selectedAnswer)
+                                    const val = matchedEntry ? matchedEntry[1] : ""
+                                    if (isQuizCorrectAnswer(question, selectedAnswer, val)) {
+                                      correctCount++
+                                    }
+                                  }
+                                })
+                              }
+                              return (
+                                <Card key={timelineItem.id} className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
+                                  <CardContent className="space-y-4 px-5 py-5">
+                                    <div>
+                                      <p className="font-semibold text-[#24385b]">Quiz Aky</p>
+                                      <p className="mt-1 text-xs font-medium text-slate-400">
+                                        {timelineItem.documentLabel} • {timelineItem.nrIntrebari} întrebări • {formatTime(timelineItem.createdAt)}
+                                      </p>
+                                    </div>
 
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto]">
-                              <select
-                                value={quizDocumentId}
-                                onChange={(event) => setQuizDocumentId(event.target.value)}
-                                disabled={isLoadingQuizDocuments || isGeneratingQuiz}
-                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
-                              >
-                                <option value="">Toate documentele accesibile</option>
-                                {quizDocuments.map((document) => (
-                                  <option key={document.documentId} value={document.documentId}>{document.numeFisier}</option>
-                                ))}
-                              </select>
-                              <select
-                                value={quizNrIntrebari}
-                                onChange={(event) => setQuizNrIntrebari(event.target.value)}
-                                disabled={isGeneratingQuiz}
-                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
-                              >
-                                {[3, 5, 7, 10].map((count) => (
-                                  <option key={count} value={count}>{count} întrebări</option>
-                                ))}
-                              </select>
-                              <Button
-                                type="button"
-                                onClick={handleGenerateQuiz}
-                                disabled={isGeneratingQuiz || isLoadingQuizDocuments}
-                                className={`h-11 rounded-xl bg-linear-to-r ${selectedTheme.accent} px-4 text-white shadow-md disabled:opacity-50`}
-                              >
-                                {isGeneratingQuiz ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Generează
-                              </Button>
+                                    <div className="space-y-4">
+                                      {timelineItem.questions.map((question, questionIndex) => {
+                                        const selectedAnswer = timelineItem.answers?.[questionIndex]
+                                        const optionEntries = getQuizOptionEntries(question.optiuni)
+
+                                        return (
+                                          <div key={`${timelineItem.id}-${question.intrebare}-${questionIndex}`} className="rounded-2xl border border-[#edf2f8] bg-[#fbfdff] p-4">
+                                            <p className="text-sm font-semibold leading-6 text-[#24385b]">{questionIndex + 1}. {question.intrebare}</p>
+                                            <div className="mt-3 space-y-2">
+                                              {optionEntries.map(([key, value]) => {
+                                                const isSelected = selectedAnswer === key
+                                                const isCorrect = isQuizCorrectAnswer(question, key, value)
+                                                const showResult = Boolean(selectedAnswer)
+
+                                                return (
+                                                  <button
+                                                    key={key}
+                                                    type="button"
+                                                    onClick={() => handleQuizAnswer(timelineItem.id, questionIndex, key)}
+                                                    className={cn(
+                                                      "flex w-full items-start gap-2 rounded-xl border bg-white px-3 py-2 text-left text-sm transition",
+                                                      showResult && isCorrect ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#d9e4f4] text-slate-700 hover:border-[#bfd5eb] hover:bg-[#f4f8fd]",
+                                                      showResult && isSelected && !isCorrect ? "border-rose-200 bg-rose-50 text-rose-800" : null
+                                                    )}
+                                                  >
+                                                    <span className="font-semibold">{key}.</span>
+                                                    <span>{value}</span>
+                                                  </button>
+                                                )
+                                              })}
+                                            </div>
+                                            {selectedAnswer ? (
+                                              <p className="mt-3 text-xs leading-5 text-slate-600">
+                                                <span className="font-semibold text-[#24385b]">Explicație: </span>
+                                                {question.explicatie || "Răspunsul corect este evidențiat mai sus."}
+                                              </p>
+                                            ) : null}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+
+                                    {isCompleted && (
+                                      <div className="mt-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 backdrop-blur-sm space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rezultate Quiz</p>
+                                          <span className={cn(
+                                            "px-2.5 py-0.5 rounded-full text-xs font-bold",
+                                            correctCount / totalQuestions >= 0.8
+                                              ? "bg-emerald-100 text-emerald-800"
+                                              : correctCount / totalQuestions >= 0.5
+                                                ? "bg-amber-100 text-amber-800"
+                                                : "bg-rose-100 text-rose-800"
+                                          )}>
+                                            {correctCount / totalQuestions >= 0.8
+                                              ? "Excelent!"
+                                              : correctCount / totalQuestions >= 0.5
+                                                ? "Bine!"
+                                                : "Mai studiază!"}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-end justify-between">
+                                          <div>
+                                            <p className="text-2xl font-bold text-[#24385b]">
+                                              {correctCount} <span className="text-sm font-medium text-slate-400">/ {totalQuestions} corecte</span>
+                                            </p>
+                                          </div>
+                                          <p className="text-3xl font-extrabold text-[#24385b]">
+                                            {Math.round((correctCount / totalQuestions) * 100)}%
+                                          </p>
+                                        </div>
+                                        {/* Progress Bar */}
+                                        <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                                          <div
+                                            className={cn(
+                                              "h-full rounded-full transition-all duration-500",
+                                              correctCount / totalQuestions >= 0.8
+                                                ? "bg-emerald-500"
+                                                : correctCount / totalQuestions >= 0.5
+                                                  ? "bg-amber-500"
+                                                  : "bg-rose-500"
+                                            )}
+                                            style={{ width: `${(correctCount / totalQuestions) * 100}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    <div className="flex justify-end pt-3 border-t border-slate-100">
+                                      <Button
+                                        type="button"
+                                        onClick={handleOpenQuizNew}
+                                        className={cn(
+                                          "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
+                                          selectedTheme.accent
+                                        )}
+                                      >
+                                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                        Generează quiz nou
+                                      </Button>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            }
+
+                            const message = timelineItem.message
+                            const isUser = message.rol === "UTILIZATOR"
+
+                            return (
+                              <div key={timelineItem.id} className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
+                                <div
+                                  className={cn(
+                                    "max-w-[85%] rounded-[1.35rem] px-4 py-3 text-sm leading-relaxed shadow-xs",
+                                    isUser
+                                      ? `rounded-br-xs bg-linear-to-r ${selectedTheme.accent} text-white`
+                                      : "rounded-bl-xs border border-[#e4d8cd] bg-white text-slate-800"
+                                  )}
+                                >
+                                  <div className="whitespace-pre-wrap font-sans text-sm markdown-body">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                      {message.continut}
+                                    </ReactMarkdown>
+                                  </div>
+
+                                  {!isUser && message.surseFolosite ? (
+                                    <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
+                                      <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Surse folosite:</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {message.surseFolosite.split(",").filter(Boolean).map((sourceItem, index) => {
+                                          const parts = sourceItem.split("|");
+                                          const sourceId = parts[0];
+                                          const sourceName = parts.length > 1 ? parts[1] : `Document ${sourceId}`;
+                                          return (
+                                            <span key={index} className="inline-flex items-center gap-1 rounded-xl border border-[#d9e4f4] bg-[#f4f8fd] px-2.5 py-1 text-[11px] font-semibold text-[#24385b]">
+                                              <FileText className="h-3 w-3 text-[#3b6ea8]" />
+                                              <span className="max-w-[140px] truncate">{sourceName}</span>
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+                                <div className="flex items-center gap-2 px-1">
+                                  {isUser && message.areRaspuns === false && (
+                                    <div className="flex items-center gap-1.5">
+                                      <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+                                      <span className="text-[10px] font-medium text-rose-500">Nu s-a putut răspunde</span>
+                                      <button
+                                        onClick={() => handleRetry(message.id)}
+                                        className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 transition-colors"
+                                      >
+                                        <RotateCcw className="h-3 w-3" /> Retry
+                                      </button>
+                                    </div>
+                                  )}
+                                  <span className="text-[10px] font-medium text-slate-400">{formatTime(message.createdAt)}</span>
+                                </div>
+                              </div>
+                            )
+                          })}
+
+                          {isSending ? (
+                            <div className="flex flex-col items-start gap-1.5">
+                              <div className="flex items-center gap-2 rounded-[1.35rem] rounded-bl-xs border border-[#e4d8cd] bg-white px-4 py-3 text-xs text-slate-600 shadow-xs">
+                                <Loader2 className="h-4 w-4 animate-spin text-[#24385b]" />
+                                <span>Aky analizează materialele cursului...</span>
+                              </div>
                             </div>
+                          ) : null}
 
-                            {quizError ? (
-                              <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90 px-4 py-3">
-                                <AlertCircle className="h-4 w-4 text-rose-600" />
-                                <AlertDescription className="text-xs font-medium text-rose-800">{quizError}</AlertDescription>
-                              </Alert>
-                            ) : null}
-                          </CardContent>
-                        </Card>
-                      ) : null}
+                          {error ? (
+                            <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90 px-4 py-3">
+                              <AlertCircle className="h-4 w-4 text-rose-600" />
+                              <AlertDescription className="text-xs font-medium text-rose-800">{error}</AlertDescription>
+                            </Alert>
+                          ) : null}
 
-                      <div ref={messagesEndRef} />
+                          {quizOpen ? (
+                            <Card className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
+                              <CardContent className="space-y-4 px-5 py-5">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="font-semibold text-[#24385b]">Quiz Aky</p>
+                                    <p className="mt-1 text-sm leading-6 text-slate-600">Generează întrebări din materialele accesibile pentru acest curs.</p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setQuizOpen(false)}
+                                    className="rounded-xl text-xs font-semibold text-slate-500 hover:bg-[#f4f8fd]"
+                                  >
+                                    Închide
+                                  </Button>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto]">
+                                  <select
+                                    value={quizDocumentId}
+                                    onChange={(event) => setQuizDocumentId(event.target.value)}
+                                    disabled={isLoadingQuizDocuments || isGeneratingQuiz}
+                                    className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
+                                  >
+                                    <option value="">Toate documentele accesibile</option>
+                                    {quizDocuments.map((document) => (
+                                      <option key={document.documentId} value={document.documentId}>{document.numeFisier}</option>
+                                    ))}
+                                  </select>
+                                  <select
+                                    value={quizNrIntrebari}
+                                    onChange={(event) => setQuizNrIntrebari(event.target.value)}
+                                    disabled={isGeneratingQuiz}
+                                    className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
+                                  >
+                                    {[3, 5, 7, 10].map((count) => (
+                                      <option key={count} value={count}>{count} întrebări</option>
+                                    ))}
+                                  </select>
+                                  <Button
+                                    type="button"
+                                    onClick={handleGenerateQuiz}
+                                    disabled={isGeneratingQuiz || isLoadingQuizDocuments}
+                                    className={`h-11 rounded-xl bg-linear-to-r ${selectedTheme.accent} px-4 text-white shadow-md disabled:opacity-50`}
+                                  >
+                                    {isGeneratingQuiz ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Generează
+                                  </Button>
+                                </div>
+
+                                {quizError ? (
+                                  <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90 px-4 py-3">
+                                    <AlertCircle className="h-4 w-4 text-rose-600" />
+                                    <AlertDescription className="text-xs font-medium text-rose-800">{quizError}</AlertDescription>
+                                  </Alert>
+                                ) : null}
+                              </CardContent>
+                            </Card>
+                          ) : null}
+
+                          <div ref={messagesEndRef} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="mt-auto p-6 pt-2 bg-white/50 backdrop-blur-md border-t border-slate-100">
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    <div className="rounded-[1.6rem] border border-[#d9e4f4] bg-white p-2 shadow-sm transition-shadow focus-within:shadow-md">
-                      <div className="flex items-end gap-2">
-                        <Input
-                          disabled={!enabled || !selectedCourseId || isSending}
-                          value={draft}
-                          onChange={(event) => setDraft(event.target.value)}
-                          placeholder="Scrie întrebarea ta pentru Aky..."
-                          className="h-12 flex-1 rounded-2xl border-0 bg-transparent px-4 text-slate-700 shadow-none focus-visible:ring-0 disabled:opacity-60 placeholder:text-slate-400"
-                        />
-                        <Button
-                          type="submit"
-                          disabled={!enabled || !selectedCourseId || !draft.trim() || isSending}
-                          className={`h-12 w-12 shrink-0 rounded-2xl bg-linear-to-r ${selectedTheme.accent} p-0 text-white shadow-md disabled:opacity-40 transition-transform active:scale-95`}
-                        >
-                          {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 ml-1" />}
-                        </Button>
-                      </div>
+                    <div className="mt-auto p-6 pt-2 bg-white/50 backdrop-blur-md border-t border-slate-100">
+                      <form onSubmit={handleSubmit} className="space-y-3">
+                        <div className="rounded-[1.6rem] border border-[#d9e4f4] bg-white p-2 shadow-sm transition-shadow focus-within:shadow-md">
+                          <div className="flex items-end gap-2">
+                            <Input
+                              disabled={!enabled || !selectedCourseId || isSending}
+                              value={draft}
+                              onChange={(event) => setDraft(event.target.value)}
+                              placeholder="Scrie întrebarea ta pentru Aky..."
+                              className="h-12 flex-1 rounded-2xl border-0 bg-transparent px-4 text-slate-700 shadow-none focus-visible:ring-0 disabled:opacity-60 placeholder:text-slate-400"
+                            />
+                            <Button
+                              type="submit"
+                              disabled={!enabled || !selectedCourseId || !draft.trim() || isSending}
+                              className={`h-12 w-12 shrink-0 rounded-2xl bg-linear-to-r ${selectedTheme.accent} p-0 text-white shadow-md disabled:opacity-40 transition-transform active:scale-95`}
+                            >
+                              {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 ml-1" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </form>
                     </div>
-                  </form>
-                </div>
-              </>
-              ) : null}
+                  </>
+                ) : null}
+              </div>
             </div>
-          </div>
           </div>
 
           {/* RIGHT PANEL: Quiz Panel */}
