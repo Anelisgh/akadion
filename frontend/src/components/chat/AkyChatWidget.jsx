@@ -1270,6 +1270,23 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       ) : null}
                       {timelineItems.map((timelineItem) => {
                         if (timelineItem.type === "quiz") {
+                          const totalQuestions = timelineItem.questions.length
+                          const answeredCount = Object.keys(timelineItem.answers || {}).length
+                          const isCompleted = answeredCount === totalQuestions
+                          let correctCount = 0
+                          if (isCompleted) {
+                            timelineItem.questions.forEach((question, questionIndex) => {
+                              const selectedAnswer = timelineItem.answers?.[questionIndex]
+                              if (selectedAnswer) {
+                                const optionEntries = getQuizOptionEntries(question.optiuni)
+                                const matchedEntry = optionEntries.find(([key]) => key === selectedAnswer)
+                                const val = matchedEntry ? matchedEntry[1] : ""
+                                if (isQuizCorrectAnswer(question, selectedAnswer, val)) {
+                                  correctCount++
+                                }
+                              }
+                            })
+                          }
                           return (
                             <Card key={timelineItem.id} className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
                               <CardContent className="space-y-4 px-5 py-5">
@@ -1321,6 +1338,52 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                     )
                                   })}
                                 </div>
+
+                                {isCompleted && (
+                                  <div className="mt-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 backdrop-blur-sm space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rezultate Quiz</p>
+                                      <span className={cn(
+                                        "px-2.5 py-0.5 rounded-full text-xs font-bold",
+                                        correctCount / totalQuestions >= 0.8
+                                          ? "bg-emerald-100 text-emerald-800"
+                                          : correctCount / totalQuestions >= 0.5
+                                          ? "bg-amber-100 text-amber-800"
+                                          : "bg-rose-100 text-rose-800"
+                                      )}>
+                                        {correctCount / totalQuestions >= 0.8
+                                          ? "Excelent!"
+                                          : correctCount / totalQuestions >= 0.5
+                                          ? "Bine!"
+                                          : "Mai studiază!"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-end justify-between">
+                                      <div>
+                                        <p className="text-2xl font-bold text-[#24385b]">
+                                          {correctCount} <span className="text-sm font-medium text-slate-400">/ {totalQuestions} corecte</span>
+                                        </p>
+                                      </div>
+                                      <p className="text-3xl font-extrabold text-[#24385b]">
+                                        {Math.round((correctCount / totalQuestions) * 100)}%
+                                      </p>
+                                    </div>
+                                    {/* Progress Bar */}
+                                    <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                                      <div
+                                        className={cn(
+                                          "h-full rounded-full transition-all duration-500",
+                                          correctCount / totalQuestions >= 0.8
+                                            ? "bg-emerald-500"
+                                            : correctCount / totalQuestions >= 0.5
+                                            ? "bg-amber-500"
+                                            : "bg-rose-500"
+                                        )}
+                                        style={{ width: `${(correctCount / totalQuestions) * 100}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
 
                                 <div className="flex justify-end pt-3 border-t border-slate-100">
                                   <Button
