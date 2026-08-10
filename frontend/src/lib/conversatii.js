@@ -43,10 +43,29 @@ export async function getDocumenteAccesibile(cursId) {
   return response.data
 }
 
-export async function genereazaQuiz(cursId, { documentId = null, nrIntrebari = 5 } = {}) {
+export async function genereazaQuiz(cursId, docIdOrOpts = null, nrIntrebari = 5) {
+  let documentId = null
+  let numIntrebari = 5
+
+  if (docIdOrOpts && typeof docIdOrOpts === 'object') {
+    documentId = docIdOrOpts.documentId ?? null
+    numIntrebari = docIdOrOpts.nrIntrebari ?? 5
+  } else {
+    documentId = docIdOrOpts
+    numIntrebari = nrIntrebari
+  }
+
   const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/quiz/generate`, {
     documentId,
-    nrIntrebari,
+    nrIntrebari: numIntrebari
+  })
+  return response.data
+}
+
+export async function genereazaFlashcards(cursId, documentId = null, nrFlashcards = 5) {
+  const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/flashcards/generate`, {
+    documentId,
+    nrFlashcards
   })
   return response.data
 }
