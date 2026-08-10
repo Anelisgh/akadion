@@ -384,7 +384,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
       // dacă suntem pe un curs nou fără conversații proprii, dar utilizatorul are conversații în cont,
       // comutăm automat pe tab-ul "Toate" pentru ca utilizatorul să își vadă istoricul general
-      if (!append && pageToLoad === 0 && selectedCourseId && activeFilter === "course" && items.length === 0) {
+      if (!overrideFilter && !append && pageToLoad === 0 && selectedCourseId && activeFilter === "course" && items.length === 0) {
         const globalRes = await getConversatiiGlobale(0)
         const globalItems = Array.isArray(globalRes) ? globalRes : (globalRes?.continut || [])
         if (globalItems.length > 0) {
