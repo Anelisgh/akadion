@@ -148,4 +148,43 @@ public class RagChatService {
             throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         }
     }
+
+    public List<Map<String, Object>> genereazaFlashcards(Long cursId, Integer maxSaptamana, Long documentId, Integer nrFlashcards) {
+        try {
+            Map<String, Object> ragPayload = new HashMap<>();
+            ragPayload.put("cursId", cursId);
+            if (maxSaptamana != null) {
+                ragPayload.put("maxSaptamana", maxSaptamana);
+            }
+            if (documentId != null) {
+                ragPayload.put("documentId", documentId);
+            }
+            if (nrFlashcards != null) {
+                ragPayload.put("nrFlashcards", nrFlashcards);
+            }
+
+            log.info("Trimitere cerere RAG Flashcards pentru cursul {} (maxSaptamana={}, documentId={}, nrFlashcards={}).", cursId, maxSaptamana, documentId, nrFlashcards);
+
+            List<Map<String, Object>> response = restClient.post()
+                    .uri("/flashcards/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(ragPayload)
+                    .retrieve()
+                    .body(new org.springframework.core.ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+            if (response == null) {
+                throw new RagChatException("Serviciul RAG a returnat un răspuns vid.");
+            }
+
+            return response;
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Autentificare eșuată către serviciul RAG la generare flashcards (cursId={})", cursId);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
+        } catch (RagChatException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Eroare la comunicarea cu RAG la generare flashcards pentru cursul {}: {}", cursId, e.getMessage(), e);
+            throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
+        }
+    }
 }

@@ -367,4 +367,37 @@ public class StudentCursService {
 
         return enrollment;
     }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> genereazaFlashcards(Long studentId, Long cursId, FlashcardGenerateRequestDto request) {
+        checkRateLimit(studentId);
+        int maxSaptamana = determinaSaptamanaParcursaMax(studentId, cursId);
+        Long documentId = request != null ? request.documentId() : null;
+        Integer nrFlashcards = request != null && request.nrFlashcards() != null ? request.nrFlashcards() : 5;
+
+        if (nrFlashcards < 1 || nrFlashcards > 20) {
+            throw new IllegalArgumentException("Numărul de flashcard-uri trebuie să fie între 1 și 20.");
+        }
+
+        if (documentId != null) {
+            Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
+
+            if (!Boolean.TRUE.equals(document.getActiv())) {
+                throw new AccesInterzisException("Documentul nu este activ.");
+            }
+
+            Saptamana saptamana = document.getSaptamana();
+            if (saptamana == null || saptamana.getCurs() == null || !saptamana.getCurs().getId().equals(cursId)) {
+                throw new AccesInterzisException("Documentul nu aparține acestui curs.");
+            }
+
+            Integer nrSaptamana = saptamana.getNrSaptamana();
+            if (nrSaptamana == null || nrSaptamana > maxSaptamana) {
+                throw new AccesInterzisException("Documentul nu este accesibil încă.");
+            }
+        }
+
+        return ragChatService.genereazaFlashcards(cursId, maxSaptamana, documentId, nrFlashcards);
+    }
 }

@@ -61,3 +61,11 @@ export async function genereazaQuiz(cursId, docIdOrOpts = null, nrIntrebari = 5)
   })
   return response.data
 }
+
+export async function genereazaFlashcards(cursId, documentId = null, nrFlashcards = 5) {
+  const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/flashcards/generate`, {
+    documentId,
+    nrFlashcards
+  })
+  return response.data
+}

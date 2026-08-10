@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { adaugaMesaj, creareConversatieSiMesaj, genereazaQuiz, getConversatii, getConversatiiGlobale, getDocumenteAccesibile, getIstoric, retryMesaj, stergeConversatie } from "@/lib/conversatii"
+import { adaugaMesaj, creareConversatieSiMesaj, genereazaQuiz, getConversatii, getConversatiiGlobale, getDocumenteAccesibile, getIstoric, retryMesaj, stergeConversatie, genereazaFlashcards } from "@/lib/conversatii"
 import { COURSE_THEME_KEYS, COURSE_THEMES, DEFAULT_COURSE_THEME, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
@@ -113,8 +113,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [isLoadingQuizDocuments, setIsLoadingQuizDocuments] = useState(false)
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
 
-  // Stefy's Quiz States
-  const [quizMode, setQuizMode] = useState(false)
+  // Stefy's Quiz & Flashcard States
+  const [rightPanelMode, setRightPanelMode] = useState(null) // null | 'quiz' | 'flashcards'
+  const quizMode = rightPanelMode === "quiz"
+  const flashcardMode = rightPanelMode === "flashcards"
+
   const [accessibleDocuments, setAccessibleDocuments] = useState([])
   const [selectedQuizDocId, setSelectedQuizDocId] = useState("")
   const [isQuizLoading, setIsQuizLoading] = useState(false)
@@ -122,6 +125,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState({})
   const [quizNumQuestions, setQuizNumQuestions] = useState(5)
+
+  // Flashcards States
+  const [flashcardQuestions, setFlashcardQuestions] = useState([])
+  const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0)
+  const [isFlashcardFlipped, setIsFlashcardFlipped] = useState(false)
+  const [isFlashcardsLoading, setIsFlashcardsLoading] = useState(false)
+  const [flashcardNumQuestions, setFlashcardNumQuestions] = useState(5)
+  const [selectedFlashcardDocId, setSelectedFlashcardDocId] = useState("")
+  const [flashcardError, setFlashcardError] = useState(null)
 
   const clampPanelWidth = useCallback((nextWidth) => {
     const maxWidth = Math.min(AKY_PANEL_MAX_WIDTH, window.innerWidth - AKY_PANEL_VIEWPORT_GAP)
@@ -147,8 +159,17 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
   function toggleQuizMode() {
     if (!selectedCourseId) return
-    const nextMode = !quizMode
-    setQuizMode(nextMode)
+    const nextMode = rightPanelMode === "quiz" ? null : "quiz"
+    setRightPanelMode(nextMode)
+    if (nextMode) {
+      loadAccessibleDocuments()
+    }
+  }
+
+  function toggleFlashcardMode() {
+    if (!selectedCourseId) return
+    const nextMode = rightPanelMode === "flashcards" ? null : "flashcards"
+    setRightPanelMode(nextMode)
     if (nextMode) {
       loadAccessibleDocuments()
     }
@@ -168,7 +189,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       if (Array.isArray(data) && data.length > 0) {
         setQuizQuestions(data)
       } else {
-        setQuizError("Gemini nu a putut returna întrebări structurate corect. Te rugăm să reîncerci.")
+        setQuizError("Gemini nu a putut returna întrebări structurate corect. Te rugăm să reîncercați.")
       }
     } catch (err) {
       console.error("Eroare la generare quiz", err)
@@ -176,6 +197,31 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setQuizError(errorMsg)
     } finally {
       setIsQuizLoading(false)
+    }
+  }
+
+  async function handleStartFlashcards() {
+    if (!selectedCourseId) return
+    setIsFlashcardsLoading(true)
+    setFlashcardError(null)
+    setFlashcardQuestions([])
+    setCurrentFlashcardIndex(0)
+    setIsFlashcardFlipped(false)
+
+    try {
+      const docId = selectedFlashcardDocId ? Number(selectedFlashcardDocId) : null
+      const data = await genereazaFlashcards(selectedCourseId, docId, flashcardNumQuestions)
+      if (Array.isArray(data) && data.length > 0) {
+        setFlashcardQuestions(data)
+      } else {
+        setFlashcardError("Gemini nu a putut returna flashcard-uri structurate corect. Te rugăm să reîncercați.")
+      }
+    } catch (err) {
+      console.error("Eroare la generare flashcards", err)
+      const errorMsg = err.response?.data?.eroare || err.response?.data?.detail || "Nu am putut genera flashcard-urile. Te rugăm să verifici conexiunea sau indexarea documentelor."
+      setFlashcardError(errorMsg)
+    } finally {
+      setIsFlashcardsLoading(false)
     }
   }
 
@@ -205,6 +251,13 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setQuizError(null);
   }
 
+  function handleResetFlashcards() {
+    setFlashcardQuestions([])
+    setCurrentFlashcardIndex(0)
+    setIsFlashcardFlipped(false)
+    setFlashcardError(null)
+  }
+
   useEffect(() => {
     if (open && selectedCourseId) {
       loadAccessibleDocuments()
@@ -212,8 +265,9 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   }, [open, selectedCourseId])
 
   useEffect(() => {
-    setQuizMode(false)
+    setRightPanelMode(null)
     handleResetQuiz()
+    handleResetFlashcards()
   }, [selectedCourseId])
 
   useEffect(() => {
@@ -779,7 +833,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           style={{ "--aky-panel-width": `${panelWidth}px`, "--aky-history-width": `${historyWidth}px` }}
           className={cn(
             "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:w-[var(--aky-panel-width)] lg:max-w-[min(84rem,calc(100vw-2rem))] transition-all duration-300",
-            quizMode ? "lg:w-[min(96rem,calc(100vw-2rem))] flex-row" : "flex-col"
+            rightPanelMode ? "lg:w-[min(96rem,calc(100vw-2rem))] flex-row" : "flex-col"
           )}
         >
           <div
@@ -793,7 +847,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           </div>
 
           {/* LEFT PANEL: Chat panel */}
-          <div className={cn("flex flex-col flex-1 h-full min-w-[350px]", quizMode && "lg:max-w-[50%] border-r border-slate-200/80")}>
+          <div className={cn("flex flex-col flex-1 h-full min-w-[350px]", rightPanelMode && "lg:max-w-[50%] border-r border-slate-200/80")}>
           <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
             <div className="absolute -top-10 right-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-sm" />
             <div className="absolute -bottom-12 left-[-1.5rem] h-28 w-28 rounded-full bg-[#8bc8f1]/14 blur-sm" />
@@ -835,7 +889,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
             </div>
 
             {!isProfessor && selectedCourseId ? (
-              <div className="absolute right-28 top-4 z-20">
+              <div className="absolute right-28 top-4 z-20 flex gap-2">
                 <button
                   type="button"
                   aria-label="Generare Quiz"
@@ -849,6 +903,20 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                 >
                   <Sparkles className="h-4 w-4" />
                   <span>Quiz-uri</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Flashcards"
+                  onClick={toggleFlashcardMode}
+                  className={cn(
+                    "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
+                    flashcardMode
+                      ? "border-emerald-300 bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30"
+                      : "border-white/32 bg-white/16 text-white hover:bg-white/24"
+                  )}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Flashcards</span>
                 </button>
               </div>
             ) : null}
@@ -1587,6 +1655,205 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* RIGHT PANEL: Flashcards Panel */}
+          {flashcardMode && (
+            <div className="flex flex-col flex-1 h-full min-w-[360px] border-l border-slate-200/80 bg-white">
+              {/* Header-ul panoului de Flashcards */}
+              <div className={`p-4 border-b border-slate-100 flex items-center justify-between bg-linear-to-r from-emerald-500 to-teal-600 text-white`}>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-emerald-200 animate-pulse" />
+                  <div>
+                    <h4 className="font-bold text-sm">Flashcards Smart Aky</h4>
+                    <p className="text-[10px] text-white/80">Memorare rapidă prin repetiție!</p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleFlashcardMode}
+                  className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5 rotate-180" />
+                </button>
+              </div>
+
+              {/* Corpul panoului de Flashcards */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Partea de Configurare Flashcards */}
+                {flashcardQuestions.length === 0 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5 font-sans">Sursa Flashcard-urilor</label>
+                      <select
+                        disabled={isFlashcardsLoading}
+                        value={selectedFlashcardDocId}
+                        onChange={(e) => setSelectedFlashcardDocId(e.target.value)}
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-[#24385b] focus:border-[#3b6ea8] focus:ring-1 focus:ring-[#3b6ea8]"
+                      >
+                        <option value="">Toate documentele accesibile</option>
+                        {accessibleDocuments.map((doc) => (
+                          <option key={doc.id} value={doc.id}>{doc.titlu}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5 font-sans">Număr Fise</label>
+                      <select
+                        disabled={isFlashcardsLoading}
+                        value={flashcardNumQuestions}
+                        onChange={(e) => setFlashcardNumQuestions(Number(e.target.value))}
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs font-semibold text-[#24385b]"
+                      >
+                        {[3, 5, 8, 12].map((n) => (
+                          <option key={n} value={n}>{n} Flashcard-uri</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <Button
+                      disabled={isFlashcardsLoading}
+                      onClick={handleStartFlashcards}
+                      className={cn("w-full h-11 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-500 to-teal-600")}
+                    >
+                      Generează Flashcards
+                    </Button>
+                  </div>
+                )}
+
+                {isFlashcardsLoading && (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                    <p className="text-sm sm:text-base font-semibold text-slate-500 animate-pulse">Se extrag conceptele cheie din materie...</p>
+                  </div>
+                )}
+
+                {!isFlashcardsLoading && flashcardError && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-center space-y-2">
+                    <AlertCircle className="h-8 w-8 text-rose-500 mx-auto" />
+                    <p className="text-sm sm:text-base font-semibold text-rose-800">{flashcardError}</p>
+                    <p className="text-xs sm:text-sm text-slate-500">Asigură-te că există documente încărcate și indexate în săptămânile parcurse de tine la acest curs.</p>
+                  </div>
+                )}
+
+                {!isFlashcardsLoading && !flashcardError && flashcardQuestions.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full text-center space-y-3 p-4">
+                    <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100 text-emerald-500">
+                      <FileText className="h-7 w-7" />
+                    </div>
+                    <h5 className="font-bold text-base sm:text-lg text-slate-700 font-sans">Memorare prin Flashcards</h5>
+                    <p className="text-sm sm:text-base text-slate-500 max-w-xs font-sans">
+                      Generează fișe cu concepte cheie și explicații pentru a le memora vizual prin repetiție activă.
+                    </p>
+                  </div>
+                )}
+
+                {!isFlashcardsLoading && !flashcardError && flashcardQuestions.length > 0 && (
+                  <div className="space-y-5">
+                    {/* Progresul */}
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase font-sans">
+                      <span>Fișa {currentFlashcardIndex + 1} din {flashcardQuestions.length}</span>
+                      <span className="text-emerald-500">Memorare activă</span>
+                    </div>
+
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 transition-all duration-300"
+                        style={{ width: `${((currentFlashcardIndex + 1) / flashcardQuestions.length) * 100}%` }}
+                      />
+                    </div>
+
+                    {/* Cardul 3D Flip */}
+                    <div 
+                      onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)} 
+                      className="w-full h-64 cursor-pointer"
+                      style={{ perspective: "1000px" }}
+                    >
+                      <div 
+                        className="w-full h-full relative duration-500 rounded-3xl"
+                        style={{ 
+                          transformStyle: "preserve-3d", 
+                          transform: isFlashcardFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
+                        }}
+                      >
+                        {/* Front Face */}
+                        <div 
+                          className="absolute inset-0 w-full h-full bg-linear-to-br from-[#edf6fc] to-[#dcf0fb] border border-blue-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-xs"
+                          style={{ backfaceVisibility: "hidden" }}
+                        >
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#3b6ea8] bg-[#3b6ea8]/10 px-3 py-1 rounded-full font-sans">Concept / Întrebare</span>
+                          <p className="text-lg sm:text-xl font-bold text-[#24385b] leading-snug flex-1 flex items-center justify-center p-2 font-sans">
+                            {flashcardQuestions[currentFlashcardIndex].fata}
+                          </p>
+                          <span className="text-xs font-semibold text-[#3b6ea8]/70 flex items-center gap-1.5 font-sans">
+                            <RotateCcw className="h-3.5 w-3.5" /> Apasă pentru răspuns
+                          </span>
+                        </div>
+
+                        {/* Back Face */}
+                        <div 
+                          className="absolute inset-0 w-full h-full bg-white border border-emerald-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-xs"
+                          style={{ 
+                            backfaceVisibility: "hidden", 
+                            transform: "rotateY(180deg)"
+                          }}
+                        >
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-sans">Răspuns / Definiție</span>
+                          <p className="text-sm sm:text-base font-medium text-slate-700 leading-relaxed flex-1 overflow-y-auto flex items-center justify-center whitespace-pre-wrap max-h-[140px] w-full p-2 font-sans">
+                            {flashcardQuestions[currentFlashcardIndex].verso}
+                          </p>
+                          <span className="text-xs font-semibold text-emerald-600/70 flex items-center gap-1.5 font-sans">
+                            <RotateCcw className="h-3.5 w-3.5" /> Apasă pentru întoarcere
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Navigare */}
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        disabled={currentFlashcardIndex === 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsFlashcardFlipped(false);
+                          setTimeout(() => {
+                            setCurrentFlashcardIndex(prev => prev - 1);
+                          }, 150);
+                        }}
+                        className="flex-1 h-10 rounded-xl text-xs font-semibold text-slate-600 border-slate-200 font-sans"
+                      >
+                        Înapoi
+                      </Button>
+                      {currentFlashcardIndex < flashcardQuestions.length - 1 ? (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsFlashcardFlipped(false);
+                            setTimeout(() => {
+                              setCurrentFlashcardIndex(prev => prev + 1);
+                            }, 150);
+                          }}
+                          className={cn(
+                            "flex-1 h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-600 font-sans"
+                          )}
+                        >
+                          Următorul
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={handleResetFlashcards}
+                          className="flex-1 h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-amber-500 to-orange-600 font-sans"
+                        >
+                          Finalizează & Reset
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
