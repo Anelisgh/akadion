@@ -34,7 +34,7 @@ export default function LogoutPage() {
             <div className="overflow-hidden rounded-[1.5rem] border border-[#eadfd4] bg-[#f7efe6]">
               <video
                 src={wavingOwlVideo}
-                className="aspect-video w-full object-cover"
+                className="aspect-[4/3] w-full object-cover"
                 autoPlay
                 loop
                 muted
@@ -49,7 +49,7 @@ export default function LogoutPage() {
             variant="outline"
             size="lg"
             onClick={startLogin}
-            className="mt-7 rounded-2xl border-[#d9ccbe] bg-white px-8 text-base font-semibold text-black shadow-sm hover:bg-white hover:text-black"
+            className="mt-7 rounded-2xl border-[#d9ccbe] bg-white px-8 text-base font-semibold text-[#24385b] shadow-sm transition-all hover:bg-[#24385b] hover:text-white hover:border-[#24385b]"
           >
             Inapoi la autentificare
           </Button>
