@@ -948,20 +948,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   <FileText className="h-4 w-4" />
                   <span>Flashcards</span>
                 </button>
-                <button
-                  type="button"
-                  aria-label="Flashcards"
-                  onClick={toggleFlashcardMode}
-                  className={cn(
-                    "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
-                    flashcardMode
-                      ? "border-emerald-300 bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30"
-                      : "border-white/32 bg-white/16 text-white hover:bg-white/24"
-                  )}
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Flashcards</span>
-                </button>
               </div>
             ) : null}
 
