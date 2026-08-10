@@ -1268,6 +1268,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                       ) : null}
                       {timelineItems.map((timelineItem) => {
                         if (timelineItem.type === "quiz") {
+                          const quizItems = timelineItems.filter((item) => item.type === "quiz")
+                          const quizIndex = quizItems.findIndex((q) => q.id === timelineItem.id)
                           return (
                             <Card key={timelineItem.id} className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
                               <CardContent className="space-y-4 px-5 py-5">
@@ -1320,19 +1322,21 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                   })}
                                 </div>
 
-                                <div className="flex justify-end pt-3 border-t border-slate-100">
-                                  <Button
-                                    type="button"
-                                    onClick={handleOpenQuizNew}
-                                    className={cn(
-                                      "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
-                                      selectedTheme.accent
-                                    )}
-                                  >
-                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                    Generează quiz nou
-                                  </Button>
-                                </div>
+                                {quizIndex > 0 && (
+                                  <div className="flex justify-end pt-3 border-t border-slate-100">
+                                    <Button
+                                      type="button"
+                                      onClick={handleOpenQuizNew}
+                                      className={cn(
+                                        "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
+                                        selectedTheme.accent
+                                      )}
+                                    >
+                                      <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                      Generează quiz nou
+                                    </Button>
+                                  </div>
+                                )}
                               </CardContent>
                             </Card>
                           )
