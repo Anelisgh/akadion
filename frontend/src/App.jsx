@@ -12,6 +12,7 @@ import CourseDetailPage from "@/pages/CourseDetailPage"
 import NewCoursePage from "@/pages/NewCoursePage"
 import ProfilePage from "@/pages/ProfilePage"
 import DiscoverAkyPage from "@/pages/DiscoverAkyPage"
+import AdminAuditLogPage from "@/pages/AdminAuditLogPage"
 import OwlHall from "@/pages/OwlHall"
 import LogoutPage from "@/pages/LogoutPage"
 import AppShell from "@/components/AppShell"
@@ -1044,6 +1045,7 @@ function App() {
       "/owl-hall": "Galeria Bufnițelor Legendare",
       "/users": "Utilizatori",
       "/admin/users": "Administrare Utilizatori",
+      "/admin/audit-log": "Audit Log",
     }
 
     let title = "AKADION - Platformă Academică"
@@ -1152,6 +1154,14 @@ function App() {
         element={
           <RequireAdmin>
             <AdminUsersPage />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/audit-log"
+        element={
+          <RequireAdmin>
+            <AdminAuditLogPage />
           </RequireAdmin>
         }
       />
