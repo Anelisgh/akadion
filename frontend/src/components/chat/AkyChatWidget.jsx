@@ -836,11 +836,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent
           onOpenChange={handleOpenChange}
-          style={{ "--aky-panel-width": `${panelWidth}px`, "--aky-history-width": `${historyWidth}px` }}
+          style={{
+            "--aky-panel-width": `${panelWidth}px`,
+            "--aky-history-width": `${historyWidth}px`,
+            width: (typeof window !== "undefined" && window.innerWidth >= 1024) ? (rightPanelMode ? "min(96rem, calc(100vw - 2rem))" : `${panelWidth}px`) : undefined
+          }}
           className={cn(
-            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:w-[var(--aky-panel-width)] lg:max-w-[min(84rem,calc(100vw-2rem))]",
+            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:max-w-[min(84rem,calc(100vw-2rem))]",
             !isResizing && "transition-all duration-300",
-            rightPanelMode ? "lg:w-[min(96rem,calc(100vw-2rem))] flex-row" : "flex-col"
+            rightPanelMode ? "flex-row" : "flex-col"
           )}
         >
           <div
@@ -960,7 +964,14 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
             </div>
           </SheetHeader>
 
-          <div className={cn("grid min-h-0 flex-1 bg-slate-50/50", historyVisible ? "lg:grid-cols-[var(--aky-history-width)_minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)]")}>
+          <div
+            style={{
+              gridTemplateColumns: (historyVisible && typeof window !== "undefined" && window.innerWidth >= 1024)
+                ? `${historyWidth}px minmax(0, 1fr)`
+                : undefined
+            }}
+            className={cn("grid min-h-0 flex-1 bg-slate-50/50", !historyVisible && "lg:grid-cols-[minmax(0,1fr)]")}
+          >
             {/* CONVERSATION LIST VIEW */}
             <div className={cn("relative min-h-0 flex-col border-r border-slate-100 bg-white/42", view === "chat" ? "hidden lg:flex" : "flex", !historyVisible && "lg:hidden")}>
                 <div
