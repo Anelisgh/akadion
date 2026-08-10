@@ -1,7 +1,11 @@
 import os
-import random
 import requests
 from dotenv import load_dotenv
+from logging_ctx import request_id_var, user_var
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -33,6 +37,7 @@ MOCK_DOCUMENTS = [
     }
 ]
 
+
 def obtine_embedding_intrebare(intrebare: str) -> list[float] | None:
     """
     Apeleaza Embedder Service (POST /api/query/embed) pentru a obtine vectorul de embedding al intrebarii.
@@ -42,18 +47,35 @@ def obtine_embedding_intrebare(intrebare: str) -> list[float] | None:
         response = requests.post(
             embedder_url,
             json={"text": intrebare},
-            timeout=30.0
+            auth=(
+                os.environ.get("RAG_SERVICE_USERNAME", "akadion-spring-backend"),
+                os.environ.get("RAG_SERVICE_PASSWORD", "parola_spring_rag"),
+            ),
+            headers={"X-Request-ID": request_id_var.get(), "X-User": user_var.get()},
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json()
-            return data.get("embedding")
+            embedding = data.get("embedding")
+            logger.info(
+                "embedding_obtinut",
+                extra={"dim": len(embedding) if embedding else 0},
+            )
+            return embedding
         else:
-            print(f"[EMBEDDER WARNING] Status code {response.status_code} primit de la Embedder Service.")
+            logger.warning(
+                "embedder_status_neasteptat",
+                extra={"status": response.status_code, "url": embedder_url},
+            )
     except Exception as e:
-        print(f"[EMBEDDER WARNING] Nu s-a putut obtine embedding-ul de la Embedder Service ({embedder_url}): {e}")
+        logger.warning(
+            "embedder_indisponibil",
+            extra={"url": embedder_url, "error": str(e)},
+        )
     return None
 
-def cauta_context(intrebare: str, curs_id: int, max_saptamana: int, document_id: int | None = None, match_any: bool = False) -> list[dict]:
+
+def cauta_context(intrebare: str, curs_id: int, max_saptamana: int) -> list[dict]:
     """
     Filtreaza documentele conform regulilor din contract:
     - cursId == curs_id
@@ -80,21 +102,15 @@ def cauta_context(intrebare: str, curs_id: int, max_saptamana: int, document_id:
 
                 client = QdrantClient(host=host, port=port, timeout=10.0)
 
-                must_conditions = [
-                    models.FieldCondition(key="week_id", range=models.Range(lte=max_saptamana))
-                ]
-                if document_id is not None:
-                    must_conditions.append(
-                        models.FieldCondition(key="document_id", match=models.MatchValue(value=document_id))
-                    )
-
                 # Filtru de metadate pe curs si saptamana parcursa
                 scroll_filter = models.Filter(
                     should=[
                         models.FieldCondition(key="course_id", match=models.MatchValue(value=curs_id)),
                         models.FieldCondition(key="curs_id", match=models.MatchValue(value=curs_id))
                     ],
-                    must=must_conditions
+                    must=[
+                        models.FieldCondition(key="week_id", range=models.Range(lte=max_saptamana))
+                    ]
                 )
 
                 # Cautare vectorială semantică
@@ -114,14 +130,24 @@ def cauta_context(intrebare: str, curs_id: int, max_saptamana: int, document_id:
                     )
                     search_results = response_qp.points
 
+                logger.info(
+                    "vector_search_done",
+                    extra={
+                        "curs_id": curs_id,
+                        "max_saptamana": max_saptamana,
+                        "collection": collection,
+                        "n_results": len(search_results),
+                        "scores": [round(getattr(pt, "score", 0) or 0, 4) for pt in search_results],
+                        "doc_ids": [(pt.payload or {}).get("document_id") for pt in search_results],
+                    },
+                )
+
                 contexte_qdrant = []
                 for pt in search_results:
                     payload = pt.payload or {}
                     text_content = payload.get("chunk_text") or payload.get("text", "")
                     c_id = payload.get("course_id") or payload.get("curs_id", curs_id)
                     doc_id = payload.get("document_id", 999)
-                    if document_id is not None and str(doc_id) != str(document_id):
-                        continue
                     w_id = payload.get("week_id", max_saptamana)
 
                     contexte_qdrant.append({
@@ -132,11 +158,27 @@ def cauta_context(intrebare: str, curs_id: int, max_saptamana: int, document_id:
                     })
 
                 if contexte_qdrant:
+                    logger.info(
+                        "context_din_qdrant",
+                        extra={
+                            "n_chunks": len(contexte_qdrant),
+                            "chars_total": sum(len(c["text"]) for c in contexte_qdrant),
+                            "preview": [c["text"][:80] for c in contexte_qdrant[:3]],
+                        },
+                    )
                     return contexte_qdrant
+
+                logger.warning(
+                    "qdrant_zero_rezultate",
+                    extra={"curs_id": curs_id, "max_saptamana": max_saptamana},
+                )
             else:
-                print("[QDRANT WARNING] Vectorul de interogare nu a putut fi extras. Folosim fallback mock.")
+                logger.warning("vector_lipsa_fallback_mock", extra={"curs_id": curs_id})
         except Exception as e:
-            print(f"[QDRANT WARNING] Nu s-a putut efectua interogarea pe Qdrant: {e}. Folosim fallback mock.")
+            logger.warning(
+                "qdrant_eroare_fallback_mock",
+                extra={"curs_id": curs_id, "error": str(e)},
+            )
 
     # Cautare pe date simulate (Mock Fallback)
     contexte_gasite = []
@@ -144,20 +186,26 @@ def cauta_context(intrebare: str, curs_id: int, max_saptamana: int, document_id:
 
     for doc in MOCK_DOCUMENTS:
         if doc["curs_id"] == curs_id and doc["week_id"] <= max_saptamana:
-            if document_id is not None and doc["document_id"] != document_id:
-                continue
             cuvinte_doc = set([w for w in doc["text"].lower().split() if len(w) > 2])
-            if match_any or cuvinte_intrebare.intersection(cuvinte_doc):
+            if cuvinte_intrebare.intersection(cuvinte_doc):
                 contexte_gasite.append(doc)
 
+    logger.warning(
+        "context_din_mock",
+        extra={"n_chunks": len(contexte_gasite), "use_mock": use_mock, "curs_id": curs_id},
+    )
     return contexte_gasite
 
-def cauta_contexte_scroll(curs_id: int, max_saptamana: int, document_id: int | None = None, limit: int = 15) -> list[dict]:
+
+def cauta_contexte_scroll(curs_id: int, max_saptamana: int, document_id: int = None, limit: int = 15) -> list[dict]:
     """
-    Recupereaza fragmente brute din Qdrant pentru quiz, fara cautare semantica.
-    Quiz-ul are nevoie de diversitate din materia accesibila, nu de top rezultate pentru o intrebare artificiala.
+    Recuperează fragmente brute de text (chunks) din Qdrant fără căutare vectorială semantică.
+    Folosește metoda de scroll pe baza ID-ului de curs/săptămână sau document_id.
+    Pentru diversitate, face scroll la un număr mai mare de fragmente, le amestecă (shuffle) 
+    și selectează un subset de dimensiune `limit`.
     """
     use_mock = os.environ.get("USE_QDRANT_MOCK", "true").lower() in ("true", "1", "yes")
+    import random
 
     if not use_mock:
         try:
@@ -170,28 +218,39 @@ def cauta_contexte_scroll(curs_id: int, max_saptamana: int, document_id: int | N
 
             client = QdrantClient(host=host, port=port, timeout=10.0)
 
-            must_conditions = [
-                models.FieldCondition(key="week_id", range=models.Range(lte=max_saptamana))
-            ]
+            # Construire filtre
+            must_conditions = []
             if document_id is not None:
-                must_conditions.append(
-                    models.FieldCondition(key="document_id", match=models.MatchValue(value=document_id))
-                )
+                must_conditions.append(models.FieldCondition(key="document_id", match=models.MatchValue(value=document_id)))
+            else:
+                must_conditions.append(models.FieldCondition(key="week_id", range=models.Range(lte=max_saptamana)))
+                must_conditions.append(models.Filter(
+                    should=[
+                        models.FieldCondition(key="course_id", match=models.MatchValue(value=curs_id)),
+                        models.FieldCondition(key="curs_id", match=models.MatchValue(value=curs_id))
+                    ]
+                ))
 
-            scroll_filter = models.Filter(
-                should=[
-                    models.FieldCondition(key="course_id", match=models.MatchValue(value=curs_id)),
-                    models.FieldCondition(key="curs_id", match=models.MatchValue(value=curs_id))
-                ],
-                must=must_conditions
-            )
+            scroll_filter = models.Filter(must=must_conditions)
 
+            # Scroll pe mai multe puncte pentru a permite diversitatea prin amestecare
             scroll_results, _ = client.scroll(
                 collection_name=collection,
                 scroll_filter=scroll_filter,
                 limit=100,
                 with_payload=True,
                 with_vectors=False
+            )
+
+            logger.info(
+                "scroll_done",
+                extra={
+                    "curs_id": curs_id,
+                    "document_id": document_id,
+                    "max_saptamana": max_saptamana,
+                    "n_scroll": len(scroll_results),
+                    "limit_returnat": limit,
+                },
             )
 
             contexte_qdrant = []
@@ -202,19 +261,9 @@ def cauta_contexte_scroll(curs_id: int, max_saptamana: int, document_id: int | N
                 doc_id = payload.get("document_id", 999)
                 w_id = payload.get("week_id", max_saptamana)
 
-                if str(c_id) != str(curs_id):
-                    continue
-                if document_id is not None and str(doc_id) != str(document_id):
-                    continue
-                try:
-                    if int(w_id) > max_saptamana:
-                        continue
-                except (TypeError, ValueError):
-                    continue
-
                 contexte_qdrant.append({
                     "document_id": int(doc_id) if str(doc_id).isdigit() else 999,
-                    "curs_id": int(c_id) if str(c_id).isdigit() else curs_id,
+                    "curs_id": int(c_id),
                     "week_id": int(w_id),
                     "text": str(text_content)
                 })
@@ -223,16 +272,31 @@ def cauta_contexte_scroll(curs_id: int, max_saptamana: int, document_id: int | N
                 random.shuffle(contexte_qdrant)
                 return contexte_qdrant[:limit]
 
-        except Exception as e:
-            print(f"[QDRANT WARNING] Nu s-a putut efectua scroll pe Qdrant: {e}. Folosim fallback mock.")
+            logger.warning(
+                "scroll_zero_rezultate",
+                extra={"curs_id": curs_id, "document_id": document_id},
+            )
 
+        except Exception as e:
+            logger.warning(
+                "scroll_eroare_fallback_mock",
+                extra={"curs_id": curs_id, "error": str(e)},
+            )
+
+    # Mock Fallback
     contexte_gasite = []
     for doc in MOCK_DOCUMENTS:
-        if doc["curs_id"] != curs_id or doc["week_id"] > max_saptamana:
-            continue
-        if document_id is not None and doc["document_id"] != document_id:
-            continue
-        contexte_gasite.append(doc)
+        if document_id is not None:
+            if doc.get("document_id") == document_id:
+                contexte_gasite.append(doc)
+        else:
+            if doc["curs_id"] == curs_id and doc["week_id"] <= max_saptamana:
+                contexte_gasite.append(doc)
+
+    logger.warning(
+        "scroll_context_din_mock",
+        extra={"n_chunks": len(contexte_gasite), "use_mock": use_mock, "curs_id": curs_id},
+    )
 
     random.shuffle(contexte_gasite)
     return contexte_gasite[:limit]

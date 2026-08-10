@@ -948,6 +948,20 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   <FileText className="h-4 w-4" />
                   <span>Flashcards</span>
                 </button>
+                <button
+                  type="button"
+                  aria-label="Flashcards"
+                  onClick={toggleFlashcardMode}
+                  className={cn(
+                    "flex h-10 items-center justify-center gap-1.5 px-3 rounded-2xl border text-xs font-semibold shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-sm transition",
+                    flashcardMode
+                      ? "border-emerald-300 bg-emerald-400/20 text-emerald-200 hover:bg-emerald-400/30"
+                      : "border-white/32 bg-white/16 text-white hover:bg-white/24"
+                  )}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Flashcards</span>
+                </button>
               </div>
             ) : null}
 
@@ -1470,6 +1484,20 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                               </Alert>
                             ) : null}
 
+                            <div className="flex justify-end pt-3 border-t border-slate-100">
+                              <Button
+                                type="button"
+                                onClick={handleOpenQuizNew}
+                                className={cn(
+                                  "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
+                                  selectedTheme.accent
+                                )}
+                              >
+                                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                Generează quiz nou
+                              </Button>
+                            </div>
+
                           </CardContent>
                         </Card>
                       ) : null}
@@ -1716,7 +1744,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           {flashcardMode && (
             <div className="flex flex-col flex-1 h-full min-w-[360px] border-l border-slate-200/80 bg-white">
               {/* Header-ul panoului de Flashcards */}
-              <div className={`p-4 border-b border-slate-100 flex items-center justify-between bg-linear-to-r from-emerald-500 to-teal-600 text-white`}>
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-linear-to-r from-emerald-500 to-teal-600 text-white">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-emerald-200 animate-pulse" />
                   <div>
@@ -1753,7 +1781,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5 font-sans">Număr Fise</label>
+                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5 font-sans">Număr Fișe</label>
                       <select
                         disabled={isFlashcardsLoading}
                         value={flashcardNumQuestions}
@@ -1769,7 +1797,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     <Button
                       disabled={isFlashcardsLoading}
                       onClick={handleStartFlashcards}
-                      className={cn("w-full h-11 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-500 to-teal-600")}
+                      className="w-full h-11 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-500 to-teal-600"
                     >
                       Generează Flashcards
                     </Button>
@@ -1819,21 +1847,21 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                     </div>
 
                     {/* Cardul 3D Flip */}
-                    <div 
-                      onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)} 
+                    <div
+                      onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)}
                       className="w-full h-64 cursor-pointer"
                       style={{ perspective: "1000px" }}
                     >
-                      <div 
+                      <div
                         className="w-full h-full relative duration-500 rounded-3xl"
-                        style={{ 
-                          transformStyle: "preserve-3d", 
+                        style={{
+                          transformStyle: "preserve-3d",
                           transform: isFlashcardFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
                           transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
                         }}
                       >
                         {/* Front Face */}
-                        <div 
+                        <div
                           className="absolute inset-0 w-full h-full bg-linear-to-br from-[#edf6fc] to-[#dcf0fb] border border-blue-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-xs"
                           style={{ backfaceVisibility: "hidden" }}
                         >
@@ -1847,10 +1875,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         </div>
 
                         {/* Back Face */}
-                        <div 
+                        <div
                           className="absolute inset-0 w-full h-full bg-white border border-emerald-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-xs"
-                          style={{ 
-                            backfaceVisibility: "hidden", 
+                          style={{
+                            backfaceVisibility: "hidden",
                             transform: "rotateY(180deg)"
                           }}
                         >
@@ -1890,9 +1918,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                               setCurrentFlashcardIndex(prev => prev + 1);
                             }, 150);
                           }}
-                          className={cn(
-                            "flex-1 h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-600 font-sans"
-                          )}
+                          className="flex-1 h-10 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-600 font-sans"
                         >
                           Următorul
                         </Button>

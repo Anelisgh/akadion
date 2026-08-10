@@ -1,8 +1,8 @@
 import time
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi_app.auth import verify_credentials
 
-from fastapi_app.models import IngestRequest, IngestResponse
+from fastapi_app.auth import verify_credentials
+from fastapi_app.models import IngestRequest, IngestResponse, DeleteResponse
 from fastapi_app.services import (
     get_pdf_extractor,
     get_text_chunker,
@@ -12,8 +12,11 @@ from fastapi_app.services import (
 from fastapi_app.utils.logger import setup_logger
 
 logger = setup_logger(__name__)
-router = APIRouter(prefix="/api", tags=["documents"],
-                   dependencies=[Depends(verify_credentials)])
+router = APIRouter(
+    prefix="/api",
+    tags=["documents"],
+    dependencies=[Depends(verify_credentials)]
+)
 
 
 @router.post("/documents/ingest", response_model=IngestResponse)
@@ -173,19 +176,43 @@ def ingest_document(request: IngestRequest) -> IngestResponse:
             processing_time_ms=processing_time_ms
         )
 
+@router.delete("/documents/{document_id}", response_model=DeleteResponse)
+def delete_document(document_id: int) -> DeleteResponse:
+    """
+    Delete all Qdrant chunks for a document.
 
-@router.delete("/documents/ingest/{document_id}")
-def delete_document_chunks(document_id: int):
+    Called by Spring Boot when a document is deleted (or before re-indexing
+    outside the normal ingest flow). Idempotent — succeeds even if the
+    document was never indexed.
     """
-    Delete document chunks from Qdrant vector DB when a document is deleted.
-    """
-    logger.info("Received request to delete document chunks", extra={"extra_data": {"document_id": document_id}})
+    logger.info(
+        "Delete request received",
+        extra={"extra_data": {"document_id": document_id}}
+    )
+
     try:
         qdrant_client = get_qdrant_client()
         qdrant_client.delete_document_chunks(document_id)
-        logger.info("Successfully deleted document chunks", extra={"extra_data": {"document_id": document_id}})
-        return {"status": "SUCCESS", "document_id": document_id}
+
+        logger.info(
+            "Document chunks deleted",
+            extra={"extra_data": {"document_id": document_id}}
+        )
+
+        return DeleteResponse(
+            document_id=document_id,
+            status="SUCCESS"
+        )
+
     except Exception as e:
         error_msg = str(e)
-        logger.error("Failed to delete document chunks", extra={"extra_data": {"document_id": document_id, "error": error_msg}})
-        raise HTTPException(status_code=500, detail=error_msg)
+        logger.error(
+            "Delete failed",
+            extra={"extra_data": {"document_id": document_id, "error": error_msg}}
+        )
+
+        return DeleteResponse(
+            document_id=document_id,
+            status="FAILED",
+            error=error_msg
+        )

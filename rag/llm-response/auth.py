@@ -5,8 +5,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 security = HTTPBasic()
 
-RAG_USERNAME = os.environ["RAG_SERVICE_USERNAME"]
-RAG_PASSWORD = os.environ["RAG_SERVICE_PASSWORD"]
+RAG_USERNAME = os.getenv("RAG_SERVICE_USERNAME", "akadion-spring-backend")
+RAG_PASSWORD = os.getenv("RAG_SERVICE_PASSWORD", "parola_spring_rag")
 
 
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> str:
