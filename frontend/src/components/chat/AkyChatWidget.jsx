@@ -802,6 +802,14 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     )))
   }
 
+  function handleOpenQuizNew() {
+    setQuizOpen(true)
+    setRightPanelMode(null)
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 100)
+  }
+
   function formatTime(isoString) {
     if (!isoString) return ""
     return new Date(isoString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -1312,6 +1320,22 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                     )
                                   })}
                                 </div>
+
+                                {timelineItem.questions.every((_, qIdx) => timelineItem.answers?.[qIdx] !== undefined) && (
+                                  <div className="flex justify-end pt-3 border-t border-slate-100">
+                                    <Button
+                                      type="button"
+                                      onClick={handleOpenQuizNew}
+                                      className={cn(
+                                        "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
+                                        selectedTheme.accent
+                                      )}
+                                    >
+                                      <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                      Generează quiz nou
+                                    </Button>
+                                  </div>
+                                )}
                               </CardContent>
                             </Card>
                           )
