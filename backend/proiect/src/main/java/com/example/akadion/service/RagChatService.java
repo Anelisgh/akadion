@@ -114,11 +114,17 @@ public class RagChatService {
         try {
             Map<String, Object> ragPayload = new HashMap<>();
             ragPayload.put("cursId", cursId);
-            ragPayload.put("maxSaptamanaParcursa", maxSaptamana);
-            ragPayload.put("documentId", documentId);
-            ragPayload.put("nrIntrebari", nrIntrebari);
+            if (maxSaptamana != null) {
+                ragPayload.put("maxSaptamana", maxSaptamana);
+            }
+            if (documentId != null) {
+                ragPayload.put("documentId", documentId);
+            }
+            if (nrIntrebari != null) {
+                ragPayload.put("nrIntrebari", nrIntrebari);
+            }
 
-            log.info("Trimitere cerere RAG Quiz pentru cursul {}.", cursId);
+            log.info("Trimitere cerere RAG Quiz pentru cursul {} (maxSaptamana={}, documentId={}, nrIntrebari={}).", cursId, maxSaptamana, documentId, nrIntrebari);
 
             List<Map<String, Object>> response = restClient.post()
                     .uri("/quiz/generate")
@@ -133,12 +139,12 @@ public class RagChatService {
 
             return response;
         } catch (HttpClientErrorException.Unauthorized e) {
-            log.warn("Autentificare eșuată către serviciul RAG — verifică dacă secretul e sincronizat cu echipa RAG (cursId={})", cursId);
+            log.warn("Autentificare eșuată către serviciul RAG la generare quiz (cursId={})", cursId);
             throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         } catch (RagChatException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Eroare la comunicarea cu RAG Quiz pentru cursul {}: {}", cursId, e.getMessage(), e);
+            log.error("Eroare la comunicarea cu RAG la generare quiz pentru cursul {}: {}", cursId, e.getMessage(), e);
             throw new RagChatException("Serviciul Aky este temporar indisponibil. Încearcă din nou în câteva momente.", e);
         }
     }

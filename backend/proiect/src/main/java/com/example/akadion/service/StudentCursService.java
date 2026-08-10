@@ -289,14 +289,23 @@ public class StudentCursService {
     public Integer determinaSaptamanaParcursaMax(Long studentId, Long cursId) {
         verificaStudentActivInrolat(studentId, cursId);
 
-        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
         List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
-        return saptamani.stream()
-                .filter(saptamana -> completedIds.contains(saptamana.getId()))
-                .map(Saptamana::getNrSaptamana)
-                .filter(nrSaptamana -> nrSaptamana != null)
-                .max(Integer::compareTo)
-                .orElse(saptamani.isEmpty() ? 0 : 1);
+        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
+        
+        int maxWeek = 1;
+        for (Saptamana s : saptamani) {
+            if (completedIds.contains(s.getId())) {
+                if (s.getNrSaptamana() != null && s.getNrSaptamana() >= maxWeek) {
+                    maxWeek = s.getNrSaptamana() + 1;
+                }
+            }
+        }
+        
+        int totalSapt = saptamani.size();
+        if (maxWeek > totalSapt && totalSapt > 0) {
+            maxWeek = totalSapt;
+        }
+        return maxWeek;
     }
 
     @Transactional(readOnly = true)
