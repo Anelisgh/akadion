@@ -5,13 +5,14 @@ services:
     image: qdrant/qdrant:latest
     ports:
       - "6333:6333"
+    environment:
+      QDRANT__LOG_LEVEL: WARN
+      TZ: Europe/Bucharest
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
       - rag_network
-
-
-
+      
   embedder:
     build:
       context: ./embedder
@@ -22,11 +23,18 @@ services:
       # Numele serviciilor țin loc de hostname în rețeaua Docker
       QDRANT_URL: http://qdrant:6333
       MINIO_ENDPOINT: akadion-minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-MinioParola123!}
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: MinioParola123!
       MINIO_BUCKET: course-documents
       RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+      TZ: Europe/Bucharest
+      OTEL_SERVICE_NAME: embedder
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     volumes:
       # Modelul BGE-m3 (2.3 GB) descărcat o singură dată, nu la fiecare pornire
       - hf_cache:/root/.cache/huggingface
@@ -44,6 +52,16 @@ services:
       - "8002:8002"
     # Fără HF_HOME aici: modelul e copt în imagine la /opt/hf,
     # iar o valoare în compose ar suprascrie ENV-ul din Dockerfile.
+    environment:
+      LOG_FORMAT: json
+      SERVICE_NAME: reranker
+      TZ: Europe/Bucharest
+      OTEL_SERVICE_NAME: reranker
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     networks:
       - rag_network
 
@@ -64,9 +82,29 @@ services:
       USE_QDRANT_MOCK: "false"
       RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
+      LOG_FORMAT: json
+      SERVICE_NAME: llm-response
+      TZ: Europe/Bucharest
+      OTEL_SERVICE_NAME: llm-response
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       - reranker
       - embedder
+    networks:
+      - rag_network
+      - akadion_shared
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
     networks:
       - rag_network
       - akadion_shared

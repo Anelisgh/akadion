@@ -2,15 +2,20 @@ import json
 import re
 
 from fastapi import FastAPI, HTTPException, Depends
-from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizQuestion
+from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizRequest, QuizQuestion
 from llm_service import genereaza_raspuns, verifica_conexiune, genereaza_quiz as genereaza_quiz_llm
 from prompt_builder import construieste_prompt, construieste_prompt_quiz
 from retrieval_service import cauta_context, cauta_contexte_scroll
 from reranker_service import reordoneaza_contexte
 from security_guard import valideaza_intrebare
 from auth import verify_credentials
+from logging_setup import setup_logging
+from middleware import request_context
+
+setup_logging()
 
 app = FastAPI(title="RAG Chatbot Service")
+app.middleware("http")(request_context)
 
 def _extrage_json(text: str):
     cleaned = re.sub(r"```(?:json)?|```", "", text or "", flags=re.IGNORECASE).strip()

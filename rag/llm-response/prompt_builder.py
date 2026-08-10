@@ -68,14 +68,14 @@ Formatul JSON cerut:
 ]
 """
     parti = [quiz_system_prompt]
-
+    
     if context_chunks:
         parti.append("\n--- CONTEXT START ---")
         for chunk in context_chunks:
-            parti.append(f"[Document ID: {chunk['document_id']}, Saptamana {chunk['week_id']}]\n{chunk['text']}")
+            parti.append(f"[Document ID: {chunk['document_id']}]\n{chunk['text']}")
         parti.append("--- CONTEXT END ---")
     else:
         parti.append("\n(Atentie: Nu exista context disponibil pentru generare.)")
-
+        
     parti.append(f"\nGenereaza quiz-ul acum in format JSON format din exact {nr_intrebari} intrebari:")
     return "\n".join(parti)

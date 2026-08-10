@@ -18,17 +18,6 @@ def genereaza_raspuns(prompt: str) -> str:
     )
     return response.text
 
-def genereaza_quiz(prompt: str) -> str:
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.85,
-            response_mime_type="application/json"
-        )
-    )
-    return response.text
-
 def verifica_conexiune() -> bool:
     """
     Verifica daca conexiunea la Gemini si cheia API sunt active.
@@ -40,3 +29,17 @@ def verifica_conexiune() -> bool:
         return True
     except Exception:
         return False
+
+def genereaza_quiz(prompt: str) -> str:
+    """
+    Generează un set de întrebări grilă sub formă de JSON structurat folosind Gemini.
+    """
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.85,
+            response_mime_type="application/json"
+        )
+    )
+    return response.text
