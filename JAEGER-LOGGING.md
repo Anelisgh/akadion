@@ -42,11 +42,31 @@ doar atribute standard (`http.method`, `http.status_code`, `db.statement`). `req
 
 Traces only: `OTEL_METRICS_EXPORTER=none`, `OTEL_LOGS_EXPORTER=none`.
 
-## Ce NU e pe acest branch și îți trebuie ca să meargă
+## Partea de Python: `akadion-rag/` — copie, nu sursă
 
-**1. Containerul Jaeger.** Nu e definit aici, ci în `akadion-rag/compose.yaml` — fișierul care
-leagă cele trei repo-uri RAG și care nu aparține niciunui repo. Fără el, backendul exportă spre o
-gazdă inexistentă (nu crapă, dar nu vezi nimic). Blocul necesar:
+Ca lanțul să fie vizibil cap-coadă îți trebuie și instrumentarea celor trei servicii RAG, plus
+containerul Jaeger. Amândouă sunt acum **pe acest branch**, în `akadion-rag/`:
+
+| Cale | Sursa | Commit copiat |
+|---|---|---|
+| `akadion-rag/embedder/` | `teodoratirca13/embedder_service` | `941ced0` |
+| `akadion-rag/reranker/` | `Radu2502/reranker-service` | `1ad10d5` |
+| `akadion-rag/llm-response/` | `Steefyy/RAG_llm_response_service_Stefi` | `1706f69` |
+| `akadion-rag/compose.yaml` | — | fișier de legătură, nu aparținea niciunui repo |
+
+> ⚠️ **Cele trei foldere sunt o copie la un moment dat, nu sursa de adevăr.** Repo-urile de mai sus
+> rămân locul unde se lucrează. Copia de aici nu se actualizează singură: dacă cineva împinge ceva
+> în `embedder_service`, folderul din akadion rămâne la `941ced0` fără ca nimic să semnaleze asta.
+> Modifică în repo-ul de origine și re-copiază, nu invers — altfel munca se pierde la prima
+> resincronizare.
+
+Ce aduce fiecare copie: `logging_setup.py` / `logging_ctx.py` / `middleware.py` (aproape identice
+între cele trei — o modificare într-unul trebuie portată manual în celelalte două),
+`opentelemetry-instrument` în fața lui uvicorn în `Dockerfile.multistage`, și în `compose.yaml`
+`OTEL_SERVICE_NAME` plus aceleași variabile `OTEL_EXPORTER_OTLP_*` ca la backend.
+
+`akadion-rag/compose.yaml` definește și containerul Jaeger — fără el backendul exportă spre o gazdă
+inexistentă (nu crapă, dar nu vezi nimic):
 
 ```yaml
   jaeger:
@@ -61,23 +81,19 @@ gazdă inexistentă (nu crapă, dar nu vezi nimic). Blocul necesar:
       - akadion_shared
 ```
 
-**2. Partea de Python.** Logging-ul și tracing-ul serviciilor RAG stau în repo-urile lor, cu
-commit-uri separate — `embedder`, `reranker`, `llm-response` au fiecare `tracing: OpenTelemetry
-auto-instrumentation…` și câte un `feat(logging)…`. Fiecare serviciu are propria copie a
-`logging_setup.py` / `logging_ctx.py` / `middleware.py`; sunt aproape identice, dar o modificare
-într-unul trebuie portată manual în celelalte două.
-
-Fiecare serviciu RAG mai are nevoie, în compose, de `OTEL_SERVICE_NAME` și de aceleași variabile
-`OTEL_EXPORTER_OTLP_*`, plus `opentelemetry-instrument` în fața lui uvicorn.
-
-Fără punctul 2, vezi în Jaeger doar span-urile backendului, iar lanțul pare să se termine la
-primul apel RAG.
+Numele folderelor sunt load-bearing: `akadion-rag/compose.yaml` le referă drept `context:`. Nu sunt
+numele implicite de la `git clone`.
 
 ## Cum verifici că merge
 
+Ordinea contează: stiva principală creează rețeaua `akadion_shared`, pe care `akadion-rag` o
+folosește ca `external: true`. Dacă lipsește: `docker network create akadion_shared`.
+
 ```bash
-cd akadion       && docker compose up -d --build   # --build: agentul OTel intră în imagine
-cd ../akadion-rag && docker compose up -d
+cp akadion-rag/llm-response/.env.example akadion-rag/llm-response/.env   # cerut via env_file
+
+docker compose up -d --build                       # --build: agentul OTel intră în imagine
+cd akadion-rag && docker compose up -d && cd ..
 
 curl -s http://localhost:16686/api/services | jq -r '.data[]'
 # așteptat: akadion-backend, llm-response, embedder, reranker

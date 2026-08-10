@@ -1,0 +1,17 @@
+services:
+  reranker:
+    build: .
+    container_name: reranker
+    ports:
+      - "8002:8002"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+      - LOG_FORMAT=json
+      - SERVICE_NAME=reranker
+
+    restart: unless-stopped
+
+volumes:
+  hf-cache:
