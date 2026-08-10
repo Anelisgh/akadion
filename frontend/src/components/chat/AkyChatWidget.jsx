@@ -1471,21 +1471,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 <AlertDescription className="text-xs font-medium text-rose-800">{quizError}</AlertDescription>
                               </Alert>
                             ) : null}
-                            {quizCount >= 1 && (
-                              <div className="flex justify-end pt-3 border-t border-slate-100">
-                                <Button
-                                  type="button"
-                                  onClick={handleOpenQuizNew}
-                                  className={cn(
-                                    "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
-                                    selectedTheme.accent
-                                  )}
-                                >
-                                  <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                  Generează quiz nou
-                                </Button>
-                              </div>
-                            )}
                           </CardContent>
                         </Card>
                       ) : null}
