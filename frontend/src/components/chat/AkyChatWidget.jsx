@@ -137,16 +137,25 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [isResizing, setIsResizing] = useState(false)
 
   const clampPanelWidth = useCallback((nextWidth) => {
-    const maxWidth = Math.min(AKY_PANEL_MAX_WIDTH, window.innerWidth - AKY_PANEL_VIEWPORT_GAP)
+    const maxAllowedWidth = rightPanelMode ? 1536 : AKY_PANEL_MAX_WIDTH
+    const maxWidth = Math.min(maxAllowedWidth, window.innerWidth - AKY_PANEL_VIEWPORT_GAP)
     const minWidth = Math.min(AKY_PANEL_MIN_WIDTH, maxWidth)
     return Math.max(minWidth, Math.min(nextWidth, maxWidth))
-  }, [])
+  }, [rightPanelMode])
 
   const clampHistoryWidth = useCallback((nextWidth) => {
     const maxWidth = Math.min(AKY_HISTORY_MAX_WIDTH, panelWidth - AKY_CHAT_MIN_WIDTH)
     const minWidth = Math.min(AKY_HISTORY_MIN_WIDTH, maxWidth)
     return Math.max(minWidth, Math.min(nextWidth, maxWidth))
   }, [panelWidth])
+
+  useEffect(() => {
+    if (rightPanelMode) {
+      setPanelWidth((prev) => Math.max(prev, Math.min(1150, window.innerWidth - 32)))
+    } else {
+      setPanelWidth(AKY_PANEL_DEFAULT_WIDTH)
+    }
+  }, [rightPanelMode])
 
   async function loadAccessibleDocuments() {
     if (!selectedCourseId) return
@@ -839,12 +848,12 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           style={{
             "--aky-panel-width": `${panelWidth}px`,
             "--aky-history-width": `${historyWidth}px`,
-            width: (typeof window !== "undefined" && window.innerWidth >= 1024) ? (rightPanelMode ? "min(96rem, calc(100vw - 2rem))" : `${panelWidth}px`) : undefined
+            width: (typeof window !== "undefined" && window.innerWidth >= 1024) ? `${panelWidth}px` : undefined
           }}
           className={cn(
-            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem] lg:max-w-[min(84rem,calc(100vw-2rem))]",
+            "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem]",
             !isResizing && "transition-all duration-300",
-            rightPanelMode ? "flex-row" : "flex-col"
+            rightPanelMode ? "lg:max-w-[min(96rem,calc(100vw-2rem))] flex-row" : "lg:max-w-[min(84rem,calc(100vw-2rem))] flex-col"
           )}
         >
           <div
