@@ -93,8 +93,18 @@ function Get-DockerPortOwners {
 
         $name = $parts[0]
         $ports = $parts[1]
-        if ($ports -match "(^|, )([^,]*:)?$Port->") {
-            $owners += $name
+        foreach ($mapping in $ports -split ',\s*') {
+            $match = [regex]::Match($mapping, '^(?:[^:]+:)?(?<start>\d+)(?:-(?<end>\d+))?->')
+            if (-not $match.Success) {
+                continue
+            }
+
+            $start = [int]$match.Groups['start'].Value
+            $end = if ($match.Groups['end'].Success) { [int]$match.Groups['end'].Value } else { $start }
+            if ($Port -ge $start -and $Port -le $end) {
+                $owners += $name
+                break
+            }
         }
     }
 
