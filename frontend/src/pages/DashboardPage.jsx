@@ -25,6 +25,7 @@ import {
   EmptyCoursesState,
 } from "@/pages/CoursesPage"
 import { getCourseThemeStorageKey, normalizeAvailableCourse, normalizeEnrolledCourse } from "@/lib/courseView"
+import { getStudentHomepageOwlId, getStudentHomepageOwlImage, getStudentHomepageOwlRole, hasDiscoveredOwlHall } from "@/lib/legendaryOwls"
 
 function DashboardStatCard({ icon: Icon, label, value, note, tone = "blue", action }) {
   const toneClass = tone === "amber"
@@ -237,6 +238,8 @@ function ProfessorDashboard() {
   }
 
   const courseCounts = getActiveCourseCounts(courses)
+  const activeCourses = courses.filter((course) => course.activ)
+  const inactiveCourses = courses.filter((course) => !course.activ)
 
   const heroContentStats = (
     <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
@@ -288,18 +291,66 @@ function ProfessorDashboard() {
           {loading ? <p className="text-sm text-slate-500">Se încarcă lista de cursuri...</p> : null}
 
           {!loading && courses.length > 0 ? (
-            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  mode="professor"
-                  selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
-                  onThemeChange={handleCourseThemeChange}
-                  onEnroll={() => {}}
-                  actionDisabled={false}
-                />
-              ))}
+            <div className="space-y-8">
+              <section className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="text-xl font-semibold tracking-tight text-[#24385b]">Active</h3>
+                  <span className="inline-flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                    {activeCourses.length}
+                  </span>
+                </div>
+                {activeCourses.length > 0 ? (
+                  <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+                    {activeCourses.map((course) => (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        mode="professor"
+                        selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
+                        onThemeChange={handleCourseThemeChange}
+                        onEnroll={() => {}}
+                        actionDisabled={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="rounded-[1.5rem] border-dashed border-[#d8ccbf] bg-[#fbf6f0] shadow-none">
+                    <CardContent className="px-5 py-6 text-sm text-slate-500">
+                      Nu ai niciun curs activ momentan.
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
+
+              <section className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="text-xl font-semibold tracking-tight text-[#24385b]">Inactive</h3>
+                  <span className="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                    {inactiveCourses.length}
+                  </span>
+                </div>
+                {inactiveCourses.length > 0 ? (
+                  <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+                    {inactiveCourses.map((course) => (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        mode="professor"
+                        selectedThemeKey={courseThemes[course.id] ?? DEFAULT_COURSE_THEME}
+                        onThemeChange={handleCourseThemeChange}
+                        onEnroll={() => {}}
+                        actionDisabled={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="rounded-[1.5rem] border-dashed border-[#d8ccbf] bg-[#fbf6f0] shadow-none">
+                    <CardContent className="px-5 py-6 text-sm text-slate-500">
+                      Nu ai cursuri inactive.
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
             </div>
           ) : null}
 
@@ -323,6 +374,9 @@ function StudentDashboard() {
   const [notice, setNotice] = useState("")
   const [activeAction, setActiveAction] = useState("")
   const [courseThemes, setCourseThemes] = useState({})
+  const [homepageOwlImage, setHomepageOwlImage] = useState(studentDashboardLogo)
+  const [homepageOwlRole, setHomepageOwlRole] = useState("Dashboard STUDENT")
+  const [hasUnlockedOwlHall, setHasUnlockedOwlHall] = useState(false)
 
   async function loadCourses() {
     setLoading(true)
@@ -360,6 +414,13 @@ function StudentDashboard() {
   useEffect(() => {
     syncStudentDashboard()
   }, [])
+
+  useEffect(() => {
+    const homepageOwlId = getStudentHomepageOwlId(user)
+    setHomepageOwlImage(getStudentHomepageOwlImage(homepageOwlId))
+    setHomepageOwlRole(getStudentHomepageOwlRole(homepageOwlId))
+    setHasUnlockedOwlHall(hasDiscoveredOwlHall(user))
+  }, [user])
 
   useEffect(() => {
     const allCourses = [...courses, ...availableCourses]
@@ -426,13 +487,22 @@ function StudentDashboard() {
   return (
     <AppShell
       title={`Salut, ${getUserGreetingName(user)}!`}
-      eyebrow="Dashboard STUDENT"
-      heroClassName="relative min-h-[11rem] overflow-hidden border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
+      eyebrow={homepageOwlRole}
+      heroClassName="relative min-h-[11rem] overflow-visible border-0 bg-linear-to-r from-[#0f9fbd] via-[#17b7d3] to-[#56d5ea] text-white shadow-[0_24px_60px_rgba(23,133,161,0.24)] lg:items-start before:absolute before:-top-12 before:right-[-3.5rem] before:h-56 before:w-56 before:rounded-full before:bg-white/16 before:content-[''] after:absolute after:-bottom-20 after:left-[-4.5rem] after:h-64 after:w-64 after:rounded-full after:bg-white/10 after:content-['']"
       heroEyebrowClassName="text-white/72"
       heroTitleClassName="text-white"
       heroDescriptionClassName="text-white/84"
       heroContent={studentHeroContentStats}
-      heroVisual={<img src={studentDashboardLogo} alt="Dashboard student" className="pointer-events-auto h-full max-h-full w-auto origin-bottom translate-y-[14%] cursor-pointer object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]" />}
+      heroVisual={(
+        <div className="pointer-events-auto relative flex h-full w-full flex-col items-end justify-end">
+          <img src={homepageOwlImage} alt="Dashboard student" className="h-full max-h-full w-auto origin-bottom translate-y-[8%] cursor-pointer object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.22)] transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] hover:brightness-105 hover:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)] active:scale-[1.03] active:brightness-105 active:drop-shadow-[0_35px_65px_rgba(0,0,0,0.38)]" />
+          {hasUnlockedOwlHall ? (
+            <Button asChild variant="outline" className="absolute right-2 -bottom-12 rounded-2xl border-white/28 bg-white px-5 py-2.5 text-sm font-semibold text-[#24385b] shadow-[0_14px_34px_rgba(8,18,38,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.03] hover:bg-white/90 hover:text-[#24385b] hover:shadow-[0_20px_42px_rgba(8,18,38,0.24)] active:scale-[0.98]">
+              <Link to="/owl-hall">Schimbă Avatar</Link>
+            </Button>
+          ) : null}
+        </div>
+      )}
       heroVisualClassName="right-2 bottom-0 top-auto h-full items-end justify-center lg:right-5"
     >
       <div className="space-y-6">

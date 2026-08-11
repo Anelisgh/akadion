@@ -1183,6 +1183,14 @@ function App() {
           </RequireAdmin>
         }
       />
+      <Route
+        path="/admin/audit-log"
+        element={
+          <RequireAdmin>
+            <AdminAuditLogPage />
+          </RequireAdmin>
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

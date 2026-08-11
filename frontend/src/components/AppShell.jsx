@@ -367,6 +367,14 @@ export default function AppShell({ title, description, eyebrow = "Akadion", acti
                     <LogOut className="h-4 w-4" />
                     Logout
                   </Button>
+                  {isAdminUser(user) ? (
+                    <Button asChild variant="outline" className="rounded-xl border-[#d9ccbe] bg-white">
+                      <Link to="/admin/audit-log" onClick={() => setMobileOpen(false)}>
+                        <History className="h-4 w-4" />
+                        Audit Log
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </div>

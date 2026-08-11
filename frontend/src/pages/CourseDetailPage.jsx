@@ -99,7 +99,7 @@ function getStudentName(student) {
 function extractFilename(url) {
   if (!url) return ""
   try {
-    const urlObj = new URL(url)
+    const urlObj = new URL(url, window.location.origin)
     const pathParts = urlObj.pathname.split('/')
     let lastPart = pathParts[pathParts.length - 1] || ""
     if (lastPart.length > 37 && lastPart[8] === '-' && lastPart[13] === '-') {
@@ -897,6 +897,16 @@ export default function CourseDetailPage() {
           <Trash2 className="h-4 w-4" />
           Retragere
         </Button>
+      ) : canEdit && course ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleToggleActive}
+          disabled={Boolean(activeAction)}
+          className="rounded-2xl border-[#d9ccbe] bg-white text-slate-900 shadow-sm transition-all hover:border-[#bcae9e] hover:bg-[#f7efe6]"
+        >
+          {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
+        </Button>
       ) : null}
       sideContent={!pageLoading && course && courseIndexOpen ? courseIndexPanel : null}
     >
@@ -997,9 +1007,6 @@ export default function CourseDetailPage() {
                         <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl px-5 text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
                           <Save className="h-4 w-4" />
                           {activeAction === "save-course" ? "Se salvează..." : "Salvează"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={handleToggleActive} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                          {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
                         </Button>
                       </div>
                     </form>
