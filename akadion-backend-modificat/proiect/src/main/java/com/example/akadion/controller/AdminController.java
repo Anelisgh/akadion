@@ -1,6 +1,7 @@
 package com.example.akadion.controller;
 
 import com.example.akadion.dto.ActionResponseDto;
+import com.example.akadion.dto.AdminQuizNotaDto;
 import com.example.akadion.dto.CursResponseDto;
 import com.example.akadion.dto.DashboardStatsDto;
 import com.example.akadion.dto.DocumentResponseDto;
@@ -125,5 +126,12 @@ public class AdminController {
     public org.springframework.data.domain.Slice<AuditLogDto> getAuditLog(
             org.springframework.data.domain.Pageable pageable) {
         return auditLogService.getAuditLog(pageable);
+    }
+
+    @GetMapping("/cursuri/{cursId}/quiz-note")
+    public org.springframework.data.domain.Page<AdminQuizNotaDto> getNoteQuizCurs(
+            @PathVariable Long cursId,
+            org.springframework.data.domain.Pageable pageable) {
+        return cursService.getNoteQuizCurs(cursId, pageable);
     }
 }

@@ -188,6 +188,10 @@ function DetailTab({ active, theme, children, onClick }) {
   )
 }
 
+function formatDocumentsCount(count) {
+  return `${count} document${count === 1 ? "" : "e"}`
+}
+
 export default function CourseDetailPage() {
   const { courseId } = useParams()
   const location = useLocation()
@@ -207,6 +211,7 @@ export default function CourseDetailPage() {
   const [weekDrafts, setWeekDrafts] = useState({})
   const [newWeekDescription, setNewWeekDescription] = useState("")
   const [documentsByWeek, setDocumentsByWeek] = useState({})
+  const [weekUpdateFeedback, setWeekUpdateFeedback] = useState({})
   const [uploadDrafts, setUploadDrafts] = useState({})
   const [uploadErrors, setUploadErrors] = useState({})
   const [documentDrafts, setDocumentDrafts] = useState({})
@@ -231,17 +236,9 @@ export default function CourseDetailPage() {
       }
 
       const next = {}
-      let hasExpandedWeek = false
-
-      weeks.forEach((week, index) => {
-        const isExpanded = current[week.id] ?? index === 0
-        next[week.id] = isExpanded
-        hasExpandedWeek ||= isExpanded
+      weeks.forEach((week) => {
+        next[week.id] = current[week.id] ?? false
       })
-
-      if (!hasExpandedWeek) {
-        next[weeks[0].id] = true
-      }
 
       return next
     })
@@ -389,6 +386,15 @@ export default function CourseDetailPage() {
     }
   }, [location.state, location.hash])
 
+  useEffect(() => {
+    if (canEdit) {
+      setCourseEditorOpen(false)
+      setNewWeekOpen(false)
+      setExpandedWeekIds({})
+      setIndexExpandedWeekIds({})
+    }
+  }, [canEdit, courseId])
+
   function updateCourseField(field, value) {
     setCourseForm((current) => ({ ...current, [field]: value }))
     setFieldErrors((current) => ({ ...current, [field]: "" }))
@@ -528,21 +534,45 @@ export default function CourseDetailPage() {
     const descriere = weekDrafts[week.id] ?? ""
 
     if (descriere.length > 500) {
-      setPageError("Descrierea săptămânii poate avea maximum 500 de caractere.")
+      setWeekUpdateFeedback((current) => ({
+        ...current,
+        [week.id]: {
+          type: "error",
+          message: "Descrierea săptămânii poate avea maximum 500 de caractere.",
+        },
+      }))
       return
     }
 
     setActiveAction(`update-week-${week.id}`)
+    setWeekUpdateFeedback((current) => ({
+      ...current,
+      [week.id]: null,
+    }))
 
     try {
-      await runCourseRequest(
-        () => updateCourseWeek(week.id, { descriere }),
-        "Nu am putut actualiza săptămâna.",
-      )
+      setPageError("")
+      setPageNotice("")
+      await updateCourseWeek(week.id, { descriere })
       setWeeks((current) => current.map((currentWeek) => currentWeek.id === week.id ? { ...currentWeek, descriere } : currentWeek))
-      setPageNotice("Săptămâna a fost actualizată.")
-    } catch {
-      // Error message is already mapped by runCourseRequest.
+      setWeekUpdateFeedback((current) => ({
+        ...current,
+        [week.id]: {
+          type: "success",
+          message: "Săptămâna a fost actualizată.",
+        },
+      }))
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await refreshAuth()
+      }
+      setWeekUpdateFeedback((current) => ({
+        ...current,
+        [week.id]: {
+          type: "error",
+          message: getCourseErrorMessage(error, "Nu am putut actualiza săptămâna."),
+        },
+      }))
     } finally {
       setActiveAction("")
     }
@@ -594,8 +624,9 @@ export default function CourseDetailPage() {
       }
       setDocumentsByWeek((current) => ({ ...current, [week.id]: refreshedDocuments }))
       setPageNotice("Documentul a fost încărcat.")
-    } catch {
-      // Error message is already mapped by runCourseRequest.
+    } catch (error) {
+      const nextMessage = error?.response?.data?.eroare || error?.message || "Nu am putut încărca documentul."
+      setUploadErrors((current) => ({ ...current, [week.id]: nextMessage }))
     } finally {
       setActiveAction("")
     }
@@ -684,13 +715,24 @@ export default function CourseDetailPage() {
     }))
   }
 
+  function handleOpenCourseIndex() {
+    setIndexExpandedWeekIds({})
+    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.setTimeout(() => {
+      setCourseIndexOpen(true)
+    }, 120)
+  }
+
   function scrollToWeek(weekId) {
     setActiveTab("saptamani")
     setExpandedWeekIds((current) => ({ ...current, [weekId]: true }))
     setCourseIndexOpen(false)
 
     window.requestAnimationFrame(() => {
-      document.getElementById(`course-week-${weekId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      window.setTimeout(() => {
+        document.getElementById(`course-week-${weekId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 220)
     })
   }
 
@@ -734,7 +776,7 @@ export default function CourseDetailPage() {
         <div className="min-w-0">
           <h2 className="text-lg font-bold tracking-tight text-slate-900">Cuprins curs</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {formatWeeks(weeks.length)} · {totalCourseDocuments} documente
+            {formatWeeks(weeks.length)} · {formatDocumentsCount(totalCourseDocuments)}
           </p>
         </div>
         <button
@@ -782,7 +824,7 @@ export default function CourseDetailPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold text-slate-900">Săptămâna {week.nrSaptamana}</span>
-                      <span className="block truncate text-xs font-medium text-slate-500">{documents.length} documente</span>
+                      <span className="block truncate text-xs font-medium text-slate-500">{formatDocumentsCount(documents.length)}</span>
                     </span>
                   </button>
                 </div>
@@ -887,7 +929,12 @@ export default function CourseDetailPage() {
           variant="outline"
           onClick={handleToggleActive}
           disabled={Boolean(activeAction)}
-          className="rounded-2xl border-[#d9ccbe] bg-white text-slate-900 shadow-sm transition-all hover:border-[#bcae9e] hover:bg-[#f7efe6]"
+          className={cn(
+            "rounded-2xl shadow-sm transition-all",
+            course.activ
+              ? "border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100"
+              : "border-[#d9ccbe] bg-white text-slate-900 hover:border-[#bcae9e] hover:bg-[#f7efe6]",
+          )}
         >
           {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
         </Button>
@@ -900,7 +947,7 @@ export default function CourseDetailPage() {
             {!courseIndexOpen ? (
               <button
                 type="button"
-                onClick={() => setCourseIndexOpen(true)}
+                onClick={handleOpenCourseIndex}
                 className={cn(
                   "group fixed left-0 top-28 z-20 flex h-14 w-14 items-center justify-center rounded-r-[1.75rem] border border-l-0 bg-white/95 text-slate-700 shadow-[12px_14px_34px_rgba(32,46,84,0.14)] transition hover:w-16 hover:bg-white hover:text-slate-950 focus-visible:w-16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#24385b]/20",
                   theme.heroBorder,
@@ -1089,39 +1136,41 @@ export default function CourseDetailPage() {
                       <Card id={`course-week-${week.id}`} key={week.id} className={`scroll-mt-28 overflow-hidden rounded-[1.75rem] bg-white/94 shadow-[0_18px_48px_rgba(32,46,84,0.08)] ${isStudent && week.finalizata ? "border-emerald-200" : "border-[#e4d8cd]"}`}>
                         <div className="flex flex-col gap-4 border-b border-[#eadfd4] bg-[#fffdfa] px-5 py-5 sm:px-6">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <button
-                              type="button"
-                              onClick={() => toggleWeekExpanded(week.id)}
-                              className="flex min-w-0 flex-1 items-start gap-4 text-left"
-                            >
-                              <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold", isStudent && week.finalizata ? "bg-emerald-100 text-emerald-700" : cn(theme.weekNumBg, theme.weekNumText))}>
-                                S{week.nrSaptamana}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="text-xl font-semibold text-slate-900">Săptămâna {week.nrSaptamana}</h3>
-                                  {isStudent && week.finalizata ? (
-                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                                      Finalizată
-                                    </span>
-                                  ) : null}
+                            <div className="flex min-w-0 flex-1 items-start gap-3">
+                              <button
+                                type="button"
+                                onClick={() => toggleWeekExpanded(week.id)}
+                                className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                              >
+                                <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold", isStudent && week.finalizata ? "bg-emerald-100 text-emerald-700" : cn(theme.weekNumBg, theme.weekNumText))}>
+                                  S{week.nrSaptamana}
                                 </div>
-                                <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
-                                  {week.descriere || "Fără descriere pentru această săptămână."}
-                                </p>
-                              </div>
-                            </button>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-xl font-semibold text-slate-900">Săptămâna {week.nrSaptamana}</h3>
+                                    {canEdit && week.nrSaptamana === lastWeekNumber ? (
+                                      <Button type="button" variant="outline" onClick={() => handleDeleteWeek(week)} disabled={Boolean(activeAction)} className="h-9 rounded-2xl border-rose-200 bg-rose-50 px-3 text-rose-700 hover:bg-rose-100">
+                                        <Trash2 className="h-4 w-4" />
+                                        Șterge
+                                      </Button>
+                                    ) : null}
+                                    {isStudent && week.finalizata ? (
+                                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                        Finalizată
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
+                                    {week.descriere || "Fără descriere pentru această săptămână."}
+                                  </p>
+                                </div>
+                              </button>
+                            </div>
 
                             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:pl-4">
                               <div className="text-right text-sm text-slate-500">
-                                <p>{documents.length} documente{isStudent ? ` • ${week.finalizata ? "Finalizată" : "În progres"}` : ""}</p>
+                                <p>{formatDocumentsCount(documents.length)}{isStudent ? ` • ${week.finalizata ? "Finalizată" : "În progres"}` : ""}</p>
                               </div>
-                              {canEdit && week.nrSaptamana === lastWeekNumber ? (
-                                <Button type="button" variant="outline" onClick={() => handleDeleteWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
-                                  <Trash2 className="h-4 w-4" />
-                                  Șterge
-                                </Button>
-                              ) : null}
                               {isStudent ? (
                                 <Button type="button" variant="outline" onClick={() => handleToggleWeekCompletion(week)} disabled={Boolean(activeAction) || !course?.inscris} className={cn("rounded-2xl border bg-white", theme.btnIconBorder, theme.sectionTitle)}>
                                   <CheckCircle2 className="h-4 w-4" />
@@ -1150,13 +1199,30 @@ export default function CourseDetailPage() {
                                 </div>
                                 <textarea
                                   value={weekDrafts[week.id] ?? ""}
-                                  onChange={(event) => setWeekDrafts((current) => ({ ...current, [week.id]: event.target.value }))}
+                                  onChange={(event) => {
+                                    setWeekDrafts((current) => ({ ...current, [week.id]: event.target.value }))
+                                    setWeekUpdateFeedback((current) => ({ ...current, [week.id]: null }))
+                                  }}
                                   className="min-h-24 w-full rounded-2xl border border-[#e4d8cd] bg-white px-4 py-3 text-base text-slate-900 outline-none focus:border-[#24385b] focus:ring-2 focus:ring-[#24385b]/10"
                                 />
                                 <Button type="button" variant="outline" onClick={() => handleUpdateWeek(week)} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
                                   <Save className="h-4 w-4" />
                                   {activeAction === `update-week-${week.id}` ? "Se salvează..." : "Salvează săptămâna"}
                                 </Button>
+                                {weekUpdateFeedback[week.id]?.type === "success" ? (
+                                  <Alert className="rounded-2xl border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                                    <AlertTitle>Actualizare reușită</AlertTitle>
+                                    <AlertDescription className="text-emerald-800">{weekUpdateFeedback[week.id].message}</AlertDescription>
+                                  </Alert>
+                                ) : null}
+                                {weekUpdateFeedback[week.id]?.type === "error" ? (
+                                  <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90">
+                                    <AlertCircle className="h-4 w-4 text-rose-600" />
+                                    <AlertTitle>Nu am putut actualiza săptămâna</AlertTitle>
+                                    <AlertDescription>{weekUpdateFeedback[week.id].message}</AlertDescription>
+                                  </Alert>
+                                ) : null}
                               </div>
                             ) : null}
 
@@ -1226,7 +1292,7 @@ export default function CourseDetailPage() {
                                   <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Documente</p>
                                   <p className="text-sm text-slate-500">Materialele disponibile pentru săptămâna {week.nrSaptamana}.</p>
                                 </div>
-                                <span className="text-sm font-medium text-slate-500">{documents.length} documente</span>
+                                <span className="text-sm font-medium text-slate-500">{formatDocumentsCount(documents.length)}</span>
                               </div>
 
                               {documents.length === 0 ? (

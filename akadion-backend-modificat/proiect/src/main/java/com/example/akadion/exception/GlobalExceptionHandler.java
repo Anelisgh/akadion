@@ -119,6 +119,12 @@ public class GlobalExceptionHandler {
         return Map.of("status", HttpStatus.CONFLICT.value(), "eroare", ex.getMessage());
     }
 
+    @ExceptionHandler(IncercareQuizFinalizataException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, Object> handleIncercareQuizFinalizata(IncercareQuizFinalizataException ex) {
+        return Map.of("status", HttpStatus.CONFLICT.value(), "eroare", ex.getMessage());
+    }
+
     // 9. Eroare de stocare fișiere / comunicare cu MinIO.
     @ExceptionHandler(MinioIntegrationException.class)
     @ResponseStatus(HttpStatus.BAD_GATEWAY) // Cod HTTP 502

@@ -36,7 +36,8 @@ const actionLabelMap = {
   MODIFIED: "MODIFICARE",
 }
 
-const positiveActions = new Set(["CREARE", "ACTIVARE", "ÎNCĂRCARE", "PUBLICARE"])
+const creationActions = new Set(["CREARE"])
+const positiveActions = new Set(["ACTIVARE", "ÎNCĂRCARE", "PUBLICARE"])
 const destructiveActions = new Set(["ȘTERGERE", "STERGERE", "RESPINGERE", "EROARE"])
 const warningActions = new Set(["DEZACTIVARE", "ARHIVARE"])
 
@@ -48,6 +49,10 @@ function getDisplayAction(action) {
 
 function getActionBadgeClass(action) {
   const displayAction = getDisplayAction(action)
+
+  if (creationActions.has(displayAction)) {
+    return "border-sky-200 bg-sky-50 text-sky-700"
+  }
 
   if (positiveActions.has(displayAction)) {
     return "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -74,17 +79,37 @@ function formatDateTime(value) {
   }).format(date)
 }
 
+function formatDateTimeParts(value) {
+  const formatted = formatDateTime(value)
+  if (formatted === "-" || !formatted.includes(",")) {
+    return { date: formatted, time: "" }
+  }
+
+  const [datePart, timePart] = formatted.split(",")
+  return {
+    date: datePart.trim(),
+    time: timePart.trim(),
+  }
+}
+
 function JsonFormatter({ data }) {
-  if (!data) return <span className="text-slate-400">-</span>
+  if (!data) {
+    return (
+      <div className="flex min-h-[92px] items-center justify-center rounded-3xl border border-dashed border-[#e6dacd] bg-[#fdfaf6] px-4 py-4 text-center text-sm font-medium text-slate-400">
+        -
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-3xl border border-[#ebdfd2] bg-linear-to-br from-[#fffdfa] to-[#faf6f1] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-      <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 gap-y-2 text-[12px] leading-relaxed font-sans">
-      {Object.entries(data).map(([key, value]) => (
-        <Fragment key={key}>
-          <span className="text-right font-medium tracking-[0.01em] text-slate-500">{key}:</span>
-          <span className="break-words font-semibold tracking-[0.01em] text-slate-700">{value === null ? "null" : String(value)}</span>
-        </Fragment>
-      ))}
+    <div className="min-h-[92px] rounded-3xl border border-[#ebdfd2] bg-linear-to-br from-[#fffdfa] to-[#faf6f1] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+      <div className="flex min-h-full flex-col items-center justify-center gap-2 text-center font-sans">
+        {Object.entries(data).map(([key, value]) => (
+          <div key={key} className="flex flex-wrap items-center justify-center gap-2 text-[12px] leading-relaxed">
+            <span className="font-medium tracking-[0.01em] text-slate-500">{key}:</span>
+            <span className="break-words font-semibold tracking-[0.01em] text-slate-800">{value === null ? "null" : String(value)}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -187,9 +212,17 @@ export default function AdminAuditLogPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e4d8cd]">
-                    {logs.map((log) => (
+                    {logs.map((log) => {
+                      const { date, time } = formatDateTimeParts(log.creatLa)
+
+                      return (
                       <tr key={log.id} className="transition-colors hover:bg-[#fcfaf8]">
-                        <td className="px-6 py-[18px] font-medium whitespace-nowrap text-slate-900">{formatDateTime(log.creatLa)}</td>
+                        <td className="px-6 py-[18px] text-slate-900">
+                          <div className="flex flex-col items-center justify-center text-center">
+                            <div className="font-medium whitespace-nowrap">{date}</div>
+                            {time ? <div className="mt-1 text-xs font-semibold whitespace-nowrap text-slate-500">{time}</div> : null}
+                          </div>
+                        </td>
                         <td className="px-6 py-[18px]">
                           <div className="font-medium text-slate-900">{log.numeUtilizator}</div>
                           {log.emailUtilizator ? <div className="text-xs text-slate-500">{log.emailUtilizator}</div> : null}
@@ -208,7 +241,7 @@ export default function AdminAuditLogPage() {
                           <JsonFormatter data={log.valoriNoi} />
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>

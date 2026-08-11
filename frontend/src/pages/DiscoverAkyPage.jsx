@@ -21,12 +21,18 @@ const capabilities = [
     title: "Sprijin real pentru învățare",
     description: "Aky susține procesul de studiu prin clarificări rapide, rezumate relevante, direcționare către ideile-cheie și un ritm de lucru mai eficient.",
   },
+  {
+    icon: Sparkles,
+    title: "Quiz-uri și flashcards din documente",
+    description: "Aky poate transforma documentele accesibile în quiz-uri și flashcards utile pentru recapitulare, exersare activă și verificarea rapidă a înțelegerii.",
+  },
 ]
 
 const usageIdeas = [
   "Poate sintetiza rapid informația esențială dintr-un curs sau dintr-un material mai amplu.",
   "Poate clarifica noțiuni dificile prin explicații mai simple, mai bine organizate și mai ușor de urmărit.",
   "Poate accelera recapitularea prin răspunsuri concise, orientate spre ce este cu adevărat important.",
+  "Poate genera quiz-uri și flashcards pornind din documentele disponibile, pentru învățare mai activă și recapitulare mai eficientă.",
 ]
 
 export default function DiscoverAkyPage() {
@@ -54,15 +60,15 @@ export default function DiscoverAkyPage() {
       <div className="space-y-6">
         <Card className="rounded-[1.75rem] border-[#d8dcef] bg-[#eef1fb] shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
           <CardContent className="px-6 py-5">
-            <p className="text-sm leading-7 text-slate-700">
+            <p className="max-w-5xl text-sm leading-7 text-slate-700">
               <span className="font-semibold text-[#24385b]">Aky este chatbotul Akadion</span> și folosește o arhitectură de tip
               <span className="font-semibold text-[#24385b]"> RAG (Retrieval Augmented Generation)</span>, ceea ce înseamnă că poate combina generarea de răspunsuri cu recuperarea informațiilor relevante pentru a oferi rezultate mai bine ancorate în contextul academic.
             </p>
           </CardContent>
         </Card>
 
-        <section className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(24rem,0.8fr)] xl:items-stretch">
+          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)] xl:h-full">
             <CardHeader className="px-6 pt-6">
               <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
                 <Bot className="h-5 w-5 text-[#24385b]" />
@@ -72,72 +78,45 @@ export default function DiscoverAkyPage() {
                 Aky este componenta AI a platformei Akadion, creată pentru a îmbunătăți modul în care utilizatorii caută, înțeleg și valorifică informația academică.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 px-6 pb-6 pt-2 text-sm leading-7 text-slate-600">
+            <CardContent className="space-y-4 px-6 pb-6 pt-2 text-sm leading-7 text-slate-600 xl:max-w-[62ch]">
               <p>
                 Rolul său este să reducă timpul pierdut în căutări repetitive, să ofere claritate în fața unor materiale dificile și să transforme întrebările utilizatorului în răspunsuri utile, bine formulate și imediat aplicabile.
               </p>
               <p>
                 Punctul forte al lui Aky este combinația dintre viteză, claritate și relevanță: nu doar răspunde, ci organizează informația într-o formă care sprijină înțelegerea reală și luarea rapidă a unor decizii mai bune în procesul de studiu.
               </p>
+              <p>
+                În plus, Aky poate valorifica documentele accesibile din platformă pentru a genera <span className="font-semibold text-[#24385b]">quiz-uri</span> și <span className="font-semibold text-[#24385b]">flashcards</span>, astfel încât pregătirea pentru cursuri, laboratoare sau examen să devină mai practică, mai interactivă și mai ușor de urmărit.
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-[#fcf8f3] shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
+          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-[#fcf8f3] shadow-[0_18px_48px_rgba(32,46,84,0.08)] xl:h-full">
             <CardHeader className="px-6 pt-6">
               <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
                 <Sparkles className="h-5 w-5 text-[#24385b]" />
                 Puncte forte
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 px-6 pb-6 pt-2">
+            <CardContent className="grid gap-3 px-6 pb-6 pt-2">
               {usageIdeas.map((idea) => (
-                <div key={idea} className="rounded-[1.25rem] border border-[#e4d8cd] bg-white px-4 py-3 text-sm font-medium leading-6 text-slate-700">
-                  {idea}
+                <div key={idea} className="flex min-h-[86px] items-start rounded-[1.25rem] border border-[#e4d8cd] bg-white px-4 py-3.5 text-sm font-medium leading-6 text-slate-700 shadow-[0_8px_24px_rgba(32,46,84,0.04)]">
+                  <p className="max-w-[34ch]">{idea}</p>
                 </div>
               ))}
             </CardContent>
           </Card>
         </section>
 
-        {!isAdmin ? (
-          <Card className="rounded-[1.75rem] border-[#e4d8cd] bg-[#fcf8f3] shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-            <CardHeader className="px-6 pt-6">
-              <div className="min-w-0">
-                <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
-                  <ShieldCheck className="h-5 w-5 text-[#24385b]" />
-                  Cum accesezi Aky
-                </CardTitle>
-                <CardDescription className="mt-2 text-sm leading-6 text-slate-600">
-                  Aky este integrat direct în experiența de lucru din platformă, pentru a putea fi folosit exact în momentele în care ai nevoie de ajutor.
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-4 px-6 pb-6 pt-2 md:grid-cols-2">
-              <div className="rounded-[1.5rem] border border-[#e4d8cd] bg-white px-5 py-4">
-                <p className="text-xs font-semibold tracking-[0.18em] text-[#4A5681] uppercase">Homepage</p>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  În pagina principală, Aky poate fi accesat prin widgetul dedicat, astfel încât să poți pune rapid întrebări generale, să ceri explicații și să primești sprijin imediat în procesul de studiu.
-                </p>
-              </div>
-              <div className="rounded-[1.5rem] border border-[#e4d8cd] bg-white px-5 py-4">
-                <p className="text-xs font-semibold tracking-[0.18em] text-[#4A5681] uppercase">Pagini de curs</p>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  În paginile de cursuri, widgetul Aky rămâne la îndemână pentru întrebări mai specifice, clarificări punctuale și orientare rapidă în raport cu materialele pe care le parcurgi.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <section className="grid gap-5 xl:grid-cols-3">
+        <section className="grid gap-5 md:grid-cols-2 2xl:grid-cols-4">
           {capabilities.map(({ icon: Icon, title, description }) => (
             <Card key={title} className="rounded-[1.75rem] border-[#e4d8cd] bg-white shadow-[0_18px_48px_rgba(32,46,84,0.08)]">
-              <CardContent className="px-6 py-6">
+              <CardContent className="flex h-full flex-col px-6 py-6">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef1fb] text-[#24385b]">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h2 className="mt-4 text-xl font-semibold tracking-tight text-slate-900">{title}</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p>
+                <h2 className="mt-4 min-h-[3.5rem] text-xl font-semibold tracking-tight text-slate-900">{title}</h2>
+                <p className="mt-2 max-w-[34ch] text-sm leading-7 text-slate-600">{description}</p>
               </CardContent>
             </Card>
           ))}

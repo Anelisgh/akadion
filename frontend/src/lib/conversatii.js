@@ -43,10 +43,11 @@ export async function getDocumenteAccesibile(cursId) {
   return response.data
 }
 
-export async function genereazaQuiz(cursId, { documentId = null, nrIntrebari = 5 } = {}) {
+export async function genereazaQuiz(cursId, { documentId = null, nrIntrebari = 5, dificultate = "MEDIU" } = {}) {
   const response = await axiosInstance.post(`/api/student/cursuri/${cursId}/quiz/generate`, {
     documentId,
     nrIntrebari,
+    dificultate,
   })
   return response.data
 }
@@ -57,4 +58,29 @@ export async function genereazaFlashcards(cursId, documentId = null, nrFlashcard
     nrFlashcards,
   })
   return response.data
+}
+
+export async function finalizeazaQuiz(incercareId, raspunsuri) {
+  const response = await axiosInstance.post(`/api/student/quiz/${incercareId}/finalizeaza`, {
+    raspunsuri,
+  })
+  return response.data
+}
+
+export async function getIstoricQuizStudent(cursId = null, page = 0, size = 20) {
+  const params = { page, size }
+  if (cursId) {
+    params.cursId = cursId
+  }
+  const response = await axiosInstance.get(`/api/student/quiz/istoric`, { params })
+  return response.data
+}
+
+export async function getDetaliuQuizStudent(incercareId) {
+  const response = await axiosInstance.get(`/api/student/quiz/istoric/${incercareId}`)
+  return response.data
+}
+
+export async function stergeIncercareQuiz(incercareId) {
+  await axiosInstance.delete(`/api/student/quiz/${incercareId}`)
 }

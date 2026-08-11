@@ -1,15 +1,20 @@
 package com.example.akadion.service;
 
+import com.example.akadion.dto.AdminQuizNotaDto;
 import com.example.akadion.dto.CursRequestDto;
 import com.example.akadion.dto.CursResponseDto;
 import com.example.akadion.dto.ProfesorDetaliiResponseDto;
 import com.example.akadion.dto.StudentCursDto;
 import com.example.akadion.entity.Curs;
+import com.example.akadion.entity.IncercareQuiz;
+import com.example.akadion.entity.StatusIncercareQuiz;
 import com.example.akadion.entity.User;
 import com.example.akadion.entity.UserCurs;
 import com.example.akadion.exception.AccesInterzisException;
+import com.example.akadion.exception.ResursaNegasitaException;
 import com.example.akadion.exception.UserNotFoundException;
 import com.example.akadion.repository.CursRepository;
+import com.example.akadion.repository.IncercareQuizRepository;
 import com.example.akadion.repository.SaptamanaRepository;
 import com.example.akadion.repository.UserCursRepository;
 import com.example.akadion.repository.UserRepository;
@@ -32,6 +37,7 @@ public class CursService {
     private final UserCursRepository userCursRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final IncercareQuizRepository incercareQuizRepository;
 
     public List<CursResponseDto> listaCursuriProprii(Long profesorId) {
         return cursRepository.findByProfesorId(profesorId).stream()
@@ -284,5 +290,36 @@ public class CursService {
                 student.getFacultate(),
                 student.getMail()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<AdminQuizNotaDto> getNoteQuizCurs(Long cursId, org.springframework.data.domain.Pageable pageable) {
+        Curs curs = cursRepository.findById(cursId)
+                .orElseThrow(() -> new ResursaNegasitaException("Cursul cu ID-ul " + cursId + " nu a fost găsit."));
+
+        org.springframework.data.domain.Page<IncercareQuiz> page = incercareQuizRepository.findByCursIdAndStatusOrderByCreatedAtDesc(
+                curs.getId(),
+                StatusIncercareQuiz.FINALIZATA,
+                pageable
+        );
+
+        return page.map(incercare -> {
+            User student = incercare.getStudent();
+            int nr = incercare.getNrIntrebari();
+            int scor = incercare.getScor() != null ? incercare.getScor() : 0;
+            double procentaj = nr > 0 ? Math.round(((double) scor / nr) * 10000.0) / 100.0 : 0.0;
+
+            return new AdminQuizNotaDto(
+                    incercare.getId(),
+                    student != null ? student.getId() : null,
+                    student != null ? student.getNume() : null,
+                    student != null ? student.getPrenume() : null,
+                    student != null ? student.getMail() : null,
+                    scor,
+                    nr,
+                    procentaj,
+                    incercare.getUpdatedAt() != null ? incercare.getUpdatedAt() : incercare.getCreatedAt()
+            );
+        });
     }
 }

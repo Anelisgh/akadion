@@ -32,7 +32,9 @@ services:
       RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
       TZ: Europe/Bucharest
       OTEL_SERVICE_NAME: embedder
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      # Folosim aliasul complet al containerului din reteaua Docker comuna,
+      # ca sa evitam rezolvari intermitente pe aliasul generic "jaeger".
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://akadion-jaeger:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
@@ -59,7 +61,7 @@ services:
       SERVICE_NAME: reranker
       TZ: Europe/Bucharest
       OTEL_SERVICE_NAME: reranker
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://akadion-jaeger:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
@@ -89,7 +91,7 @@ services:
       SERVICE_NAME: llm-response
       TZ: Europe/Bucharest
       OTEL_SERVICE_NAME: llm-response
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://akadion-jaeger:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
