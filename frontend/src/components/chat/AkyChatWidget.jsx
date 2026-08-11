@@ -1,4 +1,4 @@
-import { AlertCircle, Check, ChevronLeft, ChevronDown, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, RefreshCcw, Send, Sparkles, Trash2 } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, ChevronDown, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, RefreshCcw, Send, Sparkles, Trash2, Timer } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -128,10 +128,45 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [quizDocumentId, setQuizDocumentId] = useState("")
   const [quizNrIntrebari, setQuizNrIntrebari] = useState(5)
   const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
+  const [quizMode, setQuizMode] = useState("EXERSARE")
   const [quizError, setQuizError] = useState(null)
   const [isLoadingQuizDocuments, setIsLoadingQuizDocuments] = useState(false)
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
+
+  const handleFinalizeTimelineQuizRef = useRef()
+  handleFinalizeTimelineQuizRef.current = handleFinalizeTimelineQuiz
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLocalTimelineItems((currentItems) => {
+        let changed = false
+        const nextItems = currentItems.map((item) => {
+          if (item.type !== "quiz" || item.result || item.quizMode !== "EXAMEN") return item
+          
+          const currentTime = item.timeLeft !== undefined ? item.timeLeft : 30
+          if (currentTime <= 0) return item
+          
+          changed = true
+          const newTime = currentTime - 1
+          if (newTime <= 0) {
+            const itemId = item.id
+            setTimeout(() => {
+              if (handleFinalizeTimelineQuizRef.current) {
+                handleFinalizeTimelineQuizRef.current(itemId)
+              }
+            }, 0)
+            return { ...item, timeLeft: 0 }
+          }
+          return { ...item, timeLeft: newTime }
+        })
+        
+        return changed ? nextItems : currentItems
+      })
+    }, 1000)
+    
+    return () => clearInterval(timer)
+  }, [])
 
   const clampPanelWidth = useCallback((nextWidth) => {
     const maxWidth = Math.min(AKY_PANEL_MAX_WIDTH, window.innerWidth - AKY_PANEL_VIEWPORT_GAP)
@@ -683,6 +718,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           nrIntrebari,
           questions,
           answers: {},
+          quizMode: quizMode,
+          timeLeft: 30,
         },
       ])
       setQuizOpen(false)
@@ -1167,8 +1204,24 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 <div className="flex items-center justify-between">
                                   <div>
                                     <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">
-                                      {timelineItem.documentLabel} • {timelineItem.nrIntrebari} întrebări • {formatTime(timelineItem.createdAt)}
+                                    <p className="mt-1 text-xs font-medium text-slate-400 flex items-center gap-1.5 flex-wrap">
+                                      <span>{timelineItem.documentLabel}</span>
+                                      <span>•</span>
+                                      <span>{timelineItem.nrIntrebari} întrebări</span>
+                                      <span>•</span>
+                                      <span>{formatTime(timelineItem.createdAt)}</span>
+                                      {!result && timelineItem.quizMode === "EXAMEN" && (
+                                        <>
+                                          <span>•</span>
+                                          <span className={cn(
+                                            "flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 animate-pulse text-[11px]",
+                                            (timelineItem.timeLeft ?? 30) <= 10 && "bg-rose-50 border-rose-200 text-rose-700 font-extrabold"
+                                          )}>
+                                            <Timer className="h-3 w-3" />
+                                            <span>{(timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : 30)}s</span>
+                                          </span>
+                                        </>
+                                      )}
                                     </p>
                                   </div>
                                   {result && (
@@ -1362,7 +1415,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                               </Button>
                             </div>
 
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto]">
+                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_7rem_auto]">
                               <select
                                 value={quizDocumentId}
                                 onChange={(event) => setQuizDocumentId(event.target.value)}
@@ -1394,6 +1447,15 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 <option value="USOR">Ușor</option>
                                 <option value="MEDIU">Mediu</option>
                                 <option value="AVANSAT">Avansat</option>
+                              </select>
+                              <select
+                                value={quizMode}
+                                onChange={(event) => setQuizMode(event.target.value)}
+                                disabled={isGeneratingQuiz}
+                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
+                              >
+                                <option value="EXERSARE">Exersare</option>
+                                <option value="EXAMEN">Examen</option>
                               </select>
                               <Button
                                 type="button"

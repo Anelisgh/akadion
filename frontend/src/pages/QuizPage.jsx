@@ -1,4 +1,4 @@
-import { AlertCircle, Check, Loader2, RotateCcw, Sparkles } from "lucide-react"
+import { AlertCircle, Check, Loader2, RotateCcw, Sparkles, Timer } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/auth/useAuth"
@@ -42,8 +42,50 @@ export default function QuizPage() {
   const [selectedQuizDocId, setSelectedQuizDocId] = useState("")
   const [quizNumQuestions, setQuizNumQuestions] = useState(5)
   const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
+  const [quizMode, setQuizMode] = useState("EXERSARE")
+  const [timeLeft, setTimeLeft] = useState(30)
 
   const [isQuizLoading, setIsQuizLoading] = useState(false)
+
+  // Live ref to avoid stale closures in setInterval
+  const autoFinalizeRef = useRef()
+  autoFinalizeRef.current = () => {
+    if (!currentIncercareId || isFinalizingQuiz) return
+    setIsFinalizingQuiz(true)
+    setQuizError("Timpul a expirat! Chestionarul se finalizează automat...")
+    const payload = quizQuestions.map((q, idx) => ({
+      index: q.index !== undefined ? q.index : idx,
+      raspunsStudent: answeredQuestions[idx]?.selectedOption || null
+    }))
+    finalizeazaQuiz(currentIncercareId, payload)
+      .then(res => {
+        setQuizResult(res)
+      })
+      .catch(err => {
+        setQuizError(err.response?.data?.eroare || err.response?.data?.detail || "Nu s-a putut trimite automat chestionarul.")
+      })
+      .finally(() => setIsFinalizingQuiz(false))
+  }
+
+  useEffect(() => {
+    if (quizQuestions.length === 0 || quizResult || quizMode !== "EXAMEN") return
+
+    setTimeLeft(30)
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          if (autoFinalizeRef.current) {
+            autoFinalizeRef.current()
+          }
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [quizQuestions, quizResult, quizMode])
   const [quizQuestions, setQuizQuestions] = useState([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState({})
@@ -152,6 +194,7 @@ export default function QuizPage() {
     setQuizError(null)
     setCurrentIncercareId(null)
     setQuizResult(null)
+    setTimeLeft(30)
   }
 
   async function loadQuizHistory() {
@@ -232,7 +275,7 @@ export default function QuizPage() {
             {/* Config */}
             <div className="p-6 border-b border-slate-50 bg-slate-50/50 space-y-4">
               <p className="text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">Configurare Quiz</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <label htmlFor="quiz-course" className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">Curs</label>
                   <select id="quiz-course" value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} disabled={isQuizLoading}
@@ -271,6 +314,14 @@ export default function QuizPage() {
                     <option value="USOR">Ușor</option>
                     <option value="MEDIU">Mediu</option>
                     <option value="AVANSAT">Avansat</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="quiz-mode" className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">Mod de lucru</label>
+                  <select id="quiz-mode" value={quizMode} onChange={e => setQuizMode(e.target.value)} disabled={isQuizLoading}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-[#24385b] focus:border-[#3b6ea8] focus:outline-none">
+                    <option value="EXERSARE">Exersare</option>
+                    <option value="EXAMEN">Examen (30s)</option>
                   </select>
                 </div>
               </div>
@@ -327,9 +378,20 @@ export default function QuizPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-                      <span>Intrebarea {currentQuestionIndex + 1} din {quizQuestions.length}</span>
-                      <span>Raspunsuri selectate: {Object.keys(answeredQuestions).length} / {quizQuestions.length}</span>
-                    </div>
+                    <span>Intrebarea {currentQuestionIndex + 1} din {quizQuestions.length}</span>
+                    {!quizResult && quizMode === "EXAMEN" && (
+                      <div className={cn(
+                        "flex items-center gap-1 px-2.5 py-1 rounded-lg border text-sm font-extrabold transition-all duration-300",
+                        timeLeft <= 10 
+                          ? "bg-rose-50 border-rose-200 text-rose-600 animate-pulse" 
+                          : "bg-amber-50 border-amber-200 text-amber-600"
+                      )}>
+                        <Timer className="h-4 w-4" />
+                        <span>{timeLeft}s</span>
+                      </div>
+                    )}
+                    <span>Raspunsuri selectate: {Object.keys(answeredQuestions).length} / {quizQuestions.length}</span>
+                  </div>
                   )}
 
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
