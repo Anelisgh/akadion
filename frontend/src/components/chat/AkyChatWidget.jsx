@@ -127,6 +127,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const [quizDocuments, setQuizDocuments] = useState([])
   const [quizDocumentId, setQuizDocumentId] = useState("")
   const [quizNrIntrebari, setQuizNrIntrebari] = useState(5)
+  const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
   const [quizError, setQuizError] = useState(null)
   const [isLoadingQuizDocuments, setIsLoadingQuizDocuments] = useState(false)
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
@@ -663,6 +664,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       const response = await genereazaQuiz(selectedCourseId, {
         documentId: quizDocumentId ? Number(quizDocumentId) : null,
         nrIntrebari,
+        dificultate: quizDifficulty,
       })
       const questions = Array.isArray(response) ? response : (response?.intrebari || [])
       if (questions.length === 0) {
@@ -1360,7 +1362,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                               </Button>
                             </div>
 
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto]">
+                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto]">
                               <select
                                 value={quizDocumentId}
                                 onChange={(event) => setQuizDocumentId(event.target.value)}
@@ -1382,6 +1384,16 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 {[3, 5, 7, 10].map((count) => (
                                   <option key={count} value={count}>{count} întrebări</option>
                                 ))}
+                              </select>
+                              <select
+                                value={quizDifficulty}
+                                onChange={(event) => setQuizDifficulty(event.target.value)}
+                                disabled={isGeneratingQuiz}
+                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
+                              >
+                                <option value="USOR">Ușor</option>
+                                <option value="MEDIU">Mediu</option>
+                                <option value="AVANSAT">Avansat</option>
                               </select>
                               <Button
                                 type="button"

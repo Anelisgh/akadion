@@ -353,6 +353,7 @@ public class StudentCursService {
         int maxSaptamana = determinaSaptamanaParcursaMax(studentId, cursId);
         Long documentId = request != null ? request.documentId() : null;
         Integer nrIntrebari = request != null && request.nrIntrebari() != null ? request.nrIntrebari() : 5;
+        String dificultate = request != null && request.dificultate() != null ? request.dificultate() : "MEDIU";
 
         if (nrIntrebari < 1 || nrIntrebari > 20) {
             throw new IllegalArgumentException("Numărul de întrebări trebuie să fie între 1 și 20.");
@@ -379,7 +380,7 @@ public class StudentCursService {
             documentRef = document;
         }
 
-        List<Map<String, Object>> rawQuestions = ragChatService.genereazaQuiz(cursId, maxSaptamana, documentId, nrIntrebari);
+        List<Map<String, Object>> rawQuestions = ragChatService.genereazaQuiz(cursId, maxSaptamana, documentId, nrIntrebari, dificultate);
         if (rawQuestions == null || rawQuestions.isEmpty()) {
             throw new RagChatException("Serviciul RAG a returnat o listă vidă de întrebări.");
         }

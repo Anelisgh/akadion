@@ -41,6 +41,7 @@ export default function QuizPage() {
 
   const [selectedQuizDocId, setSelectedQuizDocId] = useState("")
   const [quizNumQuestions, setQuizNumQuestions] = useState(5)
+  const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
 
   const [isQuizLoading, setIsQuizLoading] = useState(false)
   const [quizQuestions, setQuizQuestions] = useState([])
@@ -105,7 +106,11 @@ export default function QuizPage() {
     setQuizResult(null)
     try {
       const docId = selectedQuizDocId ? Number(selectedQuizDocId) : null
-      const data = await genereazaQuiz(selectedCourseId, docId, quizNumQuestions)
+      const data = await genereazaQuiz(selectedCourseId, {
+        documentId: docId,
+        nrIntrebari: quizNumQuestions,
+        dificultate: quizDifficulty
+      })
       if (data && Array.isArray(data.intrebari) && data.intrebari.length > 0) {
         setCurrentIncercareId(data.incercareId)
         setQuizQuestions(data.intrebari)
@@ -227,7 +232,7 @@ export default function QuizPage() {
             {/* Config */}
             <div className="p-6 border-b border-slate-50 bg-slate-50/50 space-y-4">
               <p className="text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">Configurare Quiz</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label htmlFor="quiz-course" className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">Curs</label>
                   <select id="quiz-course" value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} disabled={isQuizLoading}
@@ -257,6 +262,15 @@ export default function QuizPage() {
                   <select id="quiz-nr" value={quizNumQuestions} onChange={e => setQuizNumQuestions(Number(e.target.value))} disabled={isQuizLoading}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-[#24385b] focus:outline-none">
                     {[3, 5, 10, 15].map(n => <option key={n} value={n}>{n} Intrebari</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="quiz-diff" className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">Dificultate</label>
+                  <select id="quiz-diff" value={quizDifficulty} onChange={e => setQuizDifficulty(e.target.value)} disabled={isQuizLoading}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-[#24385b] focus:border-[#3b6ea8] focus:outline-none">
+                    <option value="USOR">Ușor</option>
+                    <option value="MEDIU">Mediu</option>
+                    <option value="AVANSAT">Avansat</option>
                   </select>
                 </div>
               </div>
