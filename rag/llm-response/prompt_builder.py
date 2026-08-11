@@ -40,15 +40,23 @@ def construieste_prompt(intrebare: str, istoric: list, context_chunks: list) -> 
     parti.append(f"\nIntrebare noua de la student: {intrebare}\n\nRaspuns:")
     return "\n".join(parti)
 
-def construieste_prompt_quiz(context_chunks: list, nr_intrebari: int) -> str:
+def construieste_prompt_quiz(context_chunks: list, nr_intrebari: int, dificultate: str = "MEDIU") -> str:
+    dificultate_romana = {
+        "USOR": "UȘOR. Întrebările trebuie să fie directe, de memorare și recunoaștere a definițiilor, termenilor sau faptelor menționate explicit și textual în context. Răspunsurile corecte pot fi deduse direct, fără interpretare profundă sau conexiuni complexe. Distractorii (variantele greșite) trebuie să fie clar diferiți de răspunsul corect.",
+        "MEDIU": "MEDIU. Întrebările trebuie să testeze înțelegerea conceptelor și capacitatea de a face conexiuni simple (de ex: cauză-efect, asemănări/diferențe, exemplificări simple). Răspunsul corect nu este neapărat verbatim în text, dar poate fi dedus prin corelarea a 2-3 propoziții sau paragrafe. Distractorii trebuie să fie plauzibili pentru cineva care a citit textul în mare.",
+        "AVANSAT": "AVANSAT. Întrebările trebuie să testeze capacitatea de analiză profundă, deducție logică și sinteză a informațiilor complexe din text. Acestea pot implica detalii de finețe, cazuri excepționale, interpretări de nuanță sau raționamente bazate pe regulile descrise în context. Distractorii trebuie să fie foarte puternici, plauzibili și să pară corecți la o primă vedere, fiind invalidați doar de detalii subtile din text."
+    }.get(dificultate.upper(), "MEDIU")
+
     quiz_system_prompt = f"""Esti un profesor universitar asistent. Sarcina ta este sa generezi un test grila (quiz) cu EXACT {nr_intrebari} intrebari bazate EXCLUSIV pe textele oferite in contextul de mai jos.
 
 Reguli de generare:
-1. Fiecare intrebare trebuie sa fie corecta academic, clara si sa aiba raspunsul direct deductibil din textele din context. Nu folosi sub nicio forma cunostinte din afara contextului.
-2. Fiecare intrebare trebuie sa aiba intre 4 si 6 variante de raspuns (optiuni etichetate cu A, B, C, D si optional E, F in functie de complexitate).
-3. Doar O SINGURA varianta de raspuns trebuie sa fie corecta.
-4. Explica detaliat de ce varianta indicata este cea corecta si/sau de ce celelalte sunt gresite, facand referire la conceptele din text.
-5. Raspunsul tau trebuie sa fie STRICT un tablou JSON (list) valid cu exact {nr_intrebari} elemente, fara alte texte, markdown sau introduceri.
+1. Fiecare intrebare trebuie sa respecte cu strictețe nivelul de dificultate: {dificultate_romana}.
+2. Fiecare intrebare trebuie sa fie corecta academic, clara si sa aiba raspunsul direct deductibil din textele din context. Nu folosi sub nicio forma cunostinte din afara contextului.
+3. Fiecare intrebare trebuie sa aiba intre 4 si 6 variante de raspuns (optiuni etichetate cu A, B, C, D si optional E, F in functie de complexitate).
+4. Doar O SINGURA varianta de raspuns trebuie sa fie corecta.
+5. Explica detaliat de ce varianta indicata este cea corecta si/sau de ce celelalte sunt gresite, facand referire la conceptele din text.
+6. Fiecare întrebare din JSON trebuie să conțină un câmp suplimentar numit "dificultate" cu valoarea exactă "{dificultate.upper()}".
+7. Raspunsul tau trebuie sa fie STRICT un tablou JSON (list) valid cu exact {nr_intrebari} elemente, fara alte texte, markdown sau introduceri.
 
 Formatul JSON cerut:
 [
@@ -63,7 +71,8 @@ Formatul JSON cerut:
       "F": "A sasea varianta (optionala)"
     }},
     "raspuns_corect": "Litera raspunsului corect (ex: B)",
-    "explicatie": "Explicatie detaliata de ce B este raspunsul corect..."
+    "explicatie": "Explicatie detaliata de ce B este raspunsul corect...",
+    "dificultate": "{dificultate.upper()}"
   }}
 ]
 """
@@ -81,22 +90,22 @@ Formatul JSON cerut:
     return "\n".join(parti)
 
 def construieste_prompt_flashcards(context_chunks: list, nr_flashcards: int) -> str:
-    flashcard_system_prompt = f"""Esti un profesor universitar asistent. Sarcina ta este sa generezi EXACT {nr_flashcards} flashcard-uri (fise de memorare) bazate EXCLUSIV pe textele oferite in contextul de mai jos.
-
+    flashcards_system_prompt = f"""Esti un profesor universitar asistent. Sarcina ta este sa generezi un set de EXACT {nr_flashcards} flashcard-uri (fise de memorare) bazate EXCLUSIV pe textele oferite in contextul de mai jos.
+    
 Reguli de generare:
-1. Fiecare flashcard trebuie sa aiba o fata ("fata" - intrebarea sau conceptul cheie) si un verso ("verso" - raspunsul, definitia sau explicatia pe scurt).
-2. Informatiile trebuie sa fie 100% conforme cu contextul de mai jos. Nu adauga cunostinte din afara contextului.
+1. Fiecare flashcard trebuie sa aiba o fata (intrebare sau concept cheie scurt) si un verso (raspuns complet, dar concis si explicativ).
+2. Informatiile trebuie sa fie luate EXCLUSIV din contextul oferit, fara a folosi cunostinte externe.
 3. Raspunsul tau trebuie sa fie STRICT un tablou JSON (list) valid cu exact {nr_flashcards} elemente, fara alte texte, markdown sau introduceri.
 
 Formatul JSON cerut:
 [
   {{
-    "fata": "Textul intrebarii sau al conceptului...",
-    "verso": "Textul raspunsului sau al explicatiei..."
+    "fata": "Intrebarea sau conceptul cheie pe partea din fata (ex: Ce este X? sau Defineste Y)",
+    "verso": "Explicatia sau raspunsul scurt si la obiect pe partea din spate, bazat pe text."
   }}
 ]
 """
-    parti = [flashcard_system_prompt]
+    parti = [flashcards_system_prompt]
     
     if context_chunks:
         parti.append("\n--- CONTEXT START ---")
