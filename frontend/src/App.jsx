@@ -15,6 +15,8 @@ import DiscoverAkyPage from "@/pages/DiscoverAkyPage"
 import AdminAuditLogPage from "@/pages/AdminAuditLogPage"
 import OwlHall from "@/pages/OwlHall"
 import LogoutPage from "@/pages/LogoutPage"
+import QuizPage from "@/pages/QuizPage"
+import FlashcardsPage from "@/pages/FlashcardsPage"
 import AppShell from "@/components/AppShell"
 import { getRoleLabel, getUserDisplayName, getUserInitials, isAdminUser, isProfessorUser } from "@/lib/user"
 import { startLogout } from "@/auth/logout"
@@ -1121,6 +1123,22 @@ function App() {
         element={
           <RequireAuthenticatedState allowedStates={["ACTIV"]}>
             <CourseDetailPage />
+          </RequireAuthenticatedState>
+        }
+      />
+      <Route
+        path="/quiz"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <QuizPage />
+          </RequireAuthenticatedState>
+        }
+      />
+      <Route
+        path="/flashcards"
+        element={
+          <RequireAuthenticatedState allowedStates={["ACTIV"]}>
+            <FlashcardsPage />
           </RequireAuthenticatedState>
         }
       />

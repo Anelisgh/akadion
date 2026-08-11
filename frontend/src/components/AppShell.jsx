@@ -1,4 +1,4 @@
-import { AlertCircle, BookOpenText, Bot, ChevronDown, History, Home, LogOut, Menu, UserRound, Users } from "lucide-react"
+import { AlertCircle, BookOpenText, Bot, ChevronDown, FileText, History, Home, LogOut, Menu, Sparkles, UserRound, Users } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -192,6 +192,38 @@ function CourseTabsNav({ user, onNavClick }) {
             ) : null}
           </div>
         ) : null}
+
+        {/* Quiz & Flashcards links (only for students) */}
+        {isStudent && (
+          <>
+            <NavLink
+              to="/quiz"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? activeNavClass
+                  : inactiveNavClass
+                }`
+              }
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Quiz</span>
+            </NavLink>
+            <NavLink
+              to="/flashcards"
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-semibold transition ${isActive
+                  ? activeNavClass
+                  : inactiveNavClass
+                }`
+              }
+            >
+              <FileText className="h-4 w-4" />
+              <span>Flashcards</span>
+            </NavLink>
+          </>
+        )}
       </div>
     </div>
   )
