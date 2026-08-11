@@ -1,4 +1,4 @@
-import { AlertCircle, Check, ChevronLeft, ChevronDown, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, RefreshCcw, Send, Sparkles, Trash2, Timer } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, ChevronDown, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, RotateCcw, Send, Sparkles, Trash2, Timer, FileText } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useCallback, useEffect, useRef, useState } from "react"
