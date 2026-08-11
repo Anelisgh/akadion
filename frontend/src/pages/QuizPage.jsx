@@ -43,7 +43,7 @@ export default function QuizPage() {
   const [quizNumQuestions, setQuizNumQuestions] = useState(5)
   const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
   const [quizMode, setQuizMode] = useState("EXERSARE")
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(20)
 
   const [isQuizLoading, setIsQuizLoading] = useState(false)
   const [quizQuestions, setQuizQuestions] = useState([])
@@ -77,7 +77,7 @@ export default function QuizPage() {
   useEffect(() => {
     if (quizQuestions.length === 0 || quizResult || quizMode !== "EXAMEN") return
 
-    setTimeLeft(30)
+    setTimeLeft(20)
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -194,7 +194,7 @@ export default function QuizPage() {
     setQuizError(null)
     setCurrentIncercareId(null)
     setQuizResult(null)
-    setTimeLeft(30)
+    setTimeLeft(20)
   }
 
   async function loadQuizHistory() {
@@ -321,7 +321,7 @@ export default function QuizPage() {
                   <select id="quiz-mode" value={quizMode} onChange={e => setQuizMode(e.target.value)} disabled={isQuizLoading}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-[#24385b] focus:border-[#3b6ea8] focus:outline-none">
                     <option value="EXERSARE">Exersare</option>
-                    <option value="EXAMEN">Examen (30s)</option>
+                    <option value="EXAMEN">Mod Examen (timing)</option>
                   </select>
                 </div>
               </div>
@@ -347,7 +347,6 @@ export default function QuizPage() {
                 <div className="p-5 bg-rose-50 border border-rose-100 rounded-2xl text-center space-y-2">
                   <AlertCircle className="h-8 w-8 text-rose-500 mx-auto" />
                   <p className="font-semibold text-rose-800">{quizError}</p>
-                  <p className="text-xs text-slate-500">Asigura-te ca exista documente incarcate si indexate in saptamanile parcurse.</p>
                 </div>
               )}
 
@@ -378,20 +377,20 @@ export default function QuizPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-                    <span>Intrebarea {currentQuestionIndex + 1} din {quizQuestions.length}</span>
-                    {!quizResult && quizMode === "EXAMEN" && (
-                      <div className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-lg border text-sm font-extrabold transition-all duration-300",
-                        timeLeft <= 10 
-                          ? "bg-rose-50 border-rose-200 text-rose-600 animate-pulse" 
-                          : "bg-amber-50 border-amber-200 text-amber-600"
-                      )}>
-                        <Timer className="h-4 w-4" />
-                        <span>{timeLeft}s</span>
-                      </div>
-                    )}
-                    <span>Raspunsuri selectate: {Object.keys(answeredQuestions).length} / {quizQuestions.length}</span>
-                  </div>
+                      <span>Intrebarea {currentQuestionIndex + 1} din {quizQuestions.length}</span>
+                      {!quizResult && quizMode === "EXAMEN" && (
+                        <div className={cn(
+                          "flex items-center gap-1 px-2.5 py-1 rounded-lg border text-sm font-extrabold transition-all duration-300",
+                          timeLeft <= 10
+                            ? "bg-rose-50 border-rose-200 text-rose-600 animate-pulse"
+                            : "bg-amber-50 border-amber-200 text-amber-600"
+                        )}>
+                          <Timer className="h-4 w-4" />
+                          <span>{timeLeft}s</span>
+                        </div>
+                      )}
+                      <span>Raspunsuri selectate: {Object.keys(answeredQuestions).length} / {quizQuestions.length}</span>
+                    </div>
                   )}
 
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">

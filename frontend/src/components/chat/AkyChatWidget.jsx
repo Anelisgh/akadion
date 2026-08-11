@@ -144,7 +144,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         const nextItems = currentItems.map((item) => {
           if (item.type !== "quiz" || item.result || item.quizMode !== "EXAMEN") return item
           
-          const currentTime = item.timeLeft !== undefined ? item.timeLeft : 30
+          const currentTime = item.timeLeft !== undefined ? item.timeLeft : 20
           if (currentTime <= 0) return item
           
           changed = true
@@ -719,7 +719,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           questions,
           answers: {},
           quizMode: quizMode,
-          timeLeft: 30,
+          timeLeft: 20,
         },
       ])
       setQuizOpen(false)
@@ -1215,10 +1215,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                           <span>•</span>
                                           <span className={cn(
                                             "flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 animate-pulse text-[11px]",
-                                            (timelineItem.timeLeft ?? 30) <= 10 && "bg-rose-50 border-rose-200 text-rose-700 font-extrabold"
+                                            (timelineItem.timeLeft ?? 20) <= 10 && "bg-rose-50 border-rose-200 text-rose-700 font-extrabold"
                                           )}>
                                             <Timer className="h-3 w-3" />
-                                            <span>{(timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : 30)}s</span>
+                                            <span>{(timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : 20)}s</span>
                                           </span>
                                         </>
                                       )}
@@ -1455,7 +1455,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                 className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
                               >
                                 <option value="EXERSARE">Exersare</option>
-                                <option value="EXAMEN">Examen</option>
+                                <option value="EXAMEN">Mod Examen (timing)</option>
                               </select>
                               <Button
                                 type="button"
