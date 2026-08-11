@@ -769,23 +769,35 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
 
   function formatTime(isoString) {
     if (!isoString) return ""
-    return new Date(isoString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    try {
+      const d = new Date(isoString)
+      if (isNaN(d.getTime())) return ""
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    } catch {
+      return ""
+    }
   }
 
   function formatDate(isoString) {
     if (!isoString) return ""
-    return new Date(isoString).toLocaleDateString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    try {
+      const d = new Date(isoString)
+      if (isNaN(d.getTime())) return ""
+      return d.toLocaleDateString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    } catch {
+      return ""
+    }
   }
 
   const timelineItems = [
-    ...messages.map((message, index) => ({
+    ...messages.filter(Boolean).map((message, index) => ({
       id: `message-${message.id ?? index}`,
       type: "message",
       createdAt: message.createdAt,
       order: index,
       message,
     })),
-    ...localTimelineItems.map((item, index) => ({
+    ...localTimelineItems.filter(Boolean).map((item, index) => ({
       ...item,
       order: messages.length + index,
     })),
@@ -1192,6 +1204,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         </p>
                       ) : null}
                       {timelineItems.map((timelineItem) => {
+                        if (!timelineItem) return null
                         if (timelineItem.type === "quiz") {
 
                           const result = timelineItem.result
@@ -1212,7 +1225,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                       <span>{formatTime(timelineItem.createdAt)}</span>
                                       {!result && timelineItem.quizMode === "EXAMEN" && (
                                         (() => {
-                                          const timeLeftSeconds = timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : (timelineItem.questions.length * 15);
+                                          const timeLeftSeconds = timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : ((timelineItem.questions?.length ?? 0) * 15);
                                           const mins = Math.floor(timeLeftSeconds / 60);
                                           const secs = timeLeftSeconds % 60;
                                           return (
@@ -1331,6 +1344,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         }
 
                         const message = timelineItem.message
+                        if (!message) return null
                         const isUser = message.rol === "UTILIZATOR"
 
                         return (
@@ -1345,7 +1359,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                             >
                               <div className="whitespace-pre-wrap font-sans text-sm markdown-body">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {message.continut}
+                                  {message.continut || ""}
                                 </ReactMarkdown>
                               </div>
 
