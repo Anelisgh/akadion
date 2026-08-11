@@ -1045,7 +1045,7 @@ function App() {
       "/owl-hall": "Galeria Bufnițelor Legendare",
       "/users": "Utilizatori",
       "/admin/users": "Administrare Utilizatori",
-      "/admin/audit-log": "Audit Log",
+      "/admin/audit-log": "Istoric modificări",
     }
 
     let title = "AKADION - Platformă Academică"
