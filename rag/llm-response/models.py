@@ -22,6 +22,7 @@ class QuizGenerateRequest(BaseModel):
     maxSaptamana: Optional[int] = None
     documentId: Optional[int] = None
     nrIntrebari: Optional[int] = 5
+    dificultate: Optional[str] = "MEDIU"
 
 class QuizRequest(QuizGenerateRequest):
     pass
@@ -31,6 +32,7 @@ class QuizQuestion(BaseModel):
     optiuni: dict[str, str]
     raspuns_corect: str
     explicatie: str
+    dificultate: Optional[str] = None
 
 class FlashcardGenerateRequest(BaseModel):
     cursId: int

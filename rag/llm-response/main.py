@@ -53,7 +53,8 @@ def _normalizeaza_quiz(raw) -> list[QuizQuestion]:
             intrebare=str(item.get("intrebare")),
             optiuni=optiuni,
             raspuns_corect=str(item.get("raspuns_corect") or item.get("raspunsCorect") or item.get("correct_answer") or ""),
-            explicatie=str(item.get("explicatie") or item.get("explanation") or "")
+            explicatie=str(item.get("explicatie") or item.get("explanation") or ""),
+            dificultate=str(item.get("dificultate") or "")
         ))
 
     return questions
@@ -123,7 +124,7 @@ def genereaza_quiz(request: QuizGenerateRequest):
     if not context_chunks:
         return []
 
-    prompt = construieste_prompt_quiz(context_chunks, nr_intrebari)
+    prompt = construieste_prompt_quiz(context_chunks, nr_intrebari, request.dificultate or "MEDIU")
 
     try:
         raspuns_text = genereaza_quiz_llm(prompt)
