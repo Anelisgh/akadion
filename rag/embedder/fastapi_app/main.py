@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_app.routes import health_router, documents_router, query_router
+from fastapi_app.middleware import request_context
 from fastapi_app.utils.logger import setup_logger
 from fastapi_app.utils.config import get_settings
 
@@ -87,6 +88,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(request_context)
 
 # ============================================================================
 # REGISTER ROUTERS

@@ -12,7 +12,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -212,8 +214,8 @@ public class StudentCursService {
 
         return documentRepository.findBySaptamanaIdAndActivTrue(saptamanaId).stream()
                 .map(doc -> {
-                    String urlVizualizare = minioStorageService.getPresignedPreviewUrl(doc.getPathMinio());
-                    String urlDescarcare = minioStorageService.getPresignedDownloadUrl(doc.getPathMinio());
+                    String urlVizualizare = buildDocumentPreviewUrl(doc);
+                    String urlDescarcare = buildDocumentDownloadUrl(doc);
                     return new DocumentStudentResponseDto(
                             doc.getId(),
                             doc.getTitlu(),
@@ -222,6 +224,26 @@ public class StudentCursService {
                     );
                 })
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Document getAccessibleDocument(Long documentId, Long studentId) {
+        Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
+
+        if (!Boolean.TRUE.equals(document.getActiv())) {
+            throw new IllegalArgumentException("Documentul nu a fost găsit.");
+        }
+
+        Long cursId = document.getSaptamana().getCurs().getId();
+        UserCurs enrollment = userCursRepository.findByStudentIdAndCursId(studentId, cursId)
+                .orElseThrow(() -> new AccesInterzisException("Nu aveți acces la acest document."));
+
+        if (!Boolean.TRUE.equals(enrollment.getActiv())) {
+            throw new AccesInterzisException("Nu aveți o înrolare activă la acest curs.");
+        }
+
+        return document;
     }
 
     /**
@@ -248,6 +270,18 @@ public class StudentCursService {
                 profesor.getMail(),
                 profesor.getFacultate()
         );
+    }
+
+    private String buildDocumentPreviewUrl(Document document) {
+        return "/api/documente/%d/preview/%s".formatted(document.getId(), encodedFilename(document));
+    }
+
+    private String buildDocumentDownloadUrl(Document document) {
+        return "/api/documente/%d/download/%s".formatted(document.getId(), encodedFilename(document));
+    }
+
+    private String encodedFilename(Document document) {
+        return UriUtils.encodePathSegment(minioStorageService.extractOriginalFilename(document.getPathMinio()), StandardCharsets.UTF_8);
     }
 
     private final java.util.concurrent.ConcurrentHashMap<Long, List<Long>> rateLimitMap = new java.util.concurrent.ConcurrentHashMap<>();
@@ -289,14 +323,23 @@ public class StudentCursService {
     public Integer determinaSaptamanaParcursaMax(Long studentId, Long cursId) {
         verificaStudentActivInrolat(studentId, cursId);
 
-        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
         List<Saptamana> saptamani = saptamanaRepository.findByCursIdOrderByNrSaptamana(cursId);
-        return saptamani.stream()
-                .filter(saptamana -> completedIds.contains(saptamana.getId()))
-                .map(Saptamana::getNrSaptamana)
-                .filter(nrSaptamana -> nrSaptamana != null)
-                .max(Integer::compareTo)
-                .orElse(saptamani.isEmpty() ? 0 : 1);
+        List<Long> completedIds = parcursRepository.findCompletedSaptamaniIds(studentId, cursId);
+
+        int maxWeek = 1;
+        for (Saptamana s : saptamani) {
+            if (completedIds.contains(s.getId())) {
+                if (s.getNrSaptamana() != null && s.getNrSaptamana() >= maxWeek) {
+                    maxWeek = s.getNrSaptamana() + 1;
+                }
+            }
+        }
+
+        int totalSapt = saptamani.size();
+        if (maxWeek > totalSapt && totalSapt > 0) {
+            maxWeek = totalSapt;
+        }
+        return maxWeek;
     }
 
     @Transactional(readOnly = true)
@@ -341,6 +384,39 @@ public class StudentCursService {
         }
 
         return ragChatService.genereazaQuiz(cursId, maxSaptamana, documentId, nrIntrebari);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> genereazaFlashcards(Long studentId, Long cursId, FlashcardGenerateRequestDto request) {
+        checkRateLimit(studentId);
+        int maxSaptamana = determinaSaptamanaParcursaMax(studentId, cursId);
+        Long documentId = request != null ? request.documentId() : null;
+        Integer nrFlashcards = request != null && request.nrFlashcards() != null ? request.nrFlashcards() : 5;
+
+        if (nrFlashcards < 1 || nrFlashcards > 20) {
+            throw new IllegalArgumentException("Numărul de flashcard-uri trebuie să fie între 1 și 20.");
+        }
+
+        if (documentId != null) {
+            Document document = documentRepository.findWithSaptamanaAndCursAndProfesorById(documentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Documentul nu a fost găsit."));
+
+            if (!Boolean.TRUE.equals(document.getActiv())) {
+                throw new AccesInterzisException("Documentul nu este activ.");
+            }
+
+            Saptamana saptamana = document.getSaptamana();
+            if (saptamana == null || saptamana.getCurs() == null || !saptamana.getCurs().getId().equals(cursId)) {
+                throw new AccesInterzisException("Documentul nu aparține acestui curs.");
+            }
+
+            Integer nrSaptamana = saptamana.getNrSaptamana();
+            if (nrSaptamana == null || nrSaptamana > maxSaptamana) {
+                throw new AccesInterzisException("Documentul nu este accesibil încă.");
+            }
+        }
+
+        return ragChatService.genereazaFlashcards(cursId, maxSaptamana, documentId, nrFlashcards);
     }
 
     private UserCurs verificaStudentActivInrolat(Long studentId, Long cursId) {

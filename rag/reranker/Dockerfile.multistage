@@ -33,8 +33,8 @@ COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /opt/hf /opt/hf
 
 # Doar codul de producție: fără tests/, conftest.py, pyproject.toml.
-COPY main.py models.py ./
+COPY main.py models.py logging_setup.py logging_ctx.py middleware.py ./
 
 EXPOSE 8002
 
-CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8002"]
+CMD ["opentelemetry-instrument", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--no-access-log"]

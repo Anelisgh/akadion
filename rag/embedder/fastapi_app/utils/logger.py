@@ -3,18 +3,28 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+from opentelemetry import trace
+
+from fastapi_app.utils.logging_ctx import request_id_var
+
 
 class JsonFormatter(logging.Formatter):
     """Format logs as JSON."""
 
     def format(self, record: logging.LogRecord) -> str:
         log_data: Dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "ts": datetime.now().astimezone().isoformat(timespec="milliseconds"),
             "service": "embedder",
+            "request_id": request_id_var.get(),
             "level": record.levelname,
-            "message": record.getMessage(),
+            "msg": record.getMessage(),
             "logger": record.name,
         }
+
+        ctx = trace.get_current_span().get_span_context()
+        if ctx.is_valid:
+            log_data["trace_id"] = format(ctx.trace_id, "032x")
+            log_data["span_id"] = format(ctx.span_id, "016x")
 
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
@@ -22,7 +32,11 @@ class JsonFormatter(logging.Formatter):
         if hasattr(record, "extra_data"):
             log_data.update(record.extra_data)
 
-        return json.dumps(log_data)
+        for key, value in record.__dict__.items():
+            if key not in {"message", "asctime", "taskName", "extra_data"} and key not in log_data:
+                log_data[key] = value
+
+        return json.dumps(log_data, ensure_ascii=False, default=str)
 
 
 def setup_logger(name: str, level: str = "INFO") -> logging.Logger:
