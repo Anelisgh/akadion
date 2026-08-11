@@ -46,6 +46,13 @@ export default function QuizPage() {
   const [timeLeft, setTimeLeft] = useState(30)
 
   const [isQuizLoading, setIsQuizLoading] = useState(false)
+  const [quizQuestions, setQuizQuestions] = useState([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [answeredQuestions, setAnsweredQuestions] = useState({})
+  const [currentIncercareId, setCurrentIncercareId] = useState(null)
+  const [isFinalizingQuiz, setIsFinalizingQuiz] = useState(false)
+  const [quizResult, setQuizResult] = useState(null)
+  const [quizError, setQuizError] = useState(null)
 
   // Live ref to avoid stale closures in setInterval
   const autoFinalizeRef = useRef()
@@ -86,13 +93,6 @@ export default function QuizPage() {
 
     return () => clearInterval(interval)
   }, [quizQuestions, quizResult, quizMode])
-  const [quizQuestions, setQuizQuestions] = useState([])
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [answeredQuestions, setAnsweredQuestions] = useState({})
-  const [currentIncercareId, setCurrentIncercareId] = useState(null)
-  const [isFinalizingQuiz, setIsFinalizingQuiz] = useState(false)
-  const [quizResult, setQuizResult] = useState(null)
-  const [quizError, setQuizError] = useState(null)
 
   const [activeTab, setActiveTab] = useState("solve")
 
