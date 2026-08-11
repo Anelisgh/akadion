@@ -209,7 +209,7 @@ export default function QuizPage() {
   }
 
   async function handleStergeQuiz(incercareId) {
-    if (!window.confirm("Sigur dorești să ștergi această încercare din istoric?")) return
+    if (!window.confirm("Sigur dorești să ștergi acest quiz din istoric?")) return
     try {
       await stergeIncercareQuiz(incercareId)
       loadQuizHistory()
