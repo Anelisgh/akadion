@@ -1,5 +1,5 @@
 import { AlertCircle, Check, Loader2, RotateCcw, Sparkles, Timer } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/ui/button"
