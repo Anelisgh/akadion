@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class Message(BaseModel):
     role: str
@@ -18,24 +18,26 @@ class ChatResponse(BaseModel):
 
 class QuizGenerateRequest(BaseModel):
     cursId: int
-    maxSaptamanaParcursa: int | None = None
-    maxSaptamana: int | None = None
-    documentId: int | None = None
-    nrIntrebari: int = 5
+    maxSaptamanaParcursa: Optional[int] = None
+    maxSaptamana: Optional[int] = None
+    documentId: Optional[int] = None
+    nrIntrebari: Optional[int] = 5
+    dificultate: Optional[str] = "MEDIU"
 
 
 class FlashcardGenerateRequest(BaseModel):
     cursId: int
-    maxSaptamanaParcursa: int | None = None
-    maxSaptamana: int | None = None
-    documentId: int | None = None
-    nrFlashcards: int = 5
+    maxSaptamanaParcursa: Optional[int] = None
+    maxSaptamana: Optional[int] = None
+    documentId: Optional[int] = None
+    nrFlashcards: Optional[int] = 5
 
 class QuizQuestion(BaseModel):
     intrebare: str
     optiuni: dict[str, str]
     raspuns_corect: str
     explicatie: str
+    dificultate: Optional[str] = None
 
 
 class FlashcardItem(BaseModel):
