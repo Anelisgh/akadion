@@ -9,7 +9,9 @@ import {
   Plus,
   RefreshCcw,
   Save,
+  Sparkles,
   Trash2,
+
   Upload,
   Users,
   X,
@@ -97,7 +99,7 @@ function getStudentName(student) {
 function extractFilename(url) {
   if (!url) return ""
   try {
-    const urlObj = new URL(url)
+    const urlObj = new URL(url, window.location.origin)
     const pathParts = urlObj.pathname.split('/')
     let lastPart = pathParts[pathParts.length - 1] || ""
     if (lastPart.length > 37 && lastPart[8] === '-' && lastPart[13] === '-') {
@@ -895,6 +897,16 @@ export default function CourseDetailPage() {
           <Trash2 className="h-4 w-4" />
           Retragere
         </Button>
+      ) : canEdit && course ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleToggleActive}
+          disabled={Boolean(activeAction)}
+          className="rounded-2xl border-[#d9ccbe] bg-white text-slate-900 shadow-sm transition-all hover:border-[#bcae9e] hover:bg-[#f7efe6]"
+        >
+          {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
+        </Button>
       ) : null}
       sideContent={!pageLoading && course && courseIndexOpen ? courseIndexPanel : null}
     >
@@ -995,9 +1007,6 @@ export default function CourseDetailPage() {
                         <Button type="submit" disabled={Boolean(activeAction)} className={cn("rounded-2xl px-5 text-white", theme.btnPrimaryBg, theme.btnPrimaryHover)}>
                           <Save className="h-4 w-4" />
                           {activeAction === "save-course" ? "Se salvează..." : "Salvează"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={handleToggleActive} disabled={Boolean(activeAction)} className="rounded-2xl border-[#d9ccbe] bg-white">
-                          {activeAction === "toggle-course" ? "Se actualizează..." : course.activ ? "Dezactivează" : "Reactivează"}
                         </Button>
                       </div>
                     </form>
@@ -1277,6 +1286,22 @@ export default function CourseDetailPage() {
                                         </div>
                                         {canEdit ? (
                                           <div className="flex shrink-0 items-center gap-2">
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                window.dispatchEvent(
+                                                  new CustomEvent("aky:start-document-quiz", {
+                                                    detail: { documentId: document.id, autoStart: false }
+                                                  })
+                                                )
+                                              }}
+                                              className="rounded-xl border-amber-200 bg-amber-50/80 text-amber-800 hover:bg-amber-100 font-bold text-xs gap-1.5 shadow-xs"
+                                            >
+                                              <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                              <span>Quiz</span>
+                                            </Button>
                                             {canRetryIngest ? (
                                               <Button type="button" variant="outline" size="sm" onClick={() => handleRetryDocument(document, week)} disabled={Boolean(activeAction)} className="rounded-xl border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs gap-1.5">
                                                 <RefreshCcw className="h-3.5 w-3.5" />
@@ -1300,11 +1325,25 @@ export default function CourseDetailPage() {
                                             </Button>
                                           </div>
                                         ) : (
-                                          document.urlDescarcare ? (
-                                            <a href={document.urlDescarcare} rel="noreferrer" className={cn("shrink-0 text-sm font-semibold underline-offset-4 hover:underline", theme.linkColor)}>
-                                              Descarcă
-                                            </a>
-                                          ) : null
+                                          <div className="flex shrink-0 items-center gap-2">
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                navigate(`/quiz?courseId=${courseId}&documentId=${document.id}`)
+                                              }}
+                                              className="rounded-xl border-amber-200 bg-amber-50/80 text-amber-800 hover:bg-amber-100 font-bold text-xs gap-1.5 shadow-xs"
+                                            >
+                                              <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse shrink-0" />
+                                              <span>Quiz din document</span>
+                                            </Button>
+                                            {document.urlDescarcare ? (
+                                              <a href={document.urlDescarcare} rel="noreferrer" className={cn("text-sm font-semibold underline-offset-4 hover:underline px-2", theme.linkColor)}>
+                                                Descarcă
+                                              </a>
+                                            ) : null}
+                                          </div>
                                         )}
                                       </div>
 
