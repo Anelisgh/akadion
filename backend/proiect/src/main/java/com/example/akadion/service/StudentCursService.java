@@ -614,6 +614,18 @@ public class StudentCursService {
         );
     }
 
+    @Transactional
+    public void stergeIncercareQuiz(Long studentId, Long incercareId) {
+        IncercareQuiz incercare = incercareQuizRepository.findById(incercareId)
+                .orElseThrow(() -> new ResursaNegasitaException("Încercarea de quiz nu a fost găsită."));
+
+        if (!incercare.getStudent().getId().equals(studentId)) {
+            throw new AccesInterzisException("Nu aveți permisiunea de a șterge această încercare de quiz.");
+        }
+
+        incercareQuizRepository.delete(incercare);
+    }
+
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> genereazaFlashcards(Long studentId, Long cursId, FlashcardGenerateRequestDto request) {

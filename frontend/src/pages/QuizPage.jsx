@@ -1,11 +1,11 @@
-import { AlertCircle, Check, Loader2, RotateCcw, Sparkles, Timer } from "lucide-react"
+import { AlertCircle, Check, Loader2, RotateCcw, Sparkles, Timer, Trash2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/ui/button"
 import AppShell from "@/components/AppShell"
 import AkyChatWidget from "@/components/chat/AkyChatWidget"
-import { finalizeazaQuiz, genereazaQuiz, getDetaliuQuizStudent, getDocumenteAccesibile, getIstoricQuizStudent } from "@/lib/conversatii"
+import { finalizeazaQuiz, genereazaQuiz, getDetaliuQuizStudent, getDocumenteAccesibile, getIstoricQuizStudent, stergeIncercareQuiz } from "@/lib/conversatii"
 import { listStudentCourses } from "@/lib/professorCourses"
 import { isStudentUser } from "@/lib/user"
 import { cn } from "@/lib/utils"
@@ -206,6 +206,17 @@ export default function QuizPage() {
       setQuizHistory(items)
     } catch (err) { console.error(err) }
     finally { setIsLoadingHistory(false) }
+  }
+
+  async function handleStergeQuiz(incercareId) {
+    if (!window.confirm("Sigur dorești să ștergi această încercare din istoric?")) return
+    try {
+      await stergeIncercareQuiz(incercareId)
+      loadQuizHistory()
+    } catch (err) {
+      console.error(err)
+      alert("Nu s-a putut șterge încercarea.")
+    }
   }
 
   async function handleViewAttemptDetail(item) {
@@ -525,18 +536,31 @@ export default function QuizPage() {
                     <div className="space-y-3">
                       {quizHistory.map(item => (
                         <div key={item.incercareId || item.id} onClick={() => handleViewAttemptDetail(item)}
-                          className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-sm hover:border-slate-300 cursor-pointer transition-all">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-700 truncate max-w-[260px]">
+                          className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-sm hover:border-slate-300 cursor-pointer transition-all flex items-center justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-sm font-bold text-slate-700 truncate block">
                               {item.documentTitlu || item.cursDenumire || "Quiz general"}
                             </span>
+                            <p className="text-[11px] text-slate-400 mt-1">{formatQuizDate(item.createdAt)}</p>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
                             <span className={cn("text-xs font-extrabold px-2.5 py-1 rounded-full",
                               item.procentaj >= 80 ? "bg-emerald-100 text-emerald-800" :
                                 item.procentaj >= 50 ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800")}>
                               {item.scor} / {item.nrIntrebari} ({item.procentaj}%)
                             </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleStergeQuiz(item.incercareId || item.id)
+                              }}
+                              className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                              title="Șterge încercare"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-1">{formatQuizDate(item.createdAt)}</p>
                         </div>
                       ))}
                     </div>

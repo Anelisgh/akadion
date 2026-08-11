@@ -93,3 +93,8 @@ export async function getDetaliuQuizStudent(incercareId) {
   return response.data
 }
 
+export async function stergeIncercareQuiz(incercareId) {
+  const response = await axiosInstance.delete(`/api/student/quiz/${incercareId}`)
+  return response.data
+}
+
