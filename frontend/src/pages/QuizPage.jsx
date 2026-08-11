@@ -43,7 +43,7 @@ export default function QuizPage() {
   const [quizNumQuestions, setQuizNumQuestions] = useState(5)
   const [quizDifficulty, setQuizDifficulty] = useState("MEDIU")
   const [quizMode, setQuizMode] = useState("EXERSARE")
-  const [timeLeft, setTimeLeft] = useState(20)
+  const [timeLeft, setTimeLeft] = useState(0)
 
   const [isQuizLoading, setIsQuizLoading] = useState(false)
   const [quizQuestions, setQuizQuestions] = useState([])
@@ -77,7 +77,7 @@ export default function QuizPage() {
   useEffect(() => {
     if (quizQuestions.length === 0 || quizResult || quizMode !== "EXAMEN") return
 
-    setTimeLeft(20)
+    setTimeLeft(quizQuestions.length * 15)
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -194,7 +194,7 @@ export default function QuizPage() {
     setQuizError(null)
     setCurrentIncercareId(null)
     setQuizResult(null)
-    setTimeLeft(20)
+    setTimeLeft(0)
   }
 
   async function loadQuizHistory() {
@@ -386,7 +386,7 @@ export default function QuizPage() {
                             : "bg-amber-50 border-amber-200 text-amber-600"
                         )}>
                           <Timer className="h-4 w-4" />
-                          <span>{timeLeft}s</span>
+                          <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60) < 10 ? "0" : ""}{timeLeft % 60}</span>
                         </div>
                       )}
                       <span>Raspunsuri selectate: {Object.keys(answeredQuestions).length} / {quizQuestions.length}</span>

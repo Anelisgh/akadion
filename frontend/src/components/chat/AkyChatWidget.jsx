@@ -144,7 +144,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
         const nextItems = currentItems.map((item) => {
           if (item.type !== "quiz" || item.result || item.quizMode !== "EXAMEN") return item
           
-          const currentTime = item.timeLeft !== undefined ? item.timeLeft : 20
+          const currentTime = item.timeLeft !== undefined ? item.timeLeft : (item.questions.length * 15)
           if (currentTime <= 0) return item
           
           changed = true
@@ -719,7 +719,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           questions,
           answers: {},
           quizMode: quizMode,
-          timeLeft: 20,
+          timeLeft: questions.length * 15,
         },
       ])
       setQuizOpen(false)
@@ -1211,16 +1211,23 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                                       <span>•</span>
                                       <span>{formatTime(timelineItem.createdAt)}</span>
                                       {!result && timelineItem.quizMode === "EXAMEN" && (
-                                        <>
-                                          <span>•</span>
-                                          <span className={cn(
-                                            "flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 animate-pulse text-[11px]",
-                                            (timelineItem.timeLeft ?? 20) <= 10 && "bg-rose-50 border-rose-200 text-rose-700 font-extrabold"
-                                          )}>
-                                            <Timer className="h-3 w-3" />
-                                            <span>{(timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : 20)}s</span>
-                                          </span>
-                                        </>
+                                        (() => {
+                                          const timeLeftSeconds = timelineItem.timeLeft !== undefined ? timelineItem.timeLeft : (timelineItem.questions.length * 15);
+                                          const mins = Math.floor(timeLeftSeconds / 60);
+                                          const secs = timeLeftSeconds % 60;
+                                          return (
+                                            <>
+                                              <span>•</span>
+                                              <span className={cn(
+                                                "flex items-center gap-1 font-extrabold px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 animate-pulse text-[11px]",
+                                                timeLeftSeconds <= 10 && "bg-rose-50 border-rose-200 text-rose-700 font-extrabold"
+                                              )}>
+                                                <Timer className="h-3 w-3" />
+                                                <span>{mins}:{secs < 10 ? "0" : ""}{secs}</span>
+                                              </span>
+                                            </>
+                                          );
+                                        })()
                                       )}
                                     </p>
                                   </div>
