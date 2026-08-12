@@ -597,6 +597,34 @@
     @apply text-sm leading-6 text-[color:var(--muted-foreground)];
   }
 
+  .info-message-shell {
+    @apply space-y-5;
+  }
+
+  .info-message-copy {
+    @apply text-base leading-7 text-[#374151];
+  }
+
+  .info-message-highlight {
+    @apply font-semibold text-[#24385b];
+  }
+
+  .info-message-actions {
+    @apply pt-4;
+  }
+
+  .info-message-button {
+    @apply no-underline! text-center;
+    text-decoration: none !important;
+  }
+
+  .info-message-button:hover,
+  .info-message-button:focus,
+  .info-message-button:focus-visible,
+  .info-message-button:active {
+    text-decoration: none !important;
+  }
+
   .password-field {
     @apply relative;
   }

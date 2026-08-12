@@ -2,15 +2,13 @@ import json
 import logging
 import os
 import sys
-
-from logging_ctx import request_id_var
 from datetime import datetime
 
+from logging_ctx import request_id_var
 from opentelemetry import trace
 
 SERVICE = os.getenv("SERVICE_NAME", "reranker")
 
-# atributele standard ale unui LogRecord — tot ce nu e aici a venit din extra={}
 _STD = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {
     "message", "asctime", "taskName",
 }
@@ -38,7 +36,7 @@ class JsonFormatter(logging.Formatter):
         if ctx.is_valid:
             payload["trace_id"] = format(ctx.trace_id, "032x")
             payload["span_id"] = format(ctx.span_id, "016x")
-        # orice ai pasat prin extra={...} ajunge automat in JSON
+
         for key, value in record.__dict__.items():
             if key not in _STD and key not in payload:
                 payload[key] = value
@@ -66,10 +64,6 @@ def setup_logging(level: str | None = None) -> None:
     root.setLevel(level)
 
     for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
-        lg = logging.getLogger(name)
-        lg.handlers.clear()
-        lg.propagate = True
-
-    for noisy in ("httpx", "httpcore", "huggingface_hub",
-                  "sentence_transformers", "uvicorn.access"):
-        logging.getLogger(noisy).setLevel("WARNING")
+        logger = logging.getLogger(name)
+        logger.handlers.clear()
+        logger.propagate = True

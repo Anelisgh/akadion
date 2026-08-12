@@ -15,18 +15,17 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    setup_logging()   # re-aplica: uvicorn si-a pus handlerele intre timp
+    setup_logging()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
 app.middleware("http")(request_context)
 
-# rulează O DATĂ, la pornirea serverului — modelul rămâne în RAM
 log.info("model_loading")
-_t0 = time.perf_counter()
+start_time = time.perf_counter()
 model = CrossEncoder("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1")
-log.info("model_loaded", extra={"duration_ms": round((time.perf_counter() - _t0) * 1000, 1)})
+log.info("model_loaded", extra={"duration_ms": round((time.perf_counter() - start_time) * 1000, 1)})
 
 
 @app.get("/api/health")
@@ -37,14 +36,14 @@ def health():
 @app.post("/api/rerank/chunks")
 def rerank(request: RerankRequest) -> RerankResponse:
     log.info("rerank_start", extra={"n_chunks": len(request.chunks), "top_k": request.top_k})
-    _t = time.perf_counter()
+    start_time = time.perf_counter()
 
-    pairs = [(request.query, d.text) for d in request.chunks]
+    pairs = [(request.query, document.text) for document in request.chunks]
     scores = model.predict(pairs)
 
     scored = [
-        (i + 1, chunk, score)
-        for i, (chunk, score) in enumerate(zip(request.chunks, scores))
+        (index + 1, chunk, score)
+        for index, (chunk, score) in enumerate(zip(request.chunks, scores))
     ]
 
     ranked = sorted(scored, key=lambda pair: pair[2], reverse=True)
@@ -64,7 +63,7 @@ def rerank(request: RerankRequest) -> RerankResponse:
         "rerank_done",
         extra={
             "n_returned": len(reranked),
-            "duration_ms": round((time.perf_counter() - _t) * 1000, 1),
+            "duration_ms": round((time.perf_counter() - start_time) * 1000, 1),
         },
     )
     return RerankResponse(reranked_chunks=reranked)

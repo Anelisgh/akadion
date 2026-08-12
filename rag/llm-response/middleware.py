@@ -1,7 +1,7 @@
 import json
-import logging
 import time
 import uuid
+import logging
 
 from fastapi import Request
 from starlette.concurrency import iterate_in_threadpool
@@ -43,7 +43,7 @@ async def request_context(request: Request, call_next):
         response = await call_next(request)
         response.headers[HEADER] = rid
 
-        chunks = [c async for c in response.body_iterator]
+        chunks = [chunk async for chunk in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(chunks))
 
         log.info(

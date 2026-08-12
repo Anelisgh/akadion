@@ -12,7 +12,9 @@ services:
       - qdrant_data:/qdrant/storage
     networks:
       - rag_network
-      
+
+
+
   embedder:
     build:
       context: ./embedder
@@ -23,13 +25,15 @@ services:
       # Numele serviciilor țin loc de hostname în rețeaua Docker
       QDRANT_URL: http://qdrant:6333
       MINIO_ENDPOINT: akadion-minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: MinioParola123!
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-MinioParola123!}
       MINIO_BUCKET: course-documents
       RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
       RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
       TZ: Europe/Bucharest
       OTEL_SERVICE_NAME: embedder
+      # Folosim aliasul complet al containerului din reteaua Docker comuna,
+      # ca sa evitam rezolvari intermitente pe aliasul generic "jaeger".
       OTEL_EXPORTER_OTLP_ENDPOINT: http://akadion-jaeger:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_TRACES_EXPORTER: otlp
@@ -98,18 +102,6 @@ services:
     networks:
       - rag_network
       - akadion_shared
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.60
-    ports:
-      - "16687:16686"
-      - "4319:4318"
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    networks:
-      - rag_network
-      - akadion_shared
-
 
 volumes:
   qdrant_data:

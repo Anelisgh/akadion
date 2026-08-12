@@ -1,0 +1,11 @@
+.info-message-actions {
+  padding-top: 1rem !important;
+}
+
+.info-message-button,
+.info-message-button:hover,
+.info-message-button:focus,
+.info-message-button:focus-visible,
+.info-message-button:active {
+  text-decoration: none !important;
+}

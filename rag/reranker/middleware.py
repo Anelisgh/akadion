@@ -1,12 +1,12 @@
 import json
-import logging
 import time
 import uuid
+import logging
 
 from fastapi import Request
 from starlette.concurrency import iterate_in_threadpool
 
-from logging_ctx import request_id_var
+from logging_ctx import request_id_var, user_var
 
 log = logging.getLogger("access")
 
@@ -14,8 +14,6 @@ HEADER = "X-Request-ID"
 USER_HEADER = "X-User"
 SENSITIVE = {"password", "parola", "token", "secret", "access_token", "authorization"}
 MAX_LEN = 2000
-SKIP_RESPONSE_PATHS = ("/api/rerank/chunks",)
-SKIP_PAYLOAD_PATHS = ("/api/rerank/chunks",)
 
 
 def _safe(raw: bytes):
@@ -35,19 +33,17 @@ async def request_context(request: Request, call_next):
     rid = request.headers.get(HEADER) or uuid.uuid4().hex[:16]
     token = request_id_var.set(rid)
     user = request.headers.get(USER_HEADER) or "anonymous"
+    user_token = user_var.set(user)
     start = time.perf_counter()
 
     body = await request.body()
     request._body = body
 
-    log_resp = not any(request.url.path.startswith(p) for p in SKIP_RESPONSE_PATHS)
-    log_payload = not any(request.url.path.startswith(p) for p in SKIP_PAYLOAD_PATHS)
-
     try:
         response = await call_next(request)
         response.headers[HEADER] = rid
 
-        chunks = [c async for c in response.body_iterator]
+        chunks = [chunk async for chunk in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(chunks))
 
         log.info(
@@ -58,8 +54,8 @@ async def request_context(request: Request, call_next):
                 "status": response.status_code,
                 "duration_ms": round((time.perf_counter() - start) * 1000, 1),
                 "user": user,
-                "payload": _safe(body) if log_payload else "<omis>",
-                "response": _safe(b"".join(chunks)) if log_resp else "<omis>",
+                "payload": _safe(body),
+                "response": _safe(b"".join(chunks)),
             },
         )
         return response
@@ -71,9 +67,10 @@ async def request_context(request: Request, call_next):
                 "path": request.url.path,
                 "duration_ms": round((time.perf_counter() - start) * 1000, 1),
                 "user": user,
-                "payload": _safe(body) if log_payload else "<omis>",
+                "payload": _safe(body),
             },
         )
         raise
     finally:
         request_id_var.reset(token)
+        user_var.reset(user_token)

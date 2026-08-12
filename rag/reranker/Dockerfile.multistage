@@ -27,8 +27,6 @@ ENV HF_HOME=/opt/hf
 # Venv-ul în PATH înlocuiește `uv run` — uv nu mai ajunge în imagine.
 ENV PATH="/app/.venv/bin:$PATH"
 
-ENV HF_HUB_OFFLINE=1
-
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv

@@ -2,7 +2,7 @@ import json
 import re
 
 from fastapi import FastAPI, HTTPException, Depends
-from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizRequest, QuizQuestion, FlashcardGenerateRequest, FlashcardItem
+from models import ChatRequest, ChatResponse, QuizGenerateRequest, QuizQuestion, FlashcardGenerateRequest, FlashcardItem
 from llm_service import genereaza_raspuns, verifica_conexiune, genereaza_quiz as genereaza_quiz_llm
 from prompt_builder import construieste_prompt, construieste_prompt_quiz, construieste_prompt_flashcards
 from retrieval_service import cauta_context, cauta_contexte_scroll
@@ -53,10 +53,35 @@ def _normalizeaza_quiz(raw) -> list[QuizQuestion]:
             intrebare=str(item.get("intrebare")),
             optiuni=optiuni,
             raspuns_corect=str(item.get("raspuns_corect") or item.get("raspunsCorect") or item.get("correct_answer") or ""),
-            explicatie=str(item.get("explicatie") or item.get("explanation") or "")
+            explicatie=str(item.get("explicatie") or item.get("explanation") or ""),
+            dificultate=str(item.get("dificultate") or "")
         ))
 
     return questions
+
+
+def _normalizeaza_flashcards(raw) -> list[FlashcardItem]:
+    items = raw.get("flashcards") if isinstance(raw, dict) else raw
+    if not isinstance(items, list):
+        return []
+
+    flashcards = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+
+        fata = item.get("fata") or item.get("front") or item.get("question") or item.get("concept")
+        verso = item.get("verso") or item.get("back") or item.get("answer") or item.get("definition")
+
+        if not fata or not verso:
+            continue
+
+        flashcards.append(FlashcardItem(
+            fata=str(fata),
+            verso=str(verso)
+        ))
+
+    return flashcards
 
 
 @app.get("/health")
@@ -123,7 +148,7 @@ def genereaza_quiz(request: QuizGenerateRequest):
     if not context_chunks:
         return []
 
-    prompt = construieste_prompt_quiz(context_chunks, nr_intrebari)
+    prompt = construieste_prompt_quiz(context_chunks, nr_intrebari, request.dificultate or "MEDIU")
 
     try:
         raspuns_text = genereaza_quiz_llm(prompt)
@@ -134,30 +159,6 @@ def genereaza_quiz(request: QuizGenerateRequest):
             status_code=503,
             detail="Serviciul de inteligenta artificiala este indisponibil pentru generarea quiz-ului."
         )
-
-
-def _normalizeaza_flashcards(raw) -> list[FlashcardItem]:
-    items = raw.get("flashcards") if isinstance(raw, dict) else raw
-    if not isinstance(items, list):
-        return []
-
-    flashcards = []
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-
-        fata = item.get("fata") or item.get("front") or item.get("question") or item.get("concept")
-        verso = item.get("verso") or item.get("back") or item.get("answer") or item.get("definition")
-
-        if not fata or not verso:
-            continue
-
-        flashcards.append(FlashcardItem(
-            fata=str(fata),
-            verso=str(verso)
-        ))
-
-    return flashcards
 
 
 @app.post("/flashcards/generate", response_model=list[FlashcardItem], dependencies=[Depends(verify_credentials)])

@@ -1042,12 +1042,14 @@ function App() {
       "/logout-success": "Logout Finalizat",
       "/courses": "Cursuri",
       "/courses/new": "Adaugă Curs",
+      "/quiz": "Quiz",
+      "/flashcards": "Flashcards",
       "/profile": "Profilul Meu",
       "/discover-aky": "Descoperă Aky",
       "/owl-hall": "Galeria Bufnițelor Legendare",
       "/users": "Utilizatori",
       "/admin/users": "Administrare Utilizatori",
-      "/admin/audit-log": "Audit Log",
+      "/admin/audit-log": "Istoric modificări",
     }
 
     let title = "AKADION - Platformă Academică"
@@ -1172,14 +1174,6 @@ function App() {
         element={
           <RequireAdmin>
             <AdminUsersPage />
-          </RequireAdmin>
-        }
-      />
-      <Route
-        path="/admin/audit-log"
-        element={
-          <RequireAdmin>
-            <AdminAuditLogPage />
           </RequireAdmin>
         }
       />

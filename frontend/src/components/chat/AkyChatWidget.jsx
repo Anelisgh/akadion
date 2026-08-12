@@ -1,4 +1,4 @@
-import { AlertCircle, Check, ChevronLeft, ChevronDown, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, RefreshCcw, Send, Sparkles, Trash2 } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, FileText, GripVertical, Loader2, MessageCircle, Palette, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Trash2, RotateCcw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { adaugaMesaj, creareConversatieSiMesaj, genereazaQuiz, finalizeazaQuiz, getConversatii, getConversatiiGlobale, getDocumenteAccesibile, getIstoric, retryMesaj, stergeConversatie } from "@/lib/conversatii"
+import { adaugaMesaj, creareConversatieSiMesaj, getConversatii, getConversatiiGlobale, getIstoric, retryMesaj, stergeConversatie } from "@/lib/conversatii"
 import { COURSE_THEME_KEYS, COURSE_THEMES, DEFAULT_COURSE_THEME, getCourseTheme, getThemeUserKey } from "@/lib/courseThemes"
 import { listProfessorCourses, listStudentCourses } from "@/lib/professorCourses"
 import { isAdminUser, isProfessorUser, isStudentUser } from "@/lib/user"
@@ -31,46 +31,6 @@ const AKY_HISTORY_MIN_WIDTH = 260
 const AKY_HISTORY_DEFAULT_WIDTH = 320
 const AKY_HISTORY_MAX_WIDTH = 430
 const AKY_CHAT_MIN_WIDTH = 380
-
-function getQuizOptionEntries(optiuni) {
-  if (Array.isArray(optiuni)) {
-    return optiuni.map((value, index) => [String.fromCharCode(65 + index), value])
-  }
-
-  if (optiuni && typeof optiuni === "object") {
-    return Object.entries(optiuni)
-  }
-
-  return []
-}
-
-function isQuizCorrectAnswer(question, key, value) {
-  const correctAnswer = String(question?.raspuns_corect || "").trim()
-  return correctAnswer === String(key).trim() || correctAnswer === String(value).trim()
-}
-
-function getTimelineTimestamp(value) {
-  const timestamp = new Date(value).getTime()
-  return Number.isFinite(timestamp) ? timestamp : 0
-}
-
-function formatQuizDate(value) {
-  if (!value) return ""
-  try {
-    const date = new Date(value)
-    if (isNaN(date.getTime())) return ""
-    return date.toLocaleString("ro-RO", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    })
-  } catch (err) {
-    return ""
-  }
-}
-
 
 function getAkyThemeStorageKey(user) {
   return `${AKY_THEME_STORAGE_PREFIX}:${getThemeUserKey(user)}`
@@ -122,14 +82,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   const isResizingHistoryRef = useRef(false)
   const themePickerRef = useRef(null)
 
-  const [localTimelineItems, setLocalTimelineItems] = useState([])
-  const [quizOpen, setQuizOpen] = useState(false)
-  const [quizDocuments, setQuizDocuments] = useState([])
-  const [quizDocumentId, setQuizDocumentId] = useState("")
-  const [quizNrIntrebari, setQuizNrIntrebari] = useState(5)
-  const [quizError, setQuizError] = useState(null)
-  const [isLoadingQuizDocuments, setIsLoadingQuizDocuments] = useState(false)
-  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
 
   const clampPanelWidth = useCallback((nextWidth) => {
@@ -143,38 +95,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     const minWidth = Math.min(AKY_HISTORY_MIN_WIDTH, maxWidth)
     return Math.max(minWidth, Math.min(nextWidth, maxWidth))
   }, [panelWidth])
-
-  async function handleStartFlashcards() {
-    if (!selectedCourseId) return
-    setIsFlashcardsLoading(true)
-    setFlashcardError(null)
-    setFlashcardQuestions([])
-    setCurrentFlashcardIndex(0)
-    setIsFlashcardFlipped(false)
-
-    try {
-      const docId = selectedFlashcardDocId ? Number(selectedFlashcardDocId) : null
-      const data = await genereazaFlashcards(selectedCourseId, docId, flashcardNumQuestions)
-      if (Array.isArray(data) && data.length > 0) {
-        setFlashcardQuestions(data)
-      } else {
-        setFlashcardError("Gemini nu a putut returna flashcard-uri structurate corect. Te rugăm să reîncercați.")
-      }
-    } catch (err) {
-      console.error("Eroare la generare flashcards", err)
-      const errorMsg = err.response?.data?.eroare || err.response?.data?.detail || "Nu am putut genera flashcard-urile. Te rugăm să verifici conexiunea sau indexarea documentelor."
-      setFlashcardError(errorMsg)
-    } finally {
-      setIsFlashcardsLoading(false)
-    }
-  }
-
-  function handleResetFlashcards() {
-    setFlashcardQuestions([])
-    setCurrentFlashcardIndex(0)
-    setIsFlashcardFlipped(false)
-    setFlashcardError(null)
-  }
 
   useEffect(() => {
     filterModeRef.current = filterMode
@@ -234,33 +154,8 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
   }, [courseId])
 
   useEffect(() => {
-    setQuizOpen(false)
-    setQuizDocuments([])
-    setQuizDocumentId("")
-    setLocalTimelineItems([])
-    setQuizError(null)
+    setError(null)
   }, [selectedCourseId])
-
-
-  useEffect(() => {
-    if (!quizOpen || !selectedCourseId) return
-
-    async function loadQuizDocuments() {
-      try {
-        setIsLoadingQuizDocuments(true)
-        setQuizError(null)
-        const documents = await getDocumenteAccesibile(selectedCourseId)
-        setQuizDocuments(Array.isArray(documents) ? documents : [])
-      } catch (err) {
-        console.error("Nu s-au putut încărca documentele pentru quiz", err)
-        setQuizError("Nu s-au putut încărca documentele accesibile pentru quiz.")
-      } finally {
-        setIsLoadingQuizDocuments(false)
-      }
-    }
-
-    loadQuizDocuments()
-  }, [quizOpen, selectedCourseId])
 
   const fetchConversations = useCallback(async function fetchConversations(pageToLoad = 0, append = false, overrideFilter = null) {
     const activeFilter = overrideFilter || filterModeRef.current
@@ -306,7 +201,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     if (!open) return
 
     setMessages([])
-    setLocalTimelineItems([])
     setError(null)
     setConversatii([])
     setSelectedConversationId(null)
@@ -371,7 +265,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     if (open && view === "chat") {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
-  }, [isSending, localTimelineItems, messages, open, quizError, quizOpen, view])
+  }, [isSending, messages, open, view])
 
   if (isAdmin) {
     return null
@@ -384,7 +278,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     setOpen(nextOpen)
     if (!nextOpen) {
       setThemePickerOpen(false)
-      setQuizOpen(false)
     }
   }
 
@@ -472,7 +365,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     }
     setView("chat")
     setMessages([])
-    setLocalTimelineItems([])
     setError(null)
     setHasMoreMessages(false)
     setOldestLoadedMessageId(null)
@@ -541,7 +433,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
       setSelectedCourseId(null)
     }
     setMessages([])
-    setLocalTimelineItems([])
     setError(null)
     setHasMoreMessages(false)
     setOldestLoadedMessageId(null)
@@ -649,85 +540,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     }
   }
 
-  async function handleGenerateQuiz() {
-    if (!selectedCourseId || isGeneratingQuiz) return
-    const nrIntrebari = Number(quizNrIntrebari) || 5
-    const selectedDocument = quizDocumentId
-      ? (quizDocuments.find((document) => String(document.documentId) === String(quizDocumentId))
-         || accessibleDocuments.find((document) => String(document.documentId) === String(quizDocumentId)))
-      : null
-
-    try {
-      setIsGeneratingQuiz(true)
-      setQuizError(null)
-      const response = await genereazaQuiz(selectedCourseId, {
-        documentId: quizDocumentId ? Number(quizDocumentId) : null,
-        nrIntrebari,
-      })
-      const questions = Array.isArray(response) ? response : (response?.intrebari || [])
-      if (questions.length === 0) {
-        setQuizError("Aky nu a putut genera întrebări din materialele accesibile.")
-        return
-      }
-
-      setLocalTimelineItems((currentItems) => [
-        ...currentItems,
-        {
-          id: `quiz-${Date.now()}`,
-          incercareId: response?.incercareId || null,
-          type: "quiz",
-          createdAt: new Date().toISOString(),
-          documentLabel: selectedDocument?.numeFisier || "Toate documentele accesibile",
-          nrIntrebari,
-          questions,
-          answers: {},
-        },
-      ])
-      setQuizOpen(false)
-    } catch (err) {
-      console.error("Nu s-a putut genera quiz-ul", err)
-      setQuizError(err.response?.data?.eroare || err.response?.data?.detail || "Nu s-a putut genera quiz-ul. Încearcă din nou.")
-    } finally {
-      setIsGeneratingQuiz(false)
-    }
-  }
-
-  function handleQuizAnswer(quizId, questionIndex, answerKey) {
-    setLocalTimelineItems((currentItems) => currentItems.map((item) => {
-      if (item.id !== quizId || item.result) return item;
-      return { ...item, answers: { ...item.answers, [questionIndex]: answerKey } };
-    }))
-  }
-
-  async function handleFinalizeTimelineQuiz(quizId) {
-    const item = localTimelineItems.find((i) => i.id === quizId)
-    if (!item || !item.incercareId || item.isFinalizing) return
-
-    setLocalTimelineItems((currentItems) => currentItems.map((i) => i.id === quizId ? { ...i, isFinalizing: true, error: null } : i))
-
-    try {
-      const payload = item.questions.map((q, idx) => ({
-        index: q.index !== undefined ? q.index : idx,
-        raspunsStudent: item.answers?.[idx] || null
-      }))
-      const res = await finalizeazaQuiz(item.incercareId, payload)
-      setLocalTimelineItems((currentItems) => currentItems.map((i) => i.id === quizId ? { ...i, result: res, isFinalizing: false } : i))
-    } catch (err) {
-      console.error("Eroare la finalizare quiz timeline", err)
-      const errorMsg = err.response?.data?.eroare || err.response?.data?.detail || "Nu am putut finaliza quiz-ul."
-      setLocalTimelineItems((currentItems) => currentItems.map((i) => i.id === quizId ? { ...i, error: errorMsg, isFinalizing: false } : i))
-    }
-  }
-
-
-  function handleOpenQuizNew() {
-    setQuizOpen(true)
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, 100)
-  }
-
-
   function formatTime(isoString) {
     if (!isoString) return ""
     return new Date(isoString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -737,23 +549,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
     if (!isoString) return ""
     return new Date(isoString).toLocaleDateString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
   }
-
-  const timelineItems = [
-    ...messages.map((message, index) => ({
-      id: `message-${message.id ?? index}`,
-      type: "message",
-      createdAt: message.createdAt,
-      order: index,
-      message,
-    })),
-    ...localTimelineItems.map((item, index) => ({
-      ...item,
-      order: messages.length + index,
-    })),
-  ].sort((firstItem, secondItem) => {
-    const timeDifference = getTimelineTimestamp(firstItem.createdAt) - getTimelineTimestamp(secondItem.createdAt)
-    return timeDifference || firstItem.order - secondItem.order
-  })
 
   return (
     <>
@@ -774,12 +569,12 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
           style={{
             "--aky-panel-width": `${panelWidth}px`,
             "--aky-history-width": `${historyWidth}px`,
-            width: (typeof window !== "undefined" && window.innerWidth >= 1024) ? `${panelWidth}px` : undefined
+            width: (typeof window !== "undefined" && window.innerWidth >= 1024) ? `${panelWidth}px` : undefined,
           }}
           className={cn(
             "flex w-full max-w-none bg-linear-to-b from-[#fffdfa] via-[#fffdfb] to-[#f8fbff] p-0 sm:max-w-[58rem]",
             !isResizing && "transition-all duration-300",
-            "lg:max-w-[min(84rem,calc(100vw-2rem))] flex-col"
+            "lg:w-[var(--aky-panel-width)] lg:max-w-[min(84rem,calc(100vw-2rem))] flex-col",
           )}
         >
           <div
@@ -787,18 +582,18 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
             aria-orientation="vertical"
             aria-label="Redimensionează Aky"
             onPointerDown={handlePanelResizePointerDown}
-            className="absolute left-[-0.15rem] top-0 z-50 hidden h-full w-3 cursor-ew-resize items-center justify-center lg:flex"
+            className="absolute left-[-0.5rem] top-1/2 z-50 hidden h-16 w-4 -translate-y-1/2 cursor-ew-resize items-center justify-center lg:flex"
           >
-            <div className="h-20 w-1 rounded-full bg-slate-900/10 opacity-55 transition hover:bg-slate-900/20 hover:opacity-85" />
+            <div className="flex h-14 w-3 items-center justify-center rounded-full border border-slate-200/80 bg-white/90 text-slate-300 shadow-[0_4px_12px_rgba(32,46,84,0.08)] backdrop-blur-sm transition hover:border-slate-300/90 hover:text-slate-400">
+              <GripVertical className="h-3.5 w-3.5" />
+            </div>
           </div>
-
-          {/* Chat panel */}
-          <div className="flex flex-col flex-1 h-full min-w-[350px]">
-          <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
+          <div className="flex h-full min-w-[350px] flex-1 flex-col">
+            <SheetHeader className={`relative bg-linear-to-r ${selectedTheme.accent} text-white`}>
             <div className="absolute -top-10 right-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-sm" />
             <div className="absolute -bottom-12 left-[-1.5rem] h-28 w-28 rounded-full bg-[#8bc8f1]/14 blur-sm" />
 
-<div ref={themePickerRef} className="absolute right-16 top-4 z-20">
+              <div ref={themePickerRef} className="absolute right-16 top-4 z-20">
               {themePickerOpen ? (
                 <div className="absolute right-0 top-12 w-56 rounded-[1.35rem] border border-[#d9c9ff] bg-[#fbf8ff]/98 p-2.5 text-[#3a2e66] shadow-[0_18px_48px_rgba(62,42,120,0.2)] backdrop-blur-md">
                   <p className="px-2 pb-2 text-[0.68rem] font-semibold tracking-[0.14em] text-[#6c5c9a] uppercase">Tema</p>
@@ -834,10 +629,7 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
               </button>
             </div>
 
-
-
-
-            <div className="flex items-center gap-3 pr-12 relative z-10 pt-2 pb-1">
+              <div className="flex items-center gap-3 pr-12 relative z-10 pt-2 pb-1">
               {view === "chat" && (
                 <button
                   onClick={() => {
@@ -863,17 +655,10 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   {activeCourseTitle ? `Asistent: ${activeCourseTitle}` : "Chatbot Akadion"}
                 </SheetDescription>
               </div>
-            </div>
-          </SheetHeader>
+              </div>
+            </SheetHeader>
 
-          <div
-            style={{
-              gridTemplateColumns: (historyVisible && typeof window !== "undefined" && window.innerWidth >= 1024)
-                ? `${historyWidth}px minmax(0, 1fr)`
-                : undefined
-            }}
-            className={cn("grid min-h-0 flex-1 bg-slate-50/50", !historyVisible && "lg:grid-cols-[minmax(0,1fr)]")}
-          >
+          <div className={cn("grid min-h-0 flex-1 bg-slate-50/50", historyVisible ? "lg:grid-cols-[var(--aky-history-width)_minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)]")}>
             {/* CONVERSATION LIST VIEW */}
             <div className={cn("relative min-h-0 flex-col border-r border-slate-100 bg-white/42", view === "chat" ? "hidden lg:flex" : "flex", !historyVisible && "lg:hidden")}>
                 <div
@@ -881,9 +666,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                   aria-orientation="vertical"
                   aria-label="Redimensionează istoricul conversațiilor"
                   onPointerDown={handleHistoryResizePointerDown}
-                  className="absolute right-[-0.35rem] top-0 z-30 hidden h-full w-3 cursor-ew-resize items-center justify-center lg:flex"
+                  className="absolute right-[-0.5rem] top-[calc(50%-3.5rem)] z-30 hidden h-16 w-4 -translate-y-1/2 cursor-ew-resize items-center justify-center lg:flex"
                 >
-                  <div className="h-16 w-1 rounded-full bg-slate-900/8 opacity-40 transition hover:bg-slate-900/18 hover:opacity-75" />
+                  <div className="flex h-14 w-3 items-center justify-center rounded-full border border-slate-200/80 bg-white/90 text-slate-300 shadow-[0_4px_12px_rgba(32,46,84,0.08)] backdrop-blur-sm transition hover:border-slate-300/90 hover:text-slate-400">
+                    <GripVertical className="h-3.5 w-3.5" />
+                  </div>
                 </div>
                 <div className="p-6 pb-2">
                   <div className="mb-3 hidden items-center justify-end lg:flex">
@@ -1152,127 +939,11 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                           — Începutul conversației —
                         </p>
                       ) : null}
-                      {timelineItems.map((timelineItem) => {
-                        if (timelineItem.type === "quiz") {
-
-                          const result = timelineItem.result
-                          const isFinalizing = timelineItem.isFinalizing
-                          const error = timelineItem.error
-
-                          return (
-                            <Card key={timelineItem.id} className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
-                              <CardContent className="space-y-4 px-5 py-5">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">
-                                      {timelineItem.documentLabel} • {timelineItem.nrIntrebari} întrebări • {formatTime(timelineItem.createdAt)}
-                                    </p>
-                                  </div>
-                                  {result && (
-                                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-                                      Scor: {result.scor} / {result.nrIntrebari} ({result.procentaj}%)
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="space-y-4">
-                                  {timelineItem.questions.map((question, questionIndex) => {
-                                    const selectedAnswer = timelineItem.answers?.[questionIndex]
-                                    const optionEntries = getQuizOptionEntries(question.optiuni)
-                                    const questionFeedback = result?.detalii?.[questionIndex]
-
-                                    return (
-                                      <div key={`${timelineItem.id}-${question.intrebare}-${questionIndex}`} className="rounded-2xl border border-[#edf2f8] bg-[#fbfdff] p-4">
-                                        <p className="text-sm font-semibold leading-6 text-[#24385b]">{questionIndex + 1}. {question.intrebare}</p>
-                                        <div className="mt-3 space-y-2">
-                                          {optionEntries.map(([key, value]) => {
-                                            const isSelected = selectedAnswer === key
-                                            let buttonStyle = "border-[#d9e4f4] text-slate-700 hover:border-[#bfd5eb] hover:bg-[#f4f8fd]"
-                                            let iconBadge = null
-
-                                            if (result && questionFeedback) {
-                                              const isCorrectOption = questionFeedback.raspunsCorect === key
-                                              if (isCorrectOption) {
-                                                buttonStyle = "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold"
-                                                iconBadge = <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 text-xs"><Check className="h-3 w-3" /></div>
-                                              } else if (isSelected && !isCorrectOption) {
-                                                buttonStyle = "border-rose-300 bg-rose-50 text-rose-800 font-semibold"
-                                                iconBadge = <div className="h-5 w-5 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 text-xs"><AlertCircle className="h-3 w-3" /></div>
-                                              } else {
-                                                buttonStyle = "border-slate-100 bg-white text-slate-400 opacity-60"
-                                              }
-                                            } else if (isSelected) {
-                                              buttonStyle = "border-[#3b6ea8] bg-blue-50/80 text-[#3b6ea8] font-bold"
-                                            }
-
-                                            return (
-                                              <button
-                                                key={key}
-                                                type="button"
-                                                disabled={Boolean(result)}
-                                                onClick={() => handleQuizAnswer(timelineItem.id, questionIndex, key)}
-                                                className={cn(
-                                                  "flex w-full items-center justify-between gap-2 rounded-xl border bg-white px-3 py-2 text-left text-sm transition",
-                                                  buttonStyle
-                                                )}
-                                              >
-                                                <div className="flex items-start gap-2">
-                                                  <span className="font-semibold">{key}.</span>
-                                                  <span>{value}</span>
-                                                </div>
-                                                {iconBadge}
-                                              </button>
-                                            )
-                                          })}
-                                        </div>
-
-                                        {questionFeedback?.explicatie && (
-                                          <div className="mt-3 text-xs leading-5 text-slate-600 bg-blue-50/70 p-3 rounded-xl border border-blue-100/60">
-                                            <span className="font-semibold text-blue-700">Explicație: </span>
-                                            {questionFeedback.explicatie}
-                                          </div>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-
-                                {error && (
-                                  <Alert variant="destructive" className="rounded-xl border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
-                                    {error}
-                                  </Alert>
-                                )}
-
-                                {!result && (
-                                  <div className="flex justify-end pt-2">
-                                    <Button
-                                      type="button"
-                                      disabled={isFinalizing || !timelineItem.incercareId}
-                                      onClick={() => handleFinalizeTimelineQuiz(timelineItem.id)}
-                                      className={cn("h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r", selectedTheme.accent)}
-                                    >
-                                      {isFinalizing ? (
-                                        <div className="flex items-center gap-1.5">
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                          Calculare notă...
-                                        </div>
-                                      ) : (
-                                        "Finalizează Quiz & Calculează Notă"
-                                      )}
-                                    </Button>
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          )
-                        }
-
-                        const message = timelineItem.message
+                      {messages.map((message, index) => {
                         const isUser = message.rol === "UTILIZATOR"
 
                         return (
-                          <div key={timelineItem.id} className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
+                          <div key={`message-${message.id ?? index}`} className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
                             <div
                               className={cn(
                                 "max-w-[85%] rounded-[1.35rem] px-4 py-3 text-sm leading-relaxed shadow-xs",
@@ -1341,84 +1012,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
                         </Alert>
                       ) : null}
 
-                      {quizOpen ? (
-                        <Card className="border-[#d9e4f4] bg-white shadow-[0_14px_34px_rgba(32,46,84,0.08)]">
-                          <CardContent className="space-y-4 px-5 py-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="font-semibold text-[#24385b]">Quiz Aky</p>
-                                <p className="mt-1 text-sm leading-6 text-slate-600">Generează întrebări din materialele accesibile pentru acest curs.</p>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setQuizOpen(false)}
-                                className="rounded-xl text-xs font-semibold text-slate-500 hover:bg-[#f4f8fd]"
-                              >
-                                Închide
-                              </Button>
-                            </div>
-
-                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto]">
-                              <select
-                                value={quizDocumentId}
-                                onChange={(event) => setQuizDocumentId(event.target.value)}
-                                disabled={isLoadingQuizDocuments || isGeneratingQuiz}
-                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
-                              >
-                                <option value="">Toate documentele accesibile</option>
-                                {(quizDocuments.length > 0 ? quizDocuments : accessibleDocuments).map((document) => (
-                                  <option key={document.documentId} value={document.documentId}>{document.numeFisier}</option>
-                                ))}
-
-                              </select>
-                              <select
-                                value={quizNrIntrebari}
-                                onChange={(event) => setQuizNrIntrebari(event.target.value)}
-                                disabled={isGeneratingQuiz}
-                                className="h-11 rounded-xl border border-[#d9e4f4] bg-white px-3 text-sm text-[#1e3a5f] shadow-sm outline-hidden transition-all focus:border-[#8bc8f1] focus:ring-2 focus:ring-[#8bc8f1]/20 disabled:opacity-60"
-                              >
-                                {[3, 5, 7, 10].map((count) => (
-                                  <option key={count} value={count}>{count} întrebări</option>
-                                ))}
-                              </select>
-                              <Button
-                                type="button"
-                                onClick={handleGenerateQuiz}
-                                disabled={isGeneratingQuiz || isLoadingQuizDocuments}
-                                className={`h-11 rounded-xl bg-linear-to-r ${selectedTheme.accent} px-4 text-white shadow-md disabled:opacity-50`}
-                              >
-                                {isGeneratingQuiz ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Generează
-                              </Button>
-                            </div>
-
-                            {quizError ? (
-                              <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/90 px-4 py-3">
-                                <AlertCircle className="h-4 w-4 text-rose-600" />
-                                <AlertDescription className="text-xs font-medium text-rose-800">{quizError}</AlertDescription>
-                              </Alert>
-                            ) : null}
-
-                            <div className="flex justify-end pt-3 border-t border-slate-100">
-                              <Button
-                                type="button"
-                                onClick={handleOpenQuizNew}
-                                className={cn(
-                                  "h-9 rounded-xl text-xs font-semibold text-white bg-linear-to-r",
-                                  selectedTheme.accent
-                                )}
-                              >
-                                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                Generează quiz nou
-                              </Button>
-                            </div>
-
-                          </CardContent>
-                        </Card>
-                      ) : null}
-
                       <div ref={messagesEndRef} />
                     </div>
                   )}
@@ -1451,10 +1044,6 @@ export default function AkyChatWidget({ courseId = null, courseTitle = null, ena
             </div>
           </div>
           </div>
-
-
-
-
         </SheetContent>
       </Sheet>
     </>
