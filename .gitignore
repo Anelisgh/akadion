@@ -12,3 +12,7 @@ backend/proiect/src/main/resources/application-local.properties
 .claude/
 logs.txt
 scripts/
+
+# Ignoră fișierele batch / cmd
+*.cmd
+**/*.cmd
