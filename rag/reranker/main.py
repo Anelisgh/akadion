@@ -2,12 +2,13 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from sentence_transformers import CrossEncoder
 
 from logging_setup import setup_logging
 from middleware import request_context
 from models import RerankRequest, RerankResponse, RerankedChunk
+from auth import verify_credentials
 
 setup_logging()
 log = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def health():
     return {"status": "ok", "model_loaded": True}
 
 
-@app.post("/api/rerank/chunks")
+@app.post("/api/rerank/chunks", dependencies=[Depends(verify_credentials)])
 def rerank(request: RerankRequest) -> RerankResponse:
     log.info("rerank_start", extra={"n_chunks": len(request.chunks), "top_k": request.top_k})
     _t = time.perf_counter()

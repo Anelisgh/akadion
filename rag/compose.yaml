@@ -62,6 +62,8 @@ services:
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
+      RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
     networks:
       - rag_network
       - akadion_shared
