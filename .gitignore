@@ -10,6 +10,7 @@ backend/proiect/src/main/resources/application-local.properties
 .playwright-mcp/
 .serena/
 .claude/
+.agents/
 logs.txt
 scripts/
 
