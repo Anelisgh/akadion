@@ -59,6 +59,8 @@ services:
     environment:
       LOG_FORMAT: json
       SERVICE_NAME: reranker
+      RAG_SERVICE_USERNAME: ${RAG_SERVICE_USERNAME:-akadion-spring-backend}
+      RAG_SERVICE_PASSWORD: ${RAG_SERVICE_PASSWORD:-parola_spring_rag}
       TZ: Europe/Bucharest
       OTEL_SERVICE_NAME: reranker
       OTEL_EXPORTER_OTLP_ENDPOINT: http://akadion-jaeger:4318

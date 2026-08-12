@@ -6,6 +6,10 @@ from models import ChatRequest, ChatResponse, Message
 from prompt_builder import construieste_prompt
 from retrieval_service import cauta_context, obtine_embedding_intrebare, MOCK_DOCUMENTS
 from reranker_service import reordoneaza_contexte
+
+os.environ["RAG_SERVICE_USERNAME"] = "akadion-spring-backend"
+os.environ["RAG_SERVICE_PASSWORD"] = "test_password"
+
 from main import app
 from fastapi.testclient import TestClient
 
@@ -79,7 +83,7 @@ def test_chat_endpoint_success(mock_gen):
         "cursId": 45,
         "maxSaptamanaParcursa": 5
     }
-    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "parola_spring_rag"))
+    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "test_password"))
     assert response.status_code == 200
     data = response.json()
     assert "raspuns" in data
@@ -125,7 +129,7 @@ def test_chat_endpoint_unsafe():
         "cursId": 45,
         "maxSaptamanaParcursa": 5
     }
-    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "parola_spring_rag"))
+    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "test_password"))
     assert response.status_code == 200
     data = response.json()
     assert "Cerere respinsă" in data["raspuns"]
@@ -139,7 +143,7 @@ def test_chat_endpoint_llm_failure(mock_gen):
         "cursId": 45,
         "maxSaptamanaParcursa": 5
     }
-    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "parola_spring_rag"))
+    response = client.post("/chat", json=payload, auth=("akadion-spring-backend", "test_password"))
     assert response.status_code == 503
     assert "Serviciul LLM este momentan" in response.json()["detail"]
 

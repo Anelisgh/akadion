@@ -4,6 +4,8 @@ from logging_ctx import request_id_var, user_var
 from pydantic import BaseModel
 
 RERANKER_URL = os.environ.get("RERANKER_URL", "http://localhost:8002/api/rerank/chunks")
+RAG_SERVICE_USERNAME = os.getenv("RAG_SERVICE_USERNAME")
+RAG_SERVICE_PASSWORD = os.getenv("RAG_SERVICE_PASSWORD")
 
 # Definim modelele contractului de Reranker conform specificatiilor primite de la Persoana C
 class Chunk(BaseModel):
@@ -57,6 +59,7 @@ def reordoneaza_contexte(intrebare: str, contexte_brute: list) -> list:
             response = client.post(
                 RERANKER_URL,
                 json=request_body,
+                auth=(RAG_SERVICE_USERNAME, RAG_SERVICE_PASSWORD),
                 headers={"X-Request-ID": request_id_var.get(), "X-User": user_var.get()},
             )
             

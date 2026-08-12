@@ -1,5 +1,9 @@
+import os
 import pytest
 import sentence_transformers
+
+os.environ["RAG_SERVICE_USERNAME"] = "akadion-spring-backend"
+os.environ["RAG_SERVICE_PASSWORD"] = "test_password"
 
 class FakeCrossEncoder:
     def __init__(self, *args, **kwargs):

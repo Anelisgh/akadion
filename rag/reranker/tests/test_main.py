@@ -20,7 +20,7 @@ def test_rerank_ordoneaza_dupa_scor(client, monkeypatch):
         ],
         "top_k": 2,
     }
-    r = client.post("/api/rerank/chunks", json=payload)
+    r = client.post("/api/rerank/chunks", json=payload, auth=("akadion-spring-backend", "test_password"))
     assert r.status_code == 200
 
     chunks = r.json()["reranked_chunks"]
@@ -42,6 +42,11 @@ def test_top_k_mai_mare_decat_lista(client, monkeypatch):
         ],
         "top_k": 10,
     }
-    r = client.post("/api/rerank/chunks", json=payload)
+    r = client.post("/api/rerank/chunks", json=payload, auth=("akadion-spring-backend", "test_password"))
     assert r.status_code == 200
     assert len(r.json()["reranked_chunks"]) == 2
+
+
+def test_unauthorized(client):
+    r = client.post("/api/rerank/chunks", json={})
+    assert r.status_code == 401

@@ -48,8 +48,8 @@ def obtine_embedding_intrebare(intrebare: str) -> list[float] | None:
             embedder_url,
             json={"text": intrebare},
             auth=(
-                os.environ.get("RAG_SERVICE_USERNAME", "akadion-spring-backend"),
-                os.environ.get("RAG_SERVICE_PASSWORD", "parola_spring_rag"),
+                os.environ.get("RAG_SERVICE_USERNAME"),
+                os.environ.get("RAG_SERVICE_PASSWORD"),
             ),
             headers={"X-Request-ID": request_id_var.get(), "X-User": user_var.get()},
             timeout=30.0,
