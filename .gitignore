@@ -1,5 +1,5 @@
 scripts/set-local-secrets.ps1
-backend/proiect/src/main/resources/application-local.properties
+backend/akadion/src/main/resources/application-local.properties
 
 # Ignoră toate fișierele .env din orice folder
 **/.env
@@ -13,6 +13,8 @@ backend/proiect/src/main/resources/application-local.properties
 .agents/
 logs.txt
 scripts/
+.idea/
+*.iml
 
 # Ignoră fișierele batch / cmd
 *.cmd

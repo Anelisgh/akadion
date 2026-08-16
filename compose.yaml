@@ -63,7 +63,7 @@ services:
 
   backend:
     build:
-      context: ./backend/proiect
+      context: ./backend/akadion
       dockerfile: Dockerfile
     container_name: akadion-backend
     restart: unless-stopped
