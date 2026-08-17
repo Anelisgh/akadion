@@ -71,7 +71,7 @@ services:
   llm-response:
     build:
       context: ./llm-response
-      dockerfile: Dockerfile.multistage
+      dockerfile: docker/Dockerfile.multistage
     ports:
       - "8000:8000"
     env_file:
