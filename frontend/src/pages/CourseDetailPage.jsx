@@ -124,10 +124,13 @@ function getDocumentStatusClasses(document) {
 
   switch (String(document.statusIndex || "").toUpperCase()) {
     case "PRELUAT":
+    case "INDEXED_TEXT_ONLY":
       return "border-amber-200 bg-amber-50 text-amber-700"
     case "TRIMIS":
+    case "INDEXED":
       return "border-emerald-200 bg-emerald-50 text-emerald-700"
     case "ERONAT":
+    case "FAILED_IMAGES":
       return "border-rose-200 bg-rose-50 text-rose-700"
     default:
       return "border-amber-200 bg-amber-50 text-amber-700"
@@ -135,7 +138,18 @@ function getDocumentStatusClasses(document) {
 }
 
 function canRetryDocumentIngest(document) {
-  return document.retryable === true || String(document.statusIndex || "").toUpperCase() === "ERONAT"
+  if (document.retryable === true) return true
+  const status = String(document.statusIndex || "").toUpperCase()
+  return status === "ERONAT" || status === "FAILED_IMAGES" || status === "INDEXED_TEXT_ONLY"
+}
+
+const ETICHETE_STATUS_DOCUMENT = {
+  PRELUAT: "Se trimite spre indexare...",
+  TRIMIS: "Indexat",
+  ERONAT: "Eroare la indexare",
+  INDEXED_TEXT_ONLY: "Text indexat, imagini în curs de procesare...",
+  INDEXED: "Indexat complet (text + imagini)",
+  FAILED_IMAGES: "Text indexat, procesarea imaginilor a eșuat",
 }
 
 function getDocumentStatusLabel(document) {
@@ -143,7 +157,8 @@ function getDocumentStatusLabel(document) {
     return "Disponibil"
   }
 
-  return document.statusIndex || (document.activ ? "Activ" : "Inactiv")
+  const status = String(document.statusIndex || "").toUpperCase()
+  return ETICHETE_STATUS_DOCUMENT[status] || document.statusIndex || (document.activ ? "Activ" : "Inactiv")
 }
 
 function normalizeStudentEnrolledCourse(course) {
@@ -1340,6 +1355,9 @@ export default function CourseDetailPage() {
                                           ) : null}
                                           {document.statusIndex === "ERONAT" && (
                                             <p className="mt-1 text-xs text-amber-600 font-medium">⚠ Fișier stocat, dar neindexat în AI. Apasă "Reîncearcă indexarea" pentru conectarea cu serviciul RAG.</p>
+                                          )}
+                                          {document.statusIndex === "FAILED_IMAGES" && (
+                                            <p className="mt-1 text-xs text-amber-600 font-medium">⚠ Textul e indexat, dar procesarea imaginilor a eșuat. Apasă "Reîncearcă indexarea" pentru a relua.</p>
                                           )}
                                         </div>
                                         {canEdit ? (

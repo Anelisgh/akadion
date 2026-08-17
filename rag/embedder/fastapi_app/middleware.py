@@ -39,13 +39,13 @@ async def request_context(request: Request, call_next):
     body = await request.body()
     request._body = body
 
-    log_resp = not any(request.url.path.startswith(path) for path in SKIP_RESPONSE_PATHS)
+    log_resp = not any(request.url.path.startswith(p) for p in SKIP_RESPONSE_PATHS)
 
     try:
         response = await call_next(request)
         response.headers[HEADER] = rid
 
-        chunks = [chunk async for chunk in response.body_iterator]
+        chunks = [c async for c in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(chunks))
 
         log.info(

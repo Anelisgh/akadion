@@ -1,3 +1,7 @@
+# ATENTIE: fisier "solo", doar pentru dezvoltare izolata pe reranker (fara restul stack-ului akadion).
+# Porneste pe ACELASI port (8002) ca serviciul "reranker" din rag/compose.yaml.
+# NU rula acest fisier in acelasi timp cu rag/compose.yaml sau cu "start-akadion.sh" din radacina -
+# se bate pe port. Pentru rularea normala/integrata, foloseste "start-akadion.sh".
 services:
   reranker:
     build: .

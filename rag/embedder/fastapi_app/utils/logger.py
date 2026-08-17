@@ -3,10 +3,13 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from opentelemetry import trace
+from opentelemetry import trace         # ← nou
 
 from fastapi_app.utils.logging_ctx import request_id_var
 
+_STD = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {
+    "message", "asctime", "taskName", "extra_data",
+}
 
 class JsonFormatter(logging.Formatter):
     """Format logs as JSON."""
@@ -21,6 +24,7 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
         }
 
+        # Trace context OTel, format W3C — identic cu ce scoate agentul Java.  ← nou
         ctx = trace.get_current_span().get_span_context()
         if ctx.is_valid:
             log_data["trace_id"] = format(ctx.trace_id, "032x")
@@ -33,11 +37,10 @@ class JsonFormatter(logging.Formatter):
             log_data.update(record.extra_data)
 
         for key, value in record.__dict__.items():
-            if key not in {"message", "asctime", "taskName", "extra_data"} and key not in log_data:
+            if key not in _STD and key not in log_data:
                 log_data[key] = value
 
         return json.dumps(log_data, ensure_ascii=False, default=str)
-
 
 def setup_logger(name: str, level: str = "INFO") -> logging.Logger:
     """Create a logger with JSON formatting."""

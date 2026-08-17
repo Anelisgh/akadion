@@ -11,6 +11,8 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - akadion_network
 
   minio:
     image: minio/minio:RELEASE.2025-06-13T11-33-47Z
@@ -26,7 +28,7 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     networks:
-      - default
+      - akadion_network
       - akadion_shared
 
   minio-setup:
@@ -39,6 +41,8 @@ services:
       until (/usr/bin/mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-MinioParola123!}) do echo '...waiting...' && sleep 1; done;
       /usr/bin/mc mb myminio/course-documents --ignore-existing;
       "
+    networks:
+      - akadion_network
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -60,6 +64,8 @@ services:
       - ./keycloak-import:/opt/keycloak/data/import
     depends_on:
       - postgres
+    networks:
+      - akadion_network
 
   backend:
     build:
@@ -87,8 +93,9 @@ services:
       - RAG_SERVICE_PASSWORD=${RAG_SERVICE_PASSWORD:-parola_spring_rag}
       - RAG_BASE_URL=${RAG_BASE_URL:-http://llm-response:8000}
       - RAG_EMBEDDER_URL=${RAG_EMBEDDER_URL:-http://embedder:8001}
+      - SPRING_BOOT_CALLBACK_USERNAME=${SPRING_BOOT_CALLBACK_USERNAME:-akadion-embedder-callback}
+      - SPRING_BOOT_CALLBACK_PASSWORD=${SPRING_BOOT_CALLBACK_PASSWORD:-parola_callback_imagini}
       - TZ=Europe/Bucharest
-      # OpenTelemetry - tracing distribuit catre Jaeger (optional, comenteaza pentru dev local fara Jaeger)
       - OTEL_SERVICE_NAME=akadion-backend
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
@@ -97,7 +104,7 @@ services:
       - OTEL_LOGS_EXPORTER=none
       - OTEL_INSTRUMENTATION_LOGBACK_MDC_ENABLED=true
     networks:
-      - default
+      - akadion_network
       - akadion_shared
     depends_on:
       postgres:
@@ -123,7 +130,7 @@ services:
       - "16686:16686"  # UI Jaeger - http://localhost:16686
       - "4318:4318"    # OTLP HTTP endpoint
     networks:
-      - default
+      - akadion_network
       - akadion_shared
 
   frontend:
@@ -137,11 +144,20 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    networks:
+      - akadion_network
 
 volumes:
   minio_data:
   postgres_data:
 
 networks:
+  # Retea locala a acestei stive - toate serviciile de mai sus sunt pe ea (inainte, unele
+  # foloseau reteaua "default" creata implicit de Compose cand un serviciu n-are "networks:";
+  # acum e explicita si numita, la fel ca "rag_network" din rag/compose.yaml).
+  akadion_network:
+    driver: bridge
+  # Retea externa, comuna cu stiva RAG (rag/compose.yaml) - trebuie sa existe deja
+  # (docker network create akadion_shared), Compose n-o creeaza singur.
   akadion_shared:
     external: true

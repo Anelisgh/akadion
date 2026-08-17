@@ -1,0 +1,217 @@
+{
+  "main": {
+    "id": "f27eefa8cc65fc84",
+    "type": "split",
+    "children": [
+      {
+        "id": "5c3f19347753c78d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3153e9dd6f15c0e7",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "auth_infrastructure_deployment.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "auth_infrastructure_deployment"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "37f860cc774a5cba",
+    "type": "split",
+    "children": [
+      {
+        "id": "185c53993474504b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e44f2654e170e0f3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "6e95a5ceee4a6e0d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "6e76d2f5057ac40c",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "bbc09fe71942214e",
+    "type": "split",
+    "children": [
+      {
+        "id": "00d9d88b68ca6063",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f8f4f44c51f5b836",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "auth_infrastructure_deployment.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "6a045a57fe5f3e8a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "auth_infrastructure_deployment.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "16e40786522b5f27",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "6ec63fdc1fcae5d5",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d6b18775f630c56d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "auth_infrastructure_deployment.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "3153e9dd6f15c0e7",
+  "lastOpenFiles": [
+    "auth_backend_keycloak.md",
+    "auth_infrastructure_deployment.md",
+    "services.md",
+    "fluxuri/07-quiz-si-flashcards.md",
+    "fluxuri/05-student-inscriere-si-progres.md",
+    "fluxuri/06-chat-aky-si-conversatii.md",
+    "fluxuri/04-gestionare-curs-saptamani-documente.md",
+    "fluxuri/03-profil-propriu.md",
+    "fluxuri/02-administrare-utilizatori-si-audit.md",
+    "fluxuri/01-autentificare-si-onboarding.md",
+    "fluxuri/00-INDEX.md",
+    "fluxuri",
+    "api-controllers.md",
+    "business-rules.md",
+    "configurari.md",
+    "contract-rag.md",
+    "explicatie_audit_jurnal.md",
+    "exceptii.md",
+    "istoric-chat-rag-docs.md",
+    "QUIZ_SI_FLASHCARDS_DOCUMENTATIE.md",
+    "README.md",
+    "README-ENTITATI.md",
+    "md files"
+  ]
+}
