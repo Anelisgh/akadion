@@ -18,6 +18,73 @@
   --color-ring: #595f8f;
   --color-destructive: #b06e48;
   --radius: 1rem;
+
+  --animate-auth-orb-bounce-top: auth-orb-bounce-top 10s ease-in-out infinite;
+  --animate-auth-orb-bounce-bottom: auth-orb-bounce-bottom 12s ease-in-out infinite;
+
+  @keyframes auth-orb-bounce-top {
+    0%,
+    100% {
+      opacity: 0.72;
+      transform: translate(0, 0) scale(1);
+    }
+    16% {
+      opacity: 0.84;
+      transform: translate(2.75rem, 3rem) scale(1.02);
+    }
+    31% {
+      opacity: 0.9;
+      transform: translate(6.25rem, 5rem) scale(1.035);
+    }
+    42% {
+      opacity: 0.94;
+      transform: translate(7rem, 6rem) scale(1.005);
+    }
+    48% {
+      opacity: 0.78;
+      transform: translate(3.5rem, 2rem) scale(0.985);
+    }
+    67% {
+      opacity: 0.86;
+      transform: translate(8rem, 4rem) scale(1.04);
+    }
+    84% {
+      opacity: 0.9;
+      transform: translate(4.5rem, 2rem) scale(1.02);
+    }
+  }
+
+  @keyframes auth-orb-bounce-bottom {
+    0%,
+    100% {
+      opacity: 0.68;
+      transform: translate(0, 0) scale(1);
+    }
+    18% {
+      opacity: 0.8;
+      transform: translate(-2rem, -2rem) scale(1.01);
+    }
+    32% {
+      opacity: 0.88;
+      transform: translate(-5rem, -4rem) scale(1.035);
+    }
+    42% {
+      opacity: 0.9;
+      transform: translate(-4rem, -3rem) scale(0.985);
+    }
+    48% {
+      opacity: 0.75;
+      transform: translate(-1.5rem, -1.5rem) scale(0.975);
+    }
+    70% {
+      opacity: 0.84;
+      transform: translate(-5.75rem, -5rem) scale(1.025);
+    }
+    88% {
+      opacity: 0.78;
+      transform: translate(-2.25rem, -3rem) scale(1);
+    }
+  }
 }
 
 @layer base {
@@ -59,17 +126,7 @@
       radial-gradient(circle at bottom right, color-mix(in srgb, var(--owl-indigo) 10%, transparent), transparent 34%);
   }
 
-  @media (prefers-reduced-motion: reduce) {
 
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
 
   a {
     @apply text-[color:var(--primary)] underline-offset-4 transition-colors hover:text-[color:color-mix(in_oklab,var(--primary)_88%,black)] hover:underline;
@@ -83,7 +140,7 @@
   }
 }
 
-@layer components {
+/* custom components */
 
   .theme-html,
   .theme-body {
@@ -141,7 +198,7 @@
     width: 15rem;
     height: 15rem;
     background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.22) 46%, rgba(255, 255, 255, 0.1) 72%);
-    animation: auth-orb-bounce-top 42s ease-in-out infinite;
+    animation: auth-orb-bounce-top 10s ease-in-out infinite;
   }
 
   .auth-brand-panel::after {
@@ -151,95 +208,12 @@
     height: 20rem;
     background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.19) 48%, rgba(255, 255, 255, 0.08) 74%);
     mask-image: none;
-    animation: auth-orb-bounce-bottom 50s ease-in-out infinite;
+    animation: auth-orb-bounce-bottom 12s ease-in-out infinite;
   }
 
-  @keyframes auth-orb-bounce-top {
 
-    0%,
-    100% {
-      opacity: 0.72;
-      transform: translate3d(0, 0, 0) scale(1);
-    }
 
-    16% {
-      opacity: 0.84;
-      transform: translate3d(2.75rem, clamp(1.5rem, calc(18vh - 7rem), 4.5rem), 0) scale(1.02);
-    }
 
-    31% {
-      opacity: 0.9;
-      transform: translate3d(6.25rem, clamp(2rem, calc(32vh - 12.5rem), 8rem), 0) scale(1.035);
-    }
-
-    42% {
-      opacity: 0.94;
-      transform: translate3d(7rem, clamp(0.5rem, calc(41vh - 17.3rem), min(12rem, calc(100vh - 23rem))), 0) scale(1.005);
-    }
-
-    48% {
-      opacity: 0.78;
-      transform: translate3d(3.5rem, clamp(0.25rem, calc(18vh - 7rem), 4rem), 0) scale(0.985);
-    }
-
-    67% {
-      opacity: 0.86;
-      transform: translate3d(8rem, clamp(2rem, calc(28vh - 10.5rem), 6rem), 0) scale(1.04);
-    }
-
-    84% {
-      opacity: 0.9;
-      transform: translate3d(4.5rem, 2rem, 0) scale(1.02);
-    }
-  }
-
-  @keyframes auth-orb-bounce-bottom {
-
-    0%,
-    100% {
-      opacity: 0.68;
-      transform: translate3d(0, 0, 0) scale(1);
-    }
-
-    18% {
-      opacity: 0.8;
-      transform: translate3d(-2rem, clamp(-4rem, calc(7rem - 18vh), -0.75rem), 0) scale(1.01);
-    }
-
-    32% {
-      opacity: 0.88;
-      transform: translate3d(-5rem, clamp(-7rem, calc(11rem - 28vh), -1.5rem), 0) scale(1.035);
-    }
-
-    42% {
-      opacity: 0.9;
-      transform: translate3d(-4rem, clamp(max(-12rem, calc(-100vh + 27rem)), calc(17.3rem - 41vh), -0.25rem), 0) scale(0.985);
-    }
-
-    48% {
-      opacity: 0.75;
-      transform: translate3d(-1.5rem, clamp(-3.5rem, calc(5rem - 14vh), -0.25rem), 0) scale(0.975);
-    }
-
-    70% {
-      opacity: 0.84;
-      transform: translate3d(-5.75rem, clamp(-8rem, calc(9rem - 24vh), -2rem), 0) scale(1.025);
-    }
-
-    88% {
-      opacity: 0.78;
-      transform: translate3d(-2.25rem, clamp(-5rem, calc(6rem - 18vh), -1rem), 0) scale(1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-
-    .auth-brand-panel::before,
-    .auth-brand-panel::after {
-      animation: none;
-      transform: none;
-    }
-  }
 
   .auth-brand-panel__content {
     @apply relative z-10 flex h-full flex-col px-6 pt-6 pb-0 sm:px-8 lg:px-12 lg:pt-8 xl:px-14;
@@ -1232,4 +1206,4 @@
     gap: 0.15rem !important;
     line-height: 1.2 !important;
   }
-}
+/* end components */
