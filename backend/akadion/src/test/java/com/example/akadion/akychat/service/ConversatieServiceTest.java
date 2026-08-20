@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -126,12 +127,12 @@ class ConversatieServiceTest {
         MesajChat vechi = new MesajChat();
         vechi.setRol(RolMesaj.UTILIZATOR);
         vechi.setContinut("Intrebare veche");
-        vechi.setCreatedAt(OffsetDateTime.now().minusMinutes(5));
+        vechi.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(5));
 
         MesajChat curent = new MesajChat();
         curent.setRol(RolMesaj.UTILIZATOR);
         curent.setContinut("Intrebare curenta");
-        curent.setCreatedAt(OffsetDateTime.now());
+        curent.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
         // Lista returnata descrescator (cel mai nou primul)
         when(conversatieRepository.findById(100L)).thenReturn(Optional.of(conv));
